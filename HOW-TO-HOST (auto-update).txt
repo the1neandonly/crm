@@ -1,0 +1,77 @@
+╔══════════════════════════════════════════════════════════════╗
+   HÉBERGER LE CRM EN LIGNE (GRATUIT) — MISES À JOUR AUTOMATIQUES
+   → Une seule URL. Vous modifiez → tout le monde a la nouvelle
+     version, sans jamais renvoyer de fichier.
+╚══════════════════════════════════════════════════════════════╝
+
+Cette méthode met votre CRM à une adresse web (ex :
+https://VOTRENOM.github.io/crm/). Vos collaborateurs ouvrent ce
+lien. Quand vous mettez à jour, ils voient la nouvelle version au
+prochain rafraîchissement. Gratuit, à vie, via GitHub Pages.
+
+Le dossier "crm-hosting" contient déjà tout ce qu'il faut :
+   • index.html   (le CRM)
+   • logo.png     (votre logo)
+
+────────────────────────────────────────────────────────────────
+ÉTAPE 1 — Créer un compte GitHub (gratuit)
+────────────────────────────────────────────────────────────────
+1. Allez sur  https://github.com  → "Sign up"
+2. Créez votre compte (email + mot de passe).
+
+────────────────────────────────────────────────────────────────
+ÉTAPE 2 — Créer un dépôt (repository)
+────────────────────────────────────────────────────────────────
+1. En haut à droite → "+" → "New repository"
+2. Repository name :  crm
+3. Cochez "Public"
+4. Cliquez "Create repository"
+
+────────────────────────────────────────────────────────────────
+ÉTAPE 3 — Envoyer les fichiers (glisser-déposer, AUCUNE commande)
+────────────────────────────────────────────────────────────────
+1. Sur la page du dépôt → "uploading an existing file"
+   (ou onglet "Add file" → "Upload files")
+2. Faites GLISSER  index.html  ET  logo.png  (du dossier crm-hosting)
+   dans la zone.
+3. En bas → "Commit changes".
+
+────────────────────────────────────────────────────────────────
+ÉTAPE 4 — Activer GitHub Pages
+────────────────────────────────────────────────────────────────
+1. Onglet "Settings" du dépôt → menu de gauche "Pages"
+2. Sous "Branch" : choisissez "main" et dossier "/ (root)" → "Save"
+3. Attendez 1 minute. GitHub affiche votre adresse :
+      https://VOTRENOM.github.io/crm/
+4. C'est votre CRM en ligne !
+
+────────────────────────────────────────────────────────────────
+ÉTAPE 5 — Distribuer à l'équipe
+────────────────────────────────────────────────────────────────
+• Envoyez simplement le lien https://VOTRENOM.github.io/crm/
+• Chacun l'ouvre, l'épingle (Chrome : menu ⋮ → Plus d'outils →
+  Créer un raccourci → cochez "Ouvrir dans une fenêtre").
+• Sur téléphone : ouvrez le lien, "Ajouter à l'écran d'accueil".
+
+────────────────────────────────────────────────────────────────
+POUR METTRE À JOUR (le point clé)
+────────────────────────────────────────────────────────────────
+Quand une nouvelle version est prête :
+1. Sur GitHub → votre dépôt → cliquez index.html → icône crayon ✎
+   → "Upload files" et remplacez index.html par le nouveau.
+   (ou demandez-nous le nouveau index.html et remplacez-le)
+2. "Commit changes".
+→ En quelques secondes, TOUTE l'équipe a la nouvelle version au
+  prochain rafraîchissement. Vous ne renvoyez plus jamais de fichier.
+
+────────────────────────────────────────────────────────────────
+IMPORTANT — LES DONNÉES
+────────────────────────────────────────────────────────────────
+• Le lien met à jour le PROGRAMME. Les DONNÉES restent séparées.
+• Pour que toute l'équipe partage les mêmes données en direct :
+  connectez le CLOUD (bouton "Cloud" dans le CRM) — voir le guide
+  "CLOUD-Configuration".
+• Programme partagé (GitHub Pages) + Données partagées (Cloud/Supabase)
+  = un vrai CRM d'équipe complet, 100% gratuit.
+
+DevelopTheOne — Agency OS · © 2026
