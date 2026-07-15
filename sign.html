@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signature — DevelopTheOne</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--brand:#2f6fed;--ink:#0e1626;--muted:#5a6b85;--muted2:#93a1ba;--line:#e5e9f0;--bg:#f4f7fc;--good:#16a34a;--bad:#dc2626}
+body{font-family:'Segoe UI',-apple-system,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+.hero{background:linear-gradient(135deg,#2f6fed,#1c4fd1);color:#fff;padding:26px 22px;text-align:center}
+.hero .b{font-size:12px;letter-spacing:3px;text-transform:uppercase;opacity:.85;font-weight:700}
+.hero h1{font-size:20px;font-weight:800;margin-top:6px}
+.wrap{max-width:760px;margin:0 auto;padding:20px 16px 70px}
+.doc{background:#fff;border:1px solid var(--line);border-radius:16px;padding:30px 28px;box-shadow:0 12px 34px -22px rgba(20,40,80,.3);font-family:Georgia,serif;font-size:15px;line-height:1.9;white-space:pre-wrap;max-height:52vh;overflow:auto}
+.doc h2{font-family:'Segoe UI',Arial,sans-serif;font-size:18px;margin-bottom:4px}
+.doc .m{font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:var(--muted2);margin-bottom:18px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px;margin-top:16px;box-shadow:0 12px 34px -22px rgba(20,40,80,.3)}
+.card h3{font-size:12px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted2);margin-bottom:12px;font-weight:800}
+#pad{width:100%;height:170px;border:2px dashed var(--line);border-radius:12px;touch-action:none;background:#fbfcfe;cursor:crosshair;display:block}
+.padrow{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.clear{color:var(--muted);font-size:12.5px;cursor:pointer;text-decoration:underline}
+input[type=text]{width:100%;border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:15px;margin-top:6px;outline:none}
+input[type=text]:focus{border-color:var(--brand)}
+label.chk{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;color:var(--muted);margin-top:14px;cursor:pointer}
+.btn{display:block;width:100%;background:linear-gradient(135deg,#2f6fed,#1c4fd1);color:#fff;border:none;font-size:16px;font-weight:800;padding:15px;border-radius:14px;margin-top:16px;cursor:pointer;box-shadow:0 14px 30px -14px rgba(47,111,237,.8)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.state{max-width:420px;margin:14vh auto;text-align:center;padding:0 20px}
+.state .ic{font-size:52px}
+.state h2{font-size:20px;margin:14px 0 8px}
+.state p{color:var(--muted);font-size:14px}
+.spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--brand);border-radius:50%;animation:sp 1s linear infinite;margin:0 auto}
+@keyframes sp{to{transform:rotate(360deg)}}
+.ft{text-align:center;color:var(--muted2);font-size:11.5px;margin-top:26px;line-height:1.8}
+</style>
+</head>
+<body>
+<div id="app"><div class="state"><div class="spin"></div><p style="margin-top:16px;color:var(--muted)">Chargement du document...</p></div></div>
+<script>
+var SUPA_URL="https://kfoftberdejuiiemmjpr.supabase.co";
+var SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtmb2Z0YmVyZGVqdWlpZW1tanByIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMyODA3MjEsImV4cCI6MjA5ODg1NjcyMX0.OJ9wzzbu8s7RfuvAV2i-ngCLvkccgZ-owFdmsGA5j6o";
+function b64d(s){return Uint8Array.from(atob(s),function(c){return c.charCodeAt(0);});}
+function b64e(buf){var b="",a=new Uint8Array(buf);for(var i=0;i<a.length;i++)b+=String.fromCharCode(a[i]);return btoa(b);}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function qs(k){var m=location.search.match(new RegExp("[?&]"+k+"=([^&]+)"));return m?decodeURIComponent(m[1]):"";}
+function frag(k){var h=location.hash.replace(/^#/,"");var m=h.match(new RegExp("(?:^|&)"+k+"=([^&]+)"));return m?decodeURIComponent(m[1]):"";}
+function state(ic,h,p){document.getElementById("app").innerHTML='<div class="state"><div class="ic">'+ic+'</div><h2>'+h+'</h2><p>'+p+'</p></div>';}
+var TOKEN=qs("t"),KB64=frag("k"),KEY=null,ROW=null,drawn=false;
+function render(doc){document.getElementById("app").innerHTML=
+ '<div class="hero"><div class="b">'+esc(doc.agency||"DevelopTheOne")+'</div><h1>Document a signer</h1></div>'
+ +'<div class="wrap"><div class="doc"><h2>'+esc(doc.title||"")+'</h2><div class="m">'+(doc.client?'Pour : '+esc(doc.client)+' · ':'')+'Envoye le '+esc(doc.sent||"")+'</div>'+esc(doc.content||"")+'</div>'
+ +'<div class="card"><h3>✍ Votre signature</h3><canvas id="pad"></canvas><div class="padrow"><span style="font-size:11.5px;color:var(--muted2)">Signez dans le cadre (doigt ou souris)</span><span class="clear" onclick="clearPad()">Effacer</span></div>'
+ +'<input type="text" id="signName" placeholder="Votre nom complet" autocomplete="name">'
+ +'<label class="chk"><input type="checkbox" id="agree" style="margin-top:2px"> J\'ai lu le document ci-dessus et j\'accepte ses termes. Ma signature electronique a valeur d\'engagement.</label>'
+ +'<button class="btn" id="signBtn" onclick="submitSign()">✍ Signer le document</button></div>'
+ +'<div class="ft">Document securise et chiffre · '+esc(doc.agency||"DevelopTheOne")+'<br>'+esc(doc.contactEmail||"")+'</div></div>';
+ initPad();document.title="Signature — "+(doc.title||"");}
+var ctx=null,pad=null,last=null;
+function initPad(){pad=document.getElementById("pad");var r=pad.getBoundingClientRect();pad.width=r.width*2;pad.height=340;pad.style.height="170px";ctx=pad.getContext("2d");ctx.scale(2,2);ctx.lineWidth=2.4;ctx.lineCap="round";ctx.lineJoin="round";ctx.strokeStyle="#14213d";
+ function pos(e){var rr=pad.getBoundingClientRect();var t=e.touches?e.touches[0]:e;return {x:t.clientX-rr.left,y:t.clientY-rr.top};}
+ function down(e){last=pos(e);e.preventDefault();}
+ function move(e){if(!last)return;var p=pos(e);ctx.beginPath();ctx.moveTo(last.x,last.y);ctx.lineTo(p.x,p.y);ctx.stroke();last=p;drawn=true;e.preventDefault();}
+ function up(){last=null;}
+ pad.addEventListener("mousedown",down);pad.addEventListener("mousemove",move);document.addEventListener("mouseup",up);
+ pad.addEventListener("touchstart",down,{passive:false});pad.addEventListener("touchmove",move,{passive:false});pad.addEventListener("touchend",up);}
+function clearPad(){if(ctx){ctx.clearRect(0,0,pad.width,pad.height);drawn=false;}}
+function submitSign(){var name=(document.getElementById("signName").value||"").trim();
+ if(!drawn)return alert("Veuillez signer dans le cadre.");
+ if(!name)return alert("Veuillez ecrire votre nom complet.");
+ if(!document.getElementById("agree").checked)return alert("Veuillez cocher la case d'acceptation.");
+ var btn=document.getElementById("signBtn");btn.disabled=true;btn.textContent="Envoi en cours...";
+ var sig={img:pad.toDataURL("image/png"),name:name,at:new Date().toISOString(),ua:navigator.userAgent.slice(0,120)};
+ var iv=crypto.getRandomValues(new Uint8Array(12));
+ crypto.subtle.encrypt({name:"AES-GCM",iv:iv},KEY,new TextEncoder().encode(JSON.stringify(sig))).then(function(ct){
+  return fetch(SUPA_URL+"/rest/v1/workspaces?on_conflict=id",{method:"POST",headers:{apikey:SUPA_KEY,Authorization:"Bearer "+SUPA_KEY,"Content-Type":"application/json",Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify({id:"sign-"+TOKEN,data:{v:1,doc:ROW.doc,st:"signed",sig:{ct:b64e(ct),iv:b64e(iv)}},updated_at:new Date().toISOString()})});
+ }).then(function(r){if(!r.ok)throw new Error("net");state("🎉","Document signe !","Merci "+esc(name)+". Votre signature a bien ete transmise a l'agence. Vous pouvez fermer cette page.");}).catch(function(){btn.disabled=false;btn.textContent="✍ Signer le document";alert("Erreur reseau — reessayez.");});}
+function boot(){if(!TOKEN||!KB64)return state("🔒","Lien invalide","Ce lien de signature est incomplet. Demandez-en un nouveau.");
+ fetch(SUPA_URL+"/rest/v1/workspaces?id=eq.sign-"+encodeURIComponent(TOKEN)+"&select=data",{headers:{apikey:SUPA_KEY,Authorization:"Bearer "+SUPA_KEY}}).then(function(r){if(!r.ok)throw new Error("net");return r.json();}).then(function(rows){
+  ROW=rows[0]&&rows[0].data;if(!ROW||!ROW.doc)throw new Error("gone");
+  if(ROW.st==="signed")return state("✅","Deja signe","Ce document a deja ete signe. Merci !");
+  return crypto.subtle.importKey("raw",b64d(KB64),{name:"AES-GCM"},false,["encrypt","decrypt"]).then(function(k){KEY=k;return crypto.subtle.decrypt({name:"AES-GCM",iv:b64d(ROW.doc.iv)},k,b64d(ROW.doc.ct));}).then(function(pt){render(JSON.parse(new TextDecoder().decode(pt)));});
+ }).catch(function(e){if(e.message==="gone")state("⏳","Document introuvable","Ce document n'existe plus ou a ete retire.");else state("🔐","Acces impossible","Lien invalide ou reseau indisponible.");});}
+boot();
+</script>
+</body>
+</html>
