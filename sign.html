@@ -13,6 +13,13 @@ body{font-family:'Segoe UI',-apple-system,Roboto,Arial,sans-serif;background:var
 .hero h1{font-size:20px;font-weight:800;margin-top:6px}
 .wrap{max-width:760px;margin:0 auto;padding:20px 16px 70px}
 .doc{background:#fff;border:1px solid var(--line);border-radius:16px;padding:30px 28px;box-shadow:0 12px 34px -22px rgba(20,40,80,.3);font-family:Georgia,serif;font-size:15px;line-height:1.9;white-space:pre-wrap;max-height:52vh;overflow:auto}
+.docframe{width:100%;height:48vh;border:none;display:block;border-radius:10px;background:#fff}
+.docimg{width:100%;height:auto;display:block;border-radius:10px}
+.docxbody{font-family:'Segoe UI',Arial,sans-serif;font-size:14px;line-height:1.7;white-space:normal}
+.docxbody h1,.docxbody h2,.docxbody h3{margin:14px 0 7px}
+.docxbody p{margin:0 0 9px}
+.dl-row{text-align:center;padding:26px 10px;font-family:'Segoe UI',Arial,sans-serif}
+.dl-row a{display:inline-block;margin-top:12px;background:var(--brand);color:#fff;text-decoration:none;padding:10px 20px;border-radius:10px;font-weight:700;font-size:13.5px}
 .doc h2{font-family:'Segoe UI',Arial,sans-serif;font-size:18px;margin-bottom:4px}
 .doc .m{font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:var(--muted2);margin-bottom:18px}
 .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px;margin-top:16px;box-shadow:0 12px 34px -22px rgba(20,40,80,.3)}
@@ -36,6 +43,7 @@ label.chk{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;color:va
 </head>
 <body>
 <div id="app"><div class="state"><div class="spin"></div><p style="margin-top:16px;color:var(--muted)">Chargement du document...</p></div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <script>
 var SUPA_URL="https://kfoftberdejuiiemmjpr.supabase.co";
 var SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtmb2Z0YmVyZGVqdWlpZW1tanByIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMyODA3MjEsImV4cCI6MjA5ODg1NjcyMX0.OJ9wzzbu8s7RfuvAV2i-ngCLvkccgZ-owFdmsGA5j6o";
@@ -46,15 +54,22 @@ function qs(k){var m=location.search.match(new RegExp("[?&]"+k+"=([^&]+)"));retu
 function frag(k){var h=location.hash.replace(/^#/,"");var m=h.match(new RegExp("(?:^|&)"+k+"=([^&]+)"));return m?decodeURIComponent(m[1]):"";}
 function state(ic,h,p){document.getElementById("app").innerHTML='<div class="state"><div class="ic">'+ic+'</div><h2>'+h+'</h2><p>'+p+'</p></div>';}
 var TOKEN=qs("t"),KB64=frag("k"),KEY=null,ROW=null,drawn=false;
-function render(doc){document.getElementById("app").innerHTML=
+function fileBodyHtml(doc){var ty=doc.fileType||"";var isPdf=ty.indexOf("pdf")>=0;var isImg=ty.indexOf("image")>=0;var isDocx=ty.indexOf("word")>=0||ty.indexOf("officedocument")>=0||/\.docx?$/i.test(doc.fileName||"");
+ if(isPdf)return '<object class="docframe" data="'+doc.fileData+'" type="application/pdf"><iframe class="docframe" src="'+doc.fileData+'"></iframe></object>';
+ if(isImg)return '<img class="docimg" src="'+doc.fileData+'" alt="'+esc(doc.fileName||"")+'">';
+ if(isDocx)return '<div id="docxTarget"><div class="dl-row">⏳ Chargement du document...</div></div>';
+ return '<div class="dl-row">📄 <b>'+esc(doc.fileName||"Fichier")+'</b><br><a href="'+doc.fileData+'" download="'+esc(doc.fileName||"document")+'">⬇ Telecharger</a></div>';}
+function renderDocxIfNeeded(doc){var ty=doc.fileType||"";var isDocx=ty.indexOf("word")>=0||ty.indexOf("officedocument")>=0||/\.docx?$/i.test(doc.fileName||"");if(!isDocx||typeof mammoth==="undefined")return;var el=document.getElementById("docxTarget");if(!el)return;try{var b64=doc.fileData.split(",")[1];var bin=atob(b64);var buf=new ArrayBuffer(bin.length);var view=new Uint8Array(buf);for(var k=0;k<bin.length;k++)view[k]=bin.charCodeAt(k);mammoth.convertToHtml({arrayBuffer:buf}).then(function(res){el.innerHTML='<div class="docxbody">'+(res.value||"<i>Document vide</i>")+'</div>';}).catch(function(){el.innerHTML='<div class="dl-row">Impossible d\'afficher ce document.</div>';});}catch(e){el.innerHTML='<div class="dl-row">Erreur de lecture.</div>';}}
+function render(doc){var body=(doc.content&&doc.content.trim())?esc(doc.content):(doc.fileData?fileBodyHtml(doc):'<div class="dl-row" style="color:#999">Document vide</div>');
+ document.getElementById("app").innerHTML=
  '<div class="hero"><div class="b">'+esc(doc.agency||"DevelopTheOne")+'</div><h1>Document a signer</h1></div>'
- +'<div class="wrap"><div class="doc"><h2>'+esc(doc.title||"")+'</h2><div class="m">'+(doc.client?'Pour : '+esc(doc.client)+' · ':'')+'Envoye le '+esc(doc.sent||"")+'</div>'+esc(doc.content||"")+'</div>'
+ +'<div class="wrap"><div class="doc"><h2>'+esc(doc.title||"")+'</h2><div class="m">'+(doc.client?'Pour : '+esc(doc.client)+' · ':'')+'Envoye le '+esc(doc.sent||"")+'</div>'+body+'</div>'
  +'<div class="card"><h3>✍ Votre signature</h3><canvas id="pad"></canvas><div class="padrow"><span style="font-size:11.5px;color:var(--muted2)">Signez dans le cadre (doigt ou souris)</span><span class="clear" onclick="clearPad()">Effacer</span></div>'
  +'<input type="text" id="signName" placeholder="Votre nom complet" autocomplete="name">'
  +'<label class="chk"><input type="checkbox" id="agree" style="margin-top:2px"> J\'ai lu le document ci-dessus et j\'accepte ses termes. Ma signature electronique a valeur d\'engagement.</label>'
  +'<button class="btn" id="signBtn" onclick="submitSign()">✍ Signer le document</button></div>'
  +'<div class="ft">Document securise et chiffre · '+esc(doc.agency||"DevelopTheOne")+'<br>'+esc(doc.contactEmail||"")+'</div></div>';
- initPad();document.title="Signature — "+(doc.title||"");}
+ initPad();renderDocxIfNeeded(doc);document.title="Signature — "+(doc.title||"");}
 var ctx=null,pad=null,last=null;
 function initPad(){pad=document.getElementById("pad");var r=pad.getBoundingClientRect();pad.width=r.width*2;pad.height=340;pad.style.height="170px";ctx=pad.getContext("2d");ctx.scale(2,2);ctx.lineWidth=2.4;ctx.lineCap="round";ctx.lineJoin="round";ctx.strokeStyle="#14213d";
  function pos(e){var rr=pad.getBoundingClientRect();var t=e.touches?e.touches[0]:e;return {x:t.clientX-rr.left,y:t.clientY-rr.top};}

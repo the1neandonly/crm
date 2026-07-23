@@ -26,6 +26,13 @@ body{font-family:'Segoe UI',-apple-system,Roboto,Arial,sans-serif;background:var
 .spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--brand);border-radius:50%;animation:sp 1s linear infinite;margin:0 auto}
 @keyframes sp{to{transform:rotate(360deg)}}
 .ft{text-align:center;color:var(--muted2);font-size:11.5px;margin-top:26px;line-height:1.8}
+.docframe{width:100%;height:78vh;border:none;display:block;border-radius:10px;background:#fff}
+.docimg{width:100%;height:auto;display:block;border-radius:10px}
+.docxbody{font-family:'Segoe UI',Arial,sans-serif;font-size:14.5px;line-height:1.75}
+.docxbody h1,.docxbody h2,.docxbody h3{margin:16px 0 8px}
+.docxbody p{margin:0 0 10px}
+.dl-row{text-align:center;padding:30px 10px}
+.dl-row a{display:inline-block;margin-top:12px;background:var(--brand);color:#fff;text-decoration:none;padding:11px 22px;border-radius:10px;font-weight:700;font-size:14px;font-family:'Segoe UI',Arial,sans-serif}
 .thanks{position:fixed;inset:0;background:rgba(14,22,38,.55);display:flex;align-items:center;justify-content:center;z-index:20}
 .thanks .box{background:#fff;border-radius:18px;padding:30px 26px;max-width:340px;text-align:center;box-shadow:0 30px 70px -20px rgba(0,0,0,.5)}
 .thanks .box .ic{font-size:44px}
@@ -36,6 +43,7 @@ body{font-family:'Segoe UI',-apple-system,Roboto,Arial,sans-serif;background:var
 </head>
 <body>
 <div id="app"><div class="state"><div class="spin"></div><p style="margin-top:16px;color:var(--muted)">Chargement du document...</p></div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 <script>
 var SUPA_URL="https://kfoftberdejuiiemmjpr.supabase.co";
 var SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtmb2Z0YmVyZGVqdWlpZW1tanByIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMyODA3MjEsImV4cCI6MjA5ODg1NjcyMX0.OJ9wzzbu8s7RfuvAV2i-ngCLvkccgZ-owFdmsGA5j6o";
@@ -48,12 +56,20 @@ function state(ic,h,p){document.getElementById("app").innerHTML='<div class="sta
 var TOKEN=qs("t"),KB64=frag("k"),KEY=null,VIEW_ID=(Date.now().toString(36)+Math.random().toString(36).slice(2,8));
 var VSTATE={opened:new Date().toISOString(),activeSeconds:0,maxScrollPct:0,converted:false};
 function ctaLabel(sys){if(sys==="contracts")return "✅ Je veux signer ce contrat";if(sys==="proposals")return "✅ Cette proposition m'interesse";return "✅ Cette offre m'interesse";}
-function render(doc){document.getElementById("app").innerHTML=
+function fileBodyHtml(doc){var ty=doc.fileType||"";var isPdf=ty.indexOf("pdf")>=0;var isImg=ty.indexOf("image")>=0;var isDocx=ty.indexOf("word")>=0||ty.indexOf("officedocument")>=0||/\.docx?$/i.test(doc.fileName||"");
+ if(isPdf)return '<object class="docframe" data="'+doc.fileData+'" type="application/pdf"><iframe class="docframe" src="'+doc.fileData+'"></iframe></object>';
+ if(isImg)return '<img class="docimg" src="'+doc.fileData+'" alt="'+esc(doc.fileName||"")+'">';
+ if(isDocx)return '<div id="docxTarget"><div class="dl-row">⏳ Chargement du document...</div></div>';
+ return '<div class="dl-row">📄 <b>'+esc(doc.fileName||"Fichier")+'</b><br><a id="dlLink" href="'+doc.fileData+'" download="'+esc(doc.fileName||"document")+'">⬇ Telecharger</a></div>';}
+function renderDocxIfNeeded(doc){var ty=doc.fileType||"";var isDocx=ty.indexOf("word")>=0||ty.indexOf("officedocument")>=0||/\.docx?$/i.test(doc.fileName||"");if(!isDocx||typeof mammoth==="undefined")return;var el=document.getElementById("docxTarget");if(!el)return;try{var b64=doc.fileData.split(",")[1];var bin=atob(b64);var buf=new ArrayBuffer(bin.length);var view=new Uint8Array(buf);for(var k=0;k<bin.length;k++)view[k]=bin.charCodeAt(k);mammoth.convertToHtml({arrayBuffer:buf}).then(function(res){el.innerHTML='<div class="docxbody">'+(res.value||"<i>Document vide</i>")+'</div>';}).catch(function(){el.innerHTML='<div class="dl-row">Impossible d\'afficher ce document.</div>';});}catch(e){el.innerHTML='<div class="dl-row">Erreur de lecture.</div>';}}
+function render(doc){var body=(doc.content&&doc.content.trim())?esc(doc.content):(doc.fileData?fileBodyHtml(doc):'<div class="dl-row" style="color:#999">Document vide</div>');
+ document.getElementById("app").innerHTML=
  '<div class="hero"><div class="b">'+esc(doc.agency||"DevelopTheOne")+'</div><h1>'+esc(doc.title||"Document")+'</h1></div>'
- +'<div class="wrap"><div class="doc"><h2>'+esc(doc.title||"")+'</h2><div class="m">'+(doc.client?'Pour : '+esc(doc.client)+' · ':'')+'Envoye le '+esc(doc.sent||"")+'</div>'+esc(doc.content||"")+'</div>'
+ +'<div class="wrap"><div class="doc"><h2>'+esc(doc.title||"")+'</h2><div class="m">'+(doc.client?'Pour : '+esc(doc.client)+' · ':'')+'Envoye le '+esc(doc.sent||"")+'</div>'+body+'</div>'
  +'<div class="ft">Document prive et chiffre · '+esc(doc.agency||"DevelopTheOne")+'<br>'+esc(doc.contactEmail||"")+'</div></div>'
  +'<div class="cta-bar"><span class="sub">Une question ?</span><button class="btn" id="ctaBtn" onclick="doConvert()">'+ctaLabel(doc.sys)+'</button></div>';
  document.title=(doc.title||"Document")+" — "+(doc.agency||"DevelopTheOne");
+ renderDocxIfNeeded(doc);
  trackStart();}
 function encAndPush(){return crypto.subtle.encrypt({name:"AES-GCM",iv:_ivFixed=crypto.getRandomValues(new Uint8Array(12))},KEY,new TextEncoder().encode(JSON.stringify(VSTATE))).then(function(ct){
  return fetch(SUPA_URL+"/rest/v1/workspaces?on_conflict=id",{method:"POST",keepalive:true,headers:{apikey:SUPA_KEY,Authorization:"Bearer "+SUPA_KEY,"Content-Type":"application/json",Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify({id:"view-"+TOKEN+"-"+VIEW_ID,data:{ct:b64e(ct),iv:b64e(_ivFixed)},updated_at:new Date().toISOString()})});
