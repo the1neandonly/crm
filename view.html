@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Document — DevelopTheOne</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--brand:#2f6fed;--ink:#0e1626;--muted:#5a6b85;--muted2:#93a1ba;--line:#e5e9f0;--bg:#f4f7fc;--good:#16a34a}
+body{font-family:'Segoe UI',-apple-system,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+.hero{background:linear-gradient(135deg,#2f6fed,#1c4fd1);color:#fff;padding:26px 22px;text-align:center}
+.hero .b{font-size:12px;letter-spacing:3px;text-transform:uppercase;opacity:.85;font-weight:700}
+.hero h1{font-size:20px;font-weight:800;margin-top:6px}
+.wrap{max-width:760px;margin:0 auto;padding:20px 16px 90px}
+.doc{background:#fff;border:1px solid var(--line);border-radius:16px;padding:32px 28px;box-shadow:0 12px 34px -22px rgba(20,40,80,.3);font-family:Georgia,serif;font-size:15.5px;line-height:1.95;white-space:pre-wrap}
+.doc h2{font-family:'Segoe UI',Arial,sans-serif;font-size:19px;margin-bottom:4px}
+.doc .m{font-family:'Segoe UI',Arial,sans-serif;font-size:12px;color:var(--muted2);margin-bottom:20px}
+.cta-bar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);padding:14px 16px;box-shadow:0 -12px 30px -14px rgba(20,40,80,.25);display:flex;gap:10px;justify-content:center;z-index:10}
+.cta-bar .btn{background:linear-gradient(135deg,#22c07d,#16a34a);color:#fff;border:none;font-size:14.5px;font-weight:800;padding:13px 26px;border-radius:12px;cursor:pointer;box-shadow:0 10px 24px -12px rgba(22,163,74,.7)}
+.cta-bar .btn:disabled{opacity:.6;cursor:default}
+.cta-bar .sub{align-self:center;font-size:11.5px;color:var(--muted2)}
+.state{max-width:420px;margin:14vh auto;text-align:center;padding:0 20px}
+.state .ic{font-size:52px}
+.state h2{font-size:20px;margin:14px 0 8px}
+.state p{color:var(--muted);font-size:14px}
+.spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--brand);border-radius:50%;animation:sp 1s linear infinite;margin:0 auto}
+@keyframes sp{to{transform:rotate(360deg)}}
+.ft{text-align:center;color:var(--muted2);font-size:11.5px;margin-top:26px;line-height:1.8}
+.thanks{position:fixed;inset:0;background:rgba(14,22,38,.55);display:flex;align-items:center;justify-content:center;z-index:20}
+.thanks .box{background:#fff;border-radius:18px;padding:30px 26px;max-width:340px;text-align:center;box-shadow:0 30px 70px -20px rgba(0,0,0,.5)}
+.thanks .box .ic{font-size:44px}
+.thanks .box h3{font-size:17px;margin:12px 0 6px}
+.thanks .box p{color:var(--muted);font-size:13.5px}
+.thanks .box button{margin-top:16px;background:var(--brand);color:#fff;border:none;padding:10px 20px;border-radius:10px;font-weight:700;cursor:pointer}
+</style>
+</head>
+<body>
+<div id="app"><div class="state"><div class="spin"></div><p style="margin-top:16px;color:var(--muted)">Chargement du document...</p></div></div>
+<script>
+var SUPA_URL="https://kfoftberdejuiiemmjpr.supabase.co";
+var SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtmb2Z0YmVyZGVqdWlpZW1tanByIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMyODA3MjEsImV4cCI6MjA5ODg1NjcyMX0.OJ9wzzbu8s7RfuvAV2i-ngCLvkccgZ-owFdmsGA5j6o";
+function b64d(s){return Uint8Array.from(atob(s),function(c){return c.charCodeAt(0);});}
+function b64e(buf){var b="",a=new Uint8Array(buf);for(var i=0;i<a.length;i++)b+=String.fromCharCode(a[i]);return btoa(b);}
+function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+function qs(k){var m=location.search.match(new RegExp("[?&]"+k+"=([^&]+)"));return m?decodeURIComponent(m[1]):"";}
+function frag(k){var h=location.hash.replace(/^#/,"");var m=h.match(new RegExp("(?:^|&)"+k+"=([^&]+)"));return m?decodeURIComponent(m[1]):"";}
+function state(ic,h,p){document.getElementById("app").innerHTML='<div class="state"><div class="ic">'+ic+'</div><h2>'+h+'</h2><p>'+p+'</p></div>';}
+var TOKEN=qs("t"),KB64=frag("k"),KEY=null,VIEW_ID=(Date.now().toString(36)+Math.random().toString(36).slice(2,8));
+var VSTATE={opened:new Date().toISOString(),activeSeconds:0,maxScrollPct:0,converted:false};
+function ctaLabel(sys){if(sys==="contracts")return "✅ Je veux signer ce contrat";if(sys==="proposals")return "✅ Cette proposition m'interesse";return "✅ Cette offre m'interesse";}
+function render(doc){document.getElementById("app").innerHTML=
+ '<div class="hero"><div class="b">'+esc(doc.agency||"DevelopTheOne")+'</div><h1>'+esc(doc.title||"Document")+'</h1></div>'
+ +'<div class="wrap"><div class="doc"><h2>'+esc(doc.title||"")+'</h2><div class="m">'+(doc.client?'Pour : '+esc(doc.client)+' · ':'')+'Envoye le '+esc(doc.sent||"")+'</div>'+esc(doc.content||"")+'</div>'
+ +'<div class="ft">Document prive et chiffre · '+esc(doc.agency||"DevelopTheOne")+'<br>'+esc(doc.contactEmail||"")+'</div></div>'
+ +'<div class="cta-bar"><span class="sub">Une question ?</span><button class="btn" id="ctaBtn" onclick="doConvert()">'+ctaLabel(doc.sys)+'</button></div>';
+ document.title=(doc.title||"Document")+" — "+(doc.agency||"DevelopTheOne");
+ trackStart();}
+function encAndPush(){return crypto.subtle.encrypt({name:"AES-GCM",iv:_ivFixed=crypto.getRandomValues(new Uint8Array(12))},KEY,new TextEncoder().encode(JSON.stringify(VSTATE))).then(function(ct){
+ return fetch(SUPA_URL+"/rest/v1/workspaces?on_conflict=id",{method:"POST",keepalive:true,headers:{apikey:SUPA_KEY,Authorization:"Bearer "+SUPA_KEY,"Content-Type":"application/json",Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify({id:"view-"+TOKEN+"-"+VIEW_ID,data:{ct:b64e(ct),iv:b64e(_ivFixed)},updated_at:new Date().toISOString()})});
+}).catch(function(){});}
+function doConvert(){VSTATE.converted=true;var b=document.getElementById("ctaBtn");if(b){b.disabled=true;b.textContent="✓ Merci !";}
+ encAndPush().then(function(){document.body.insertAdjacentHTML("beforeend",'<div class="thanks"><div class="box"><div class="ic">🎉</div><h3>Merci !</h3><p>Votre agence a ete notifiee. Elle vous recontacte tres vite.</p><button onclick="this.closest(\'.thanks\').remove()">Fermer</button></div></div>');});}
+var _tickTimer=null,_lastPush=0;
+function trackStart(){
+ _tickTimer=setInterval(function(){if(document.visibilityState==="visible")VSTATE.activeSeconds++;var now=Date.now();if(now-_lastPush>10000){_lastPush=now;encAndPush();}},1000);
+ var scrollHandler=function(){var doc=document.documentElement;var sh=doc.scrollHeight-doc.clientHeight;var pct=sh>0?Math.round((window.scrollY/sh)*100):100;if(pct>VSTATE.maxScrollPct)VSTATE.maxScrollPct=Math.min(100,pct);};
+ window.addEventListener("scroll",scrollHandler,{passive:true});
+ document.addEventListener("visibilitychange",function(){if(document.visibilityState==="hidden")encAndPush();});
+ window.addEventListener("pagehide",function(){encAndPush();});
+ encAndPush();
+}
+function boot(){if(!TOKEN||!KB64)return state("🔒","Lien invalide","Ce lien est incomplet. Demandez-en un nouveau a l'agence.");
+ fetch(SUPA_URL+"/rest/v1/workspaces?id=eq.share-"+encodeURIComponent(TOKEN)+"&select=data",{headers:{apikey:SUPA_KEY,Authorization:"Bearer "+SUPA_KEY}}).then(function(r){if(!r.ok)throw new Error("net");return r.json();}).then(function(rows){
+  var row=rows[0]&&rows[0].data;if(!row||!row.doc)throw new Error("gone");
+  return crypto.subtle.importKey("raw",b64d(KB64),{name:"AES-GCM"},false,["decrypt"]).then(function(k){KEY=k;return crypto.subtle.decrypt({name:"AES-GCM",iv:b64d(row.doc.iv)},k,b64d(row.doc.ct));}).then(function(pt){render(JSON.parse(new TextDecoder().decode(pt)));});
+ }).catch(function(e){if(e.message==="gone")state("⏳","Document introuvable","Ce document n'existe plus ou a ete retire.");else state("🔐","Acces impossible","Lien invalide ou reseau indisponible.");});}
+boot();
+</script>
+</body>
+</html>
