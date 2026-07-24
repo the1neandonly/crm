@@ -74,7 +74,7 @@ function render(doc){var body=(doc.content&&doc.content.trim())?esc(doc.content)
  trackStart();}
 function encAndPush(){return crypto.subtle.encrypt({name:"AES-GCM",iv:_ivFixed=crypto.getRandomValues(new Uint8Array(12))},KEY,new TextEncoder().encode(JSON.stringify(VSTATE))).then(function(ct){
  return fetch(SUPA_URL+"/rest/v1/workspaces?on_conflict=id",{method:"POST",keepalive:true,headers:{apikey:SUPA_KEY,Authorization:"Bearer "+SUPA_KEY,"Content-Type":"application/json",Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify({id:"view-"+TOKEN+"-"+VIEW_ID,data:{ct:b64e(ct),iv:b64e(_ivFixed)},updated_at:new Date().toISOString()})});
-}).catch(function(){});}
+}).catch(function(e){console.error("encAndPush failed",e);});}
 function doConvert(){VSTATE.converted=true;var b=document.getElementById("ctaBtn");if(b){b.disabled=true;b.textContent="✓ Merci !";}
  encAndPush().then(function(){document.body.insertAdjacentHTML("beforeend",'<div class="thanks"><div class="box"><div class="ic">🎉</div><h3>Merci !</h3><p>Votre agence a ete notifiee. Elle vous recontacte tres vite.</p><button onclick="this.closest(\'.thanks\').remove()">Fermer</button></div></div>');});}
 var _tickTimer=null,_lastPush=0;
@@ -89,7 +89,7 @@ function trackStart(){
 function boot(){if(!TOKEN||!KB64)return state("🔒","Lien invalide","Ce lien est incomplet. Demandez-en un nouveau a l'agence.");
  fetch(SUPA_URL+"/rest/v1/workspaces?id=eq.share-"+encodeURIComponent(TOKEN)+"&select=data",{headers:{apikey:SUPA_KEY,Authorization:"Bearer "+SUPA_KEY}}).then(function(r){if(!r.ok)throw new Error("net");return r.json();}).then(function(rows){
   var row=rows[0]&&rows[0].data;if(!row||!row.doc)throw new Error("gone");
-  return crypto.subtle.importKey("raw",b64d(KB64),{name:"AES-GCM"},false,["decrypt"]).then(function(k){KEY=k;return crypto.subtle.decrypt({name:"AES-GCM",iv:b64d(row.doc.iv)},k,b64d(row.doc.ct));}).then(function(pt){render(JSON.parse(new TextDecoder().decode(pt)));});
+  return crypto.subtle.importKey("raw",b64d(KB64),{name:"AES-GCM"},false,["encrypt","decrypt"]).then(function(k){KEY=k;return crypto.subtle.decrypt({name:"AES-GCM",iv:b64d(row.doc.iv)},k,b64d(row.doc.ct));}).then(function(pt){render(JSON.parse(new TextDecoder().decode(pt)));});
  }).catch(function(e){if(e.message==="gone")state("⏳","Document introuvable","Ce document n'existe plus ou a ete retire.");else state("🔐","Acces impossible","Lien invalide ou reseau indisponible.");});}
 boot();
 </script>
