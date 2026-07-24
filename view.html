@@ -54,7 +54,8 @@ function qs(k){var m=location.search.match(new RegExp("[?&]"+k+"=([^&]+)"));retu
 function frag(k){var h=location.hash.replace(/^#/,"");var m=h.match(new RegExp("(?:^|&)"+k+"=([^&]+)"));return m?decodeURIComponent(m[1]):"";}
 function state(ic,h,p){document.getElementById("app").innerHTML='<div class="state"><div class="ic">'+ic+'</div><h2>'+h+'</h2><p>'+p+'</p></div>';}
 var TOKEN=qs("t"),KB64=frag("k"),KEY=null,VIEW_ID=(Date.now().toString(36)+Math.random().toString(36).slice(2,8));
-var VSTATE={opened:new Date().toISOString(),activeSeconds:0,maxScrollPct:0,converted:false};
+var VSTATE={opened:new Date().toISOString(),activeSeconds:0,maxScrollPct:0,converted:false,bandSeconds:[0,0,0,0,0],ua:navigator.userAgent.slice(0,140)};
+function currentScrollPct(){var doc=document.documentElement;var sh=doc.scrollHeight-doc.clientHeight;return sh>0?Math.round((window.scrollY/sh)*100):100;}
 function ctaLabel(sys){if(sys==="contracts")return "✅ Je veux signer ce contrat";if(sys==="proposals")return "✅ Cette proposition m'interesse";return "✅ Cette offre m'interesse";}
 function fileBodyHtml(doc){var ty=doc.fileType||"";var isPdf=ty.indexOf("pdf")>=0;var isImg=ty.indexOf("image")>=0;var isDocx=ty.indexOf("word")>=0||ty.indexOf("officedocument")>=0||/\.docx?$/i.test(doc.fileName||"");
  if(isPdf)return '<object class="docframe" data="'+doc.fileData+'" type="application/pdf"><iframe class="docframe" src="'+doc.fileData+'"></iframe></object>';
@@ -78,7 +79,7 @@ function doConvert(){VSTATE.converted=true;var b=document.getElementById("ctaBtn
  encAndPush().then(function(){document.body.insertAdjacentHTML("beforeend",'<div class="thanks"><div class="box"><div class="ic">🎉</div><h3>Merci !</h3><p>Votre agence a ete notifiee. Elle vous recontacte tres vite.</p><button onclick="this.closest(\'.thanks\').remove()">Fermer</button></div></div>');});}
 var _tickTimer=null,_lastPush=0;
 function trackStart(){
- _tickTimer=setInterval(function(){if(document.visibilityState==="visible")VSTATE.activeSeconds++;var now=Date.now();if(now-_lastPush>10000){_lastPush=now;encAndPush();}},1000);
+ _tickTimer=setInterval(function(){if(document.visibilityState==="visible"){VSTATE.activeSeconds++;var band=Math.min(4,Math.floor(currentScrollPct()/20));VSTATE.bandSeconds[band]++;}var now=Date.now();if(now-_lastPush>10000){_lastPush=now;encAndPush();}},1000);
  var scrollHandler=function(){var doc=document.documentElement;var sh=doc.scrollHeight-doc.clientHeight;var pct=sh>0?Math.round((window.scrollY/sh)*100):100;if(pct>VSTATE.maxScrollPct)VSTATE.maxScrollPct=Math.min(100,pct);};
  window.addEventListener("scroll",scrollHandler,{passive:true});
  document.addEventListener("visibilitychange",function(){if(document.visibilityState==="hidden")encAndPush();});
