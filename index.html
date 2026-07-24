@@ -971,18 +971,20 @@ function planProgress(p){var it=p.items||[];if(!it.length)return 0;return Math.r
 function renderPlans(c){if(_planOpen){var p=(DB.plans||[]).find(function(x){return x.id===_planOpen;});if(p)return renderPlanDetail(c,p);_planOpen=null;}
  var arr=DB.plans||[];var html='<div style="margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap"><span class="btn" onclick="openPlanForm()">➕ Nouveau plan</span><span class="btn ghost sm" onclick="seedPlanTemplate()">✨ Generer un plan type 3 mois</span></div>';
  if(!arr.length){html+='<div class="empty" style="padding:50px">📊 Aucun plan. Creez un plan marketing pour un client ou pour l\'agence.</div>';}
- else{html+='<div class="grid-cards">'+arr.map(function(p){var pr=planProgress(p);var chs={};(p.items||[]).forEach(function(i){chs[i.channel]=1;});return '<div class="hcard" onclick="_planOpen=\''+p.id+'\';renderCurrent();"><div class="hh"><span class="avatar" style="width:34px;height:34px;font-size:13px;background:linear-gradient(135deg,var(--brand),var(--purple))">📊</span><span class="hname">'+esc(p.title)+'</span><span class="pill '+(pr>=100?"good":pr>=40?"warn":"bad")+'">'+pr+'%</span></div>'+(p.client?'<div class="hrow"><span>Client</span><b>'+esc(p.client)+'</b></div>':'')+'<div class="hrow"><span>Periode</span><b>'+esc(p.start||"")+' · '+(p.months||3)+' mois</b></div><div class="hrow"><span>Budget</span><b>'+money(p.budget)+'</b></div><div style="display:flex;gap:5px;margin-top:9px;flex-wrap:wrap">'+Object.keys(chs).map(function(ch){return '<span style="width:11px;height:11px;border-radius:3px;background:'+chColor(ch)+'" title="'+esc(ch)+'"></span>';}).join("")+'</div><div style="height:6px;background:var(--line);border-radius:3px;margin-top:10px;overflow:hidden"><div style="height:100%;width:'+pr+'%;background:'+(pr>=100?"var(--good)":"var(--brand)")+'"></div></div></div>';}).join("")+'</div>';}
+ else{html+='<div class="grid-cards">'+arr.map(function(p){var pr=planProgress(p);var chs={};(p.items||[]).forEach(function(i){chs[i.channel]=1;});return '<div class="hcard" onclick="_planOpen=\''+p.id+'\';renderCurrent();"><div class="hh"><span class="avatar" style="width:34px;height:34px;font-size:13px;background:linear-gradient(135deg,var(--brand),var(--purple))">📊</span><span class="hname">'+esc(p.title)+'</span><span class="pill '+(pr>=100?"good":pr>=40?"warn":"bad")+'">'+pr+'%</span></div>'+(p.client?'<div class="hrow"><span>Client</span><b>'+esc(p.client)+'</b></div>':'')+'<div class="hrow"><span>Periode</span><b>'+esc(p.start||"")+' · '+(p.months||3)+' mois</b></div><div class="hrow"><span>Budget</span><b>'+money(p.budget)+'</b></div>'+((p.autos||[]).filter(function(r){return r.enabled;}).length?'<div class="hrow"><span>Automatisations</span><b style="color:var(--brand-2)">⚡ '+(p.autos||[]).filter(function(r){return r.enabled;}).length+'</b></div>':'')+'<div style="display:flex;gap:5px;margin-top:9px;flex-wrap:wrap">'+Object.keys(chs).map(function(ch){return '<span style="width:11px;height:11px;border-radius:3px;background:'+chColor(ch)+'" title="'+esc(ch)+'"></span>';}).join("")+'</div><div style="height:6px;background:var(--line);border-radius:3px;margin-top:10px;overflow:hidden"><div style="height:100%;width:'+pr+'%;background:'+(pr>=100?"var(--good)":"var(--brand)")+'"></div></div></div>';}).join("")+'</div>';}
  c.innerHTML=html;}
 function monthLabel(p,i){var parts=(p.start||today().slice(0,7)).split("-");var d=new Date(+parts[0],(+parts[1]||1)-1+i,1);return d.toLocaleDateString('fr-FR',{month:'short',year:'2-digit'});}
-function renderPlanDetail(c,p){var pr=planProgress(p);var alloc=(p.items||[]).reduce(function(a,i){return a+(+i.budget||0);},0);var N=p.months||3;
+function renderPlanDetail(c,p){autoSweep(p);var pr=planProgress(p);var alloc=(p.items||[]).reduce(function(a,i){return a+(+i.budget||0);},0);var N=p.months||3;
  var html='<div style="margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span class="btn ghost sm" onclick="_planOpen=null;renderCurrent();">← Plans</span><span class="btn ghost sm" onclick="openPlanForm(\''+p.id+'\')">✏ Infos</span><span class="btn ghost sm" onclick="openPlanItem(\''+p.id+'\')">➕ Action</span><span class="btn ghost sm" onclick="openPlanLinks(\''+p.id+'\')">🔗 Lier</span><span class="btn ghost sm" onclick="planToTasks(\''+p.id+'\')">📋 → Taches equipe</span><span class="btn sm" onclick="printPlan(\''+p.id+'\')">🖨 PDF client</span><span class="btn ghost sm" style="color:var(--bad)" onclick="deletePlan(\''+p.id+'\')">🗑</span></div>';
  var linkChips=(p.links||[]).map(function(lid){var lp=(DB.plans||[]).find(function(x){return x.id===lid;});return lp?'<span class="chip" style="cursor:pointer;border:1px solid var(--brand);color:var(--brand-2)" onclick="_planOpen=\''+lp.id+'\';renderCurrent();">🔗 '+esc(lp.title.slice(0,28))+'</span>':'';}).join(" ");
  html+='<div class="panel" style="background:linear-gradient(135deg,rgba(47,111,237,.15),transparent)"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;align-items:center"><div><div style="font-size:19px;font-weight:800">'+esc(p.title)+'</div><div style="color:var(--muted);font-size:13px;margin-top:3px">'+(p.client?'<span style="cursor:pointer;text-decoration:underline dotted" onclick="showC360('+JSON.stringify(p.client)+')">'+esc(p.client)+'</span> · ':'')+esc(p.start||"")+' · '+N+' mois'+(p.objective?' · 🎯 '+esc(p.objective):'')+'</div>'+(linkChips?'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">'+linkChips+'</div>':'')+'</div><div style="display:flex;gap:22px;text-align:center"><div><div style="font-size:11px;color:var(--muted)">PROGRES</div><div style="font-size:23px;font-weight:800;color:'+(pr>=100?"var(--good)":"var(--brand-2)")+'">'+pr+'%</div></div><div><div style="font-size:11px;color:var(--muted)">BUDGET</div><div style="font-size:23px;font-weight:800">'+(p.budget?(p.budget/1000).toFixed(0)+'k':'-')+'</div></div><div><div style="font-size:11px;color:var(--muted)">ALLOUE</div><div style="font-size:23px;font-weight:800;color:'+(alloc>(+p.budget||0)?"var(--bad)":"var(--txt)")+'">'+(alloc/1000).toFixed(0)+'k</div></div></div></div></div>';
  // TABS
- var tabs=[{id:"canvas",l:"🧩 Canvas"},{id:"gantt",l:"📊 Timeline"},{id:"doc",l:"📝 Document"}];
+ var nAuto=(p.autos||[]).filter(function(r){return r.enabled;}).length;
+ var tabs=[{id:"canvas",l:"🧩 Canvas"},{id:"gantt",l:"📊 Timeline"},{id:"doc",l:"📝 Document"},{id:"auto",l:"⚡ Automatisations"+(nAuto?" ("+nAuto+")":"")}];
  html+='<div style="display:flex;gap:8px;margin-bottom:14px">'+tabs.map(function(tb){return '<span class="chat-tab'+(_planTab===tb.id?" on":"")+'" onclick="_planTab=\''+tb.id+'\';renderCurrent();">'+tb.l+'</span>';}).join("")+'</div>';
  if(_planTab==="canvas"){html+=renderCanvasPanel(p);c.innerHTML=html;drawEdges(p.id);return;}
  if(_planTab==="doc"){html+=docSection(p);c.innerHTML=html;return;}
+ if(_planTab==="auto"){html+=renderAutoPanel(p);c.innerHTML=html;return;}
  // GANTT
  var items=(p.items||[]).slice().sort(function(a,b){return (a.month-b.month)||String(a.channel).localeCompare(String(b.channel));});
  html+='<div class="panel"><h3><span class="dot"></span>📊 Timeline du plan (Gantt)</h3>';
@@ -1006,16 +1008,171 @@ function docSection(p){var blocks=(p.doc||[]);var rows=blocks.map(function(b,idx
  else inner='<div class="blk-p" contenteditable="true" spellcheck="false" onblur="saveBlock(\''+p.id+'\',\''+b.id+'\',this)">'+esc(b.text)+'</div>';
  return '<div class="blk" draggable="true" ondragstart="blkDragStart(event,\''+b.id+'\')" ondragover="event.preventDefault()" ondrop="blkDrop(event,\''+p.id+'\',\''+b.id+'\')"><span class="blk-grip" title="Glisser pour reordonner">⠿</span><div style="flex:1;min-width:0">'+inner+'</div><span class="blk-tools"><span onclick="moveBlock(\''+p.id+'\',\''+b.id+'\',-1)" title="Monter">▲</span><span onclick="moveBlock(\''+p.id+'\',\''+b.id+'\',1)" title="Descendre">▼</span><span style="color:var(--bad)" onclick="delBlock(\''+p.id+'\',\''+b.id+'\')" title="Supprimer">✕</span></span></div>';}).join("");
  return '<div class="panel"><h3><span class="dot"></span>📝 Document du plan — ecrivez librement</h3>'+(rows||'<div style="color:var(--muted2);font-size:12.5px;padding:8px 0">Strategie, briefs, idees, comptes-rendus... Ajoutez des blocs ci-dessous et cliquez pour ecrire.</div>')+'<div style="display:flex;gap:7px;margin-top:14px;flex-wrap:wrap"><span class="btn ghost sm" onclick="addBlock(\''+p.id+'\',\'p\')">+ Texte</span><span class="btn ghost sm" onclick="addBlock(\''+p.id+'\',\'h\')">+ Titre</span><span class="btn ghost sm" onclick="addBlock(\''+p.id+'\',\'todo\')">+ Checklist</span><span class="btn ghost sm" onclick="addBlock(\''+p.id+'\',\'div\')">+ Separateur</span></div></div>';}
+/* ===================== AUTOMATISATIONS DE PLAN ===================== */
+var AUTO_TRIGGERS=[
+ {id:"item_done",l:"✅ Quand une action est terminee"},
+ {id:"item_start",l:"▶️ Quand une action passe En cours"},
+ {id:"item_new",l:"➕ Quand une nouvelle action est ajoutee"},
+ {id:"item_late",l:"⏰ Quand une action est en retard"},
+ {id:"plan_pct",l:"📈 Quand le plan atteint X% de progres",val:true},
+ {id:"budget_over",l:"💸 Quand le budget alloue depasse le budget total"}
+];
+var AUTO_ACTS=[
+ {id:"task",l:"📋 Creer une tache equipe"},
+ {id:"chat",l:"💬 Envoyer un message dans le chat"},
+ {id:"content",l:"📅 Creer un post dans le calendrier"},
+ {id:"fulfil",l:"⚙️ Creer une carte production"},
+ {id:"status",l:"🔄 Changer le statut de l'action"},
+ {id:"startnext",l:"⏭ Demarrer l'action suivante du meme canal"},
+ {id:"notify",l:"🔔 Notification + journal"}
+];
+function autoTrigLabel(id){var f=AUTO_TRIGGERS.find(function(x){return x.id===id;});return f?f.l:id;}
+function autoActLabel(id){var f=AUTO_ACTS.find(function(x){return x.id===id;});return f?f.l:id;}
+function planMonthIdx(p){var s=(p.start||today().slice(0,7)).split("-"),n=today().slice(0,7).split("-");return (+n[0]-+s[0])*12+(+n[1]-+s[1]);}
+function autoVars(p,it){return {plan:p.title||"",client:p.client||"",action:it?(it.title||""):"",canal:it?(it.channel||""):"",resp:(it&&it.owner)||DB._me||"",date:today()};}
+function autoTpl(s,v){return String(s||"").replace(/\{(\w+)\}/g,function(m,k){return v[k]!=null?v[k]:m;});}
+function autoMatch(r,it){if(!it||!r.flt)return true;if(r.flt.channel&&it.channel!==r.flt.channel)return false;if(r.flt.owner&&it.owner!==r.flt.owner)return false;return true;}
+function autoAddDays(n){var d=new Date();d.setDate(d.getDate()+(+n||0));return d.toISOString().slice(0,10);}
+function autoExec(p,r,it){var v=autoVars(p,it);
+ (r.acts||[]).forEach(function(a){try{
+  if(a.t==="task"){(DB.tasks=DB.tasks||[]).unshift({id:uid(),title:autoTpl(a.title||"{action}",v),due:autoAddDays(a.days),priority:a.prio||"Normale",linked:p.client||p.title||"",assignee:a.who||(it&&it.owner)||DB._me||"",done:"Non",createdAt:today()});}
+  else if(a.t==="chat"){(DB._chat=DB._chat||[]).push({id:uid(),user:"⚡ Auto",text:autoTpl(a.text||"",v).slice(0,1500),ts:new Date().toISOString()});if(DB._chat.length>300)DB._chat.splice(0,DB._chat.length-300);}
+  else if(a.t==="content"){(DB.content=DB.content||[]).push({id:uid(),date:autoAddDays(a.days),client:p.client||"",channel:a.chan||"Instagram",title:autoTpl(a.title||"{action}",v),text:"",owner:a.who||"",status:"Idee",createdAt:today()});}
+  else if(a.t==="fulfil"){(DB.fulfilment=DB.fulfilment||[]).unshift({id:uid(),client:p.client||p.title||"",service:a.service||"Autre",status:"A faire",deadline:"",owner:a.who||"",notes:autoTpl("Genere par automatisation — {action}",v),createdAt:today()});}
+  else if(a.t==="status"&&it){it.status=a.to||"Termine";}
+  else if(a.t==="startnext"&&it){var pool=(p.items||[]).filter(function(x){return x.channel===it.channel&&x.id!==it.id&&(x.status||"A faire")==="A faire";}).sort(function(x,y){return (+x.month||0)-(+y.month||0);});if(pool[0]){pool[0].status="En cours";autoFire(p,"item_start",pool[0]);}}
+  else if(a.t==="notify"){toast("🔔 "+autoTpl(a.text||(r.name||"Automatisation"),v));logActivity("auto",autoTpl(a.text||"",v));}
+ }catch(e){}});}
+var _autoDepth=0;
+function autoFire(p,trig,it,key){
+ if(!p||!(p.autos||[]).length)return 0;
+ if(_autoDepth>3)return 0;
+ _autoDepth++;var names=[];
+ (p.autos||[]).forEach(function(r){
+  if(!r.enabled||r.on!==trig)return;
+  if(!autoMatch(r,it))return;
+  if(key){r.fired=r.fired||{};if(r.fired[key])return;r.fired[key]=1;}
+  autoExec(p,r,it);r.runs=(r.runs||0)+1;r.last=new Date().toISOString();names.push(r.name||"Automatisation");
+ });
+ _autoDepth--;
+ if(names.length){logActivity("auto","⚡ "+names.join(", ")+" — "+(p.title||""));toast("⚡ "+names.length+" automatisation"+(names.length>1?"s":"")+" executee"+(names.length>1?"s":""));}
+ return names.length;}
+function autoLatch(p,r,ok,k){r.fired=r.fired||{};if(!ok){delete r.fired[k];return 0;}if(r.fired[k])return 0;r.fired[k]=1;autoExec(p,r,null);r.runs=(r.runs||0)+1;r.last=new Date().toISOString();logActivity("auto","⚡ "+(r.name||"Automatisation")+" — "+(p.title||""));toast("⚡ "+(r.name||"Automatisation"));return 1;}
+function autoSweep(p){if(!p||!(p.autos||[]).length)return 0;
+ var cur=planMonthIdx(p),pr=planProgress(p),alloc=(p.items||[]).reduce(function(a,i){return a+(+i.budget||0);},0),n=0;
+ (p.items||[]).forEach(function(it){var end=(+it.month||0)+Math.max(1,+it.duration||1)-1;if(cur>end&&(it.status||"A faire")!=="Termine")n+=autoFire(p,"item_late",it,"late:"+it.id)||0;});
+ (p.autos||[]).forEach(function(r){if(!r.enabled)return;
+  if(r.on==="plan_pct")n+=autoLatch(p,r,pr>=(+r.val||100),"pct");
+  else if(r.on==="budget_over")n+=autoLatch(p,r,(+p.budget>0&&alloc>+p.budget),"budget");});
+ if(n){p.updatedAt=today();save();}
+ return n;}
+function autoOnStatus(p,it){if(!it)return;if(it.status==="Termine")autoFire(p,"item_done",it);else if(it.status==="En cours")autoFire(p,"item_start",it);}
+function autoCut(s,n){s=String(s||"");return esc(s.length>n?s.slice(0,n)+"…":s);}
+function autoActSummary(a){
+ if(a.t==="task")return "📋 Tache «"+esc(a.title||"{action}")+"»"+(a.who?" → "+esc(a.who):"")+(+a.days?" (J+"+(+a.days)+")":" (aujourd'hui)");
+ if(a.t==="chat")return "💬 Chat: «"+autoCut(a.text,50)+"»";
+ if(a.t==="content")return "📅 Post "+esc(a.chan||"Instagram")+" «"+esc(a.title||"{action}")+"»"+(+a.days?" (J+"+(+a.days)+")":"");
+ if(a.t==="fulfil")return "⚙️ Carte production "+esc(a.service||"Autre");
+ if(a.t==="status")return "🔄 Statut → "+esc(a.to||"Termine");
+ if(a.t==="startnext")return "⏭ Demarrer l'action suivante du canal";
+ if(a.t==="notify")return "🔔 «"+autoCut(a.text,50)+"»";
+ return esc(a.t||"");}
+function renderAutoPanel(p){var rules=p.autos||[];
+ var h='<div class="panel"><h3><span class="dot"></span>⚡ Automatisations du plan <span style="margin-inline-start:auto;font-size:11px;color:var(--muted2);font-weight:600">'+rules.filter(function(r){return r.enabled;}).length+' active(s)</span></h3>'
+ +'<p style="font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:12px">Definissez <b>quand</b> (declencheur) et <b>quoi faire</b> (actions). Elles s\'executent toutes seules quand vous travaillez sur le plan : passage d\'une action a Termine, retard, progres atteint, budget depasse...</p>'
+ +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"><span class="btn" onclick="openAutoForm(\''+p.id+'\')">➕ Nouvelle automatisation</span><span class="btn ghost sm" onclick="autoRecipes(\''+p.id+'\')">✨ Recettes pretes</span><span class="btn ghost sm" onclick="autoTestRun(\''+p.id+'\')">🧪 Verifier maintenant</span></div>';
+ if(!rules.length)h+='<div class="empty" style="padding:36px">Aucune automatisation. Cliquez sur <b>Recettes pretes</b> pour demarrer en 1 clic.</div>';
+ else h+=rules.map(function(r){var trg=AUTO_TRIGGERS.find(function(x){return x.id===r.on;});
+  return '<div style="border:1px solid '+(r.enabled?'var(--line)':'var(--line)')+';border-radius:12px;padding:12px 14px;margin-bottom:10px;opacity:'+(r.enabled?'1':'.5')+';background:var(--surface)">'
+  +'<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><b style="font-size:14px;flex:1;min-width:120px">'+esc(r.name||"Automatisation")+'</b>'
+  +'<span class="chip" style="cursor:pointer" onclick="toggleAuto(\''+p.id+'\',\''+r.id+'\')">'+(r.enabled?"🟢 Active":"⚪ En pause")+'</span>'
+  +'<span class="chip" style="cursor:pointer" onclick="openAutoForm(\''+p.id+'\',\''+r.id+'\')">✏</span>'
+  +'<span class="chip" style="cursor:pointer;color:var(--bad)" onclick="delAuto(\''+p.id+'\',\''+r.id+'\')">🗑</span></div>'
+  +'<div style="font-size:12px;color:var(--muted);margin-top:8px"><b>QUAND</b> · '+esc(autoTrigLabel(r.on))+(trg&&trg.val?" ("+(+r.val||100)+"%)":"")
+  +((r.flt&&(r.flt.channel||r.flt.owner))?' <span style="color:var(--muted2)">— seulement '+esc([r.flt.channel,r.flt.owner].filter(Boolean).join(" / "))+'</span>':'')+'</div>'
+  +'<div style="font-size:12px;color:var(--muted);margin-top:5px"><b>ALORS</b> · '+((r.acts||[]).map(autoActSummary).join(" &nbsp;+&nbsp; ")||"<i>aucune action</i>")+'</div>'
+  +'<div style="font-size:11px;color:var(--muted2);margin-top:7px">Executee '+(r.runs||0)+' fois'+(r.last?' · derniere : '+new Date(r.last).toLocaleString('fr-FR'):'')+'</div></div>';}).join("");
+ h+='<div style="font-size:11.5px;color:var(--muted2);margin-top:10px;line-height:1.7">Variables utilisables dans les textes : <code>{action}</code> <code>{plan}</code> <code>{client}</code> <code>{canal}</code> <code>{resp}</code> <code>{date}</code></div></div>';
+ return h;}
+function toggleAuto(pid,rid){var p=planById(pid);var r=p&&(p.autos||[]).find(function(x){return x.id===rid;});if(!r)return;r.enabled=!r.enabled;if(!r.enabled)r.fired={};p.updatedAt=today();save();renderCurrent();}
+function delAuto(pid,rid){if(!confirm("Supprimer cette automatisation ?"))return;var p=planById(pid);if(!p)return;p.autos=(p.autos||[]).filter(function(x){return x.id!==rid;});p.updatedAt=today();save();renderCurrent();}
+function autoTestRun(pid){var p=planById(pid);if(!p)return;var n=autoSweep(p);renderCurrent();if(!n)toast("Rien a declencher pour l'instant");}
+function autoRecipes(pid){var p=planById(pid);if(!p)return;resetModal();editing=null;document.getElementById("modalTitle").textContent="✨ Recettes d'automatisation";document.getElementById("delBtn").style.display="none";document.getElementById("saveBtn").style.display="none";document.getElementById("modalEl").classList.add("wide");
+ var recipes=[
+  {k:"relance",n:"Action terminee → tache de reporting",d:"Des qu'une action est Terminee, cree une tache «Rapport {action}» a J+1 pour le responsable.",on:"item_done",acts:[{t:"task",title:"Rapport de {action} ({canal})",days:1,prio:"Normale"}]},
+  {k:"retard",n:"Action en retard → alerte equipe",d:"Si une action depasse son mois sans etre terminee, poste dans le chat et cree une tache urgente.",on:"item_late",acts:[{t:"chat",text:"⏰ RETARD sur «{action}» ({canal}) — plan {plan} / {client}"},{t:"task",title:"⏰ Debloquer {action}",days:0,prio:"Haute"}]},
+  {k:"chaine",n:"Action terminee → demarrer la suivante",d:"Enchaine automatiquement : quand une action se termine, la suivante du meme canal passe En cours.",on:"item_done",acts:[{t:"startnext"}]},
+  {k:"social",n:"Action Social Media lancee → 3 posts",d:"Quand une action Social Media passe En cours, cree 3 posts Instagram dans le calendrier (J+2, J+5, J+9).",on:"item_start",flt:{channel:"Social Media"},acts:[{t:"content",title:"{action} — post 1",chan:"Instagram",days:2},{t:"content",title:"{action} — post 2",chan:"Instagram",days:5},{t:"content",title:"{action} — post 3",chan:"Instagram",days:9}]},
+  {k:"prod",n:"Action Site Web lancee → carte production",d:"Quand une action Site Web demarre, cree automatiquement la carte dans le pipeline Production.",on:"item_start",flt:{channel:"Site Web"},acts:[{t:"fulfil",service:"Site Web"}]},
+  {k:"mid",n:"Plan a 50% → point client",d:"Quand le plan atteint 50%, cree une tache «Point mi-parcours» et notifie l'equipe.",on:"plan_pct",val:50,acts:[{t:"task",title:"Point mi-parcours {client} — plan {plan}",days:2,prio:"Haute"},{t:"chat",text:"📈 Le plan {plan} ({client}) est a 50% !"}]},
+  {k:"fin",n:"Plan a 100% → bilan + upsell",d:"Plan termine : tache de bilan, message equipe, et rappel de proposer la suite.",on:"plan_pct",val:100,acts:[{t:"task",title:"Bilan final + proposition suite — {client}",days:3,prio:"Haute"},{t:"chat",text:"🎉 Plan {plan} termine a 100% pour {client} — preparez l'upsell."}]},
+  {k:"budget",n:"Budget depasse → alerte",d:"Si le total alloue aux actions depasse le budget du plan, alerte immediate.",on:"budget_over",acts:[{t:"notify",text:"💸 Budget depasse sur le plan {plan}"},{t:"chat",text:"💸 ATTENTION : budget depasse sur {plan} ({client})"}]}
+ ];
+ window._autoRecipes=recipes;
+ document.getElementById("modalBody").innerHTML='<p style="font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:14px">Ajoutez une recette en 1 clic, puis modifiez-la si besoin.</p>'
+ +recipes.map(function(rc,i){return '<div style="border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:9px;display:flex;gap:12px;align-items:center"><div style="flex:1;min-width:0"><b style="font-size:13.5px">'+esc(rc.n)+'</b><div style="font-size:12px;color:var(--muted);margin-top:4px;line-height:1.55">'+esc(rc.d)+'</div></div><span class="btn sm" onclick="addRecipe(\''+pid+'\','+i+')">+ Ajouter</span></div>';}).join("");
+ document.getElementById("overlay").classList.add("open");}
+function addRecipe(pid,i){var p=planById(pid);var rc=(window._autoRecipes||[])[i];if(!p||!rc)return;
+ (p.autos=p.autos||[]).push({id:uid(),name:rc.n,on:rc.on,val:rc.val||0,flt:rc.flt||{},acts:JSON.parse(JSON.stringify(rc.acts)),enabled:true,runs:0,fired:{}});
+ p.updatedAt=today();logActivity("create","Automatisation: "+rc.n);save();closeModal();_planTab="auto";renderCurrent();toast("⚡ Automatisation ajoutee");}
+var _autoActs=[];
+function autoParamsHtml(i,a){var team=[""].concat(teamNames());
+ if(a.t==="task")return '<input id="aa'+i+'_title" placeholder="Titre de la tache — ex: Rapport {action}" value="'+esc(a.title||"")+'"><div style="display:flex;gap:6px;margin-top:6px"><select id="aa'+i+'_who" style="flex:1">'+team.map(function(n){return '<option value="'+esc(n)+'"'+(a.who===n?" selected":"")+'>'+(n?esc(n):"— responsable de l\'action —")+'</option>';}).join("")+'</select><input id="aa'+i+'_days" type="number" min="0" style="width:90px" placeholder="J+" value="'+(+a.days||0)+'"><select id="aa'+i+'_prio" style="width:110px">'+["Normale","Haute","Basse"].map(function(x){return '<option'+(a.prio===x?" selected":"")+'>'+x+'</option>';}).join("")+'</select></div>';
+ if(a.t==="chat")return '<textarea id="aa'+i+'_text" style="min-height:64px" placeholder="Message — ex: ⏰ Retard sur {action} ({client})">'+esc(a.text||"")+'</textarea>';
+ if(a.t==="content")return '<input id="aa'+i+'_title" placeholder="Titre du post — ex: {action} — post 1" value="'+esc(a.title||"")+'"><div style="display:flex;gap:6px;margin-top:6px"><select id="aa'+i+'_chan" style="flex:1">'+SOC_CHANNELS.map(function(ch){return '<option'+(a.chan===ch.id?" selected":"")+'>'+esc(ch.id)+'</option>';}).join("")+'</select><input id="aa'+i+'_days" type="number" min="0" style="width:90px" placeholder="J+" value="'+(+a.days||0)+'"></div>';
+ if(a.t==="fulfil")return '<select id="aa'+i+'_service">'+["Site Web","SEO","Ads","Branding","App","Autre"].map(function(x){return '<option'+(a.service===x?" selected":"")+'>'+x+'</option>';}).join("")+'</select>';
+ if(a.t==="status")return '<select id="aa'+i+'_to">'+["A faire","En cours","Termine"].map(function(x){return '<option'+(a.to===x?" selected":"")+'>'+x+'</option>';}).join("")+'</select>';
+ if(a.t==="notify")return '<input id="aa'+i+'_text" placeholder="Texte de la notification" value="'+esc(a.text||"")+'">';
+ return '<div style="font-size:12px;color:var(--muted2)">Aucun reglage necessaire.</div>';}
+function renderAutoActs(){var w=document.getElementById("autoActsWrap");if(!w)return;
+ w.innerHTML=_autoActs.map(function(a,i){return '<div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px"><div style="display:flex;gap:6px;align-items:center;margin-bottom:7px"><select style="flex:1" onchange="setAutoActType('+i+',this.value)">'+AUTO_ACTS.map(function(x){return '<option value="'+x.id+'"'+(a.t===x.id?" selected":"")+'>'+x.l+'</option>';}).join("")+'</select><span class="chip" style="cursor:pointer;color:var(--bad)" onclick="rmAutoAct('+i+')">🗑</span></div>'+autoParamsHtml(i,a)+'</div>';}).join("")
+ +'<span class="btn ghost sm" onclick="addAutoAct()">+ Ajouter une action</span>';}
+function readAutoActs(){_autoActs=_autoActs.map(function(a,i){var g=function(f){var el=document.getElementById("aa"+i+"_"+f);return el?el.value:undefined;};var o={t:a.t};
+ if(a.t==="task"){o.title=g("title")||"{action}";o.who=g("who")||"";o.days=+g("days")||0;o.prio=g("prio")||"Normale";}
+ else if(a.t==="chat"||a.t==="notify"){o.text=g("text")||"";}
+ else if(a.t==="content"){o.title=g("title")||"{action}";o.chan=g("chan")||"Instagram";o.days=+g("days")||0;}
+ else if(a.t==="fulfil"){o.service=g("service")||"Autre";}
+ else if(a.t==="status"){o.to=g("to")||"Termine";}
+ return o;});return _autoActs;}
+function setAutoActType(i,t){readAutoActs();_autoActs[i]={t:t};renderAutoActs();}
+function addAutoAct(){readAutoActs();_autoActs.push({t:"task",title:"{action}",days:0,prio:"Normale"});renderAutoActs();}
+function rmAutoAct(i){readAutoActs();_autoActs.splice(i,1);if(!_autoActs.length)_autoActs.push({t:"task",title:"{action}",days:0,prio:"Normale"});renderAutoActs();}
+function autoTrigChanged(){var on=document.getElementById("au_on").value;var f=AUTO_TRIGGERS.find(function(x){return x.id===on;});var vw=document.getElementById("au_valWrap");if(vw)vw.style.display=(f&&f.val)?"block":"none";
+ var fw=document.getElementById("au_fltWrap");if(fw)fw.style.display=(on.indexOf("item_")===0)?"block":"none";}
+function openAutoForm(pid,rid){var p=planById(pid);if(!p)return;var r=rid?(p.autos||[]).find(function(x){return x.id===rid;}):null;
+ resetModal();editing=null;document.getElementById("modalTitle").textContent=r?"Modifier l'automatisation":"⚡ Nouvelle automatisation";document.getElementById("delBtn").style.display="none";document.getElementById("modalEl").classList.add("wide");
+ _autoActs=r&&(r.acts||[]).length?JSON.parse(JSON.stringify(r.acts)):[{t:"task",title:"{action}",days:0,prio:"Normale"}];
+ var team=[""].concat(teamNames());
+ document.getElementById("modalBody").innerHTML=
+  '<div class="field"><label>Nom de l\'automatisation *</label><input id="au_name" value="'+esc(r?r.name:"")+'" placeholder="Action terminee -> rapport"></div>'
+ +'<div class="field"><label>QUAND — declencheur</label><select id="au_on" onchange="autoTrigChanged()">'+AUTO_TRIGGERS.map(function(x){return '<option value="'+x.id+'"'+((r?r.on:"item_done")===x.id?" selected":"")+'>'+x.l+'</option>';}).join("")+'</select></div>'
+ +'<div class="field" id="au_valWrap" style="display:none"><label>Seuil (%)</label><input id="au_val" type="number" min="1" max="100" value="'+(r&&+r.val?+r.val:50)+'"></div>'
+ +'<div id="au_fltWrap"><div class="field"><label>Seulement pour le canal (optionnel)</label><select id="au_chan"><option value="">— tous les canaux —</option>'+PLAN_CHANNELS.map(function(ch){return '<option'+((r&&r.flt&&r.flt.channel)===ch.id?" selected":"")+'>'+esc(ch.id)+'</option>';}).join("")+'</select></div>'
+ +'<div class="field"><label>Seulement pour le responsable (optionnel)</label><select id="au_owner">'+team.map(function(n){return '<option value="'+esc(n)+'"'+((r&&r.flt&&r.flt.owner)===n?" selected":"")+'>'+(n?esc(n):"— tous —")+'</option>';}).join("")+'</select></div></div>'
+ +'<div class="field"><label>ALORS — actions a executer</label><div id="autoActsWrap"></div></div>'
+ +'<div style="font-size:11.5px;color:var(--muted2);line-height:1.7;margin-top:6px">Variables : <code>{action}</code> <code>{plan}</code> <code>{client}</code> <code>{canal}</code> <code>{resp}</code> <code>{date}</code></div>';
+ renderAutoActs();autoTrigChanged();
+ document.getElementById("saveBtn").onclick=function(){var nm=document.getElementById("au_name").value.trim();if(!nm)return toast("Nom requis","bad");
+  var acts=readAutoActs();if(!acts.length)return toast("Ajoutez au moins une action","bad");
+  var on=document.getElementById("au_on").value;
+  var obj=r||{id:uid(),enabled:true,runs:0};
+  obj.name=nm;obj.on=on;obj.val=+((document.getElementById("au_val")||{}).value)||0;
+  obj.flt={channel:(document.getElementById("au_chan")||{}).value||"",owner:(document.getElementById("au_owner")||{}).value||""};
+  if(on.indexOf("item_")!==0)obj.flt={};
+  obj.acts=JSON.parse(JSON.stringify(acts));obj.fired={};
+  if(!r)(p.autos=p.autos||[]).push(obj);
+  p.updatedAt=today();logActivity(r?"update":"create","Automatisation: "+nm);save();closeModal();_planTab="auto";renderCurrent();toast("⚡ Automatisation enregistree");};
+ document.getElementById("overlay").classList.add("open");}
 function openPlanForm(id){var p=id?(DB.plans||[]).find(function(x){return x.id===id;}):null;resetModal();editing=null;document.getElementById("modalTitle").textContent=p?"Modifier le plan":"Nouveau plan";document.getElementById("delBtn").style.display="none";var b=document.getElementById("modalBody");
  b.innerHTML='<div class="field"><label>Titre du plan *</label><input id="pl_title" value="'+esc(p?p.title:"")+'" placeholder="Plan Croissance Q3 - Golden Hair"></div><div class="field"><label>Client (vide = interne)</label><input id="pl_client" value="'+esc(p?p.client:"")+'"></div><div class="field"><label>Objectif</label><input id="pl_obj" value="'+esc(p?p.objective:"")+'" placeholder="Doubler les leads en 3 mois"></div><div class="field"><label>Mois de depart</label><input id="pl_start" type="month" value="'+esc(p?p.start:today().slice(0,7))+'"></div><div class="field"><label>Duree (mois)</label><select id="pl_months">'+[3,6,12].map(function(n){return '<option '+((p?p.months:3)===n?"selected":"")+'>'+n+'</option>';}).join("")+'</select></div><div class="field"><label>Budget total (DA)</label><input id="pl_budget" type="number" value="'+esc(p?p.budget:"")+'"></div>';
  document.getElementById("saveBtn").onclick=function(){var ti=document.getElementById("pl_title").value.trim();if(!ti)return toast("Titre requis","bad");var obj=p||{id:uid(),items:[],createdAt:today()};obj.title=ti;obj.client=document.getElementById("pl_client").value.trim();obj.objective=document.getElementById("pl_obj").value.trim();obj.start=document.getElementById("pl_start").value||today().slice(0,7);obj.months=+document.getElementById("pl_months").value||3;obj.budget=+document.getElementById("pl_budget").value||0;obj.updatedAt=today();if(!p)(DB.plans=DB.plans||[]).unshift(obj);logActivity(p?"update":"create","Plan: "+ti);save();closeModal();_planOpen=obj.id;renderCurrent();};
  document.getElementById("overlay").classList.add("open");}
 function openPlanItem(planId,itemId){var p=(DB.plans||[]).find(function(x){return x.id===planId;});if(!p)return;var it=itemId?(p.items||[]).find(function(x){return x.id===itemId;}):null;var N=p.months||3;resetModal();editing=null;document.getElementById("modalTitle").textContent=it?"Modifier l'action":"Nouvelle action";document.getElementById("delBtn").style.display=it?"inline-flex":"none";
  var b=document.getElementById("modalBody");b.innerHTML='<div class="field"><label>Action *</label><input id="pi_title" value="'+esc(it?it.title:"")+'" placeholder="Campagne Meta Ads - notoriete"></div><div class="field"><label>Canal</label><select id="pi_channel">'+PLAN_CHANNELS.map(function(ch){return '<option '+((it?it.channel:"")===ch.id?"selected":"")+'>'+ch.id+'</option>';}).join("")+'</select></div><div class="field"><label>Mois de debut</label><select id="pi_month">'+Array.apply(null,Array(N)).map(function(_,i){return '<option value="'+i+'" '+((it?+it.month:0)===i?"selected":"")+'>'+monthLabel(p,i)+'</option>';}).join("")+'</select></div><div class="field"><label>Duree (mois)</label><input id="pi_dur" type="number" min="1" max="'+N+'" value="'+(it?it.duration||1:1)+'"></div><div class="field"><label>Budget (DA)</label><input id="pi_budget" type="number" value="'+esc(it?it.budget:"")+'"></div><div class="field"><label>Responsable</label><select id="pi_owner">'+[""].concat(teamNames()).map(function(n){return '<option '+((it?it.owner:"")===n?"selected":"")+'>'+esc(n)+'</option>';}).join("")+'</select></div><div class="field"><label>Statut</label><select id="pi_status">'+["A faire","En cours","Termine"].map(function(st){return '<option value="'+st+'" '+((it?it.status:"A faire")===st?"selected":"")+'>'+stageT(st)+'</option>';}).join("")+'</select></div>';
- document.getElementById("saveBtn").onclick=function(){var ti=document.getElementById("pi_title").value.trim();if(!ti)return toast("Titre requis","bad");var obj=it||{id:uid()};obj.title=ti;obj.channel=document.getElementById("pi_channel").value;obj.month=+document.getElementById("pi_month").value||0;obj.duration=+document.getElementById("pi_dur").value||1;obj.budget=+document.getElementById("pi_budget").value||0;obj.owner=document.getElementById("pi_owner").value;obj.status=document.getElementById("pi_status").value;if(!it)(p.items=p.items||[]).push(obj);p.updatedAt=today();save();closeModal();renderCurrent();};
+ document.getElementById("saveBtn").onclick=function(){var ti=document.getElementById("pi_title").value.trim();if(!ti)return toast("Titre requis","bad");var _prevSt=it?(it.status||"A faire"):null;var obj=it||{id:uid()};obj.title=ti;obj.channel=document.getElementById("pi_channel").value;obj.month=+document.getElementById("pi_month").value||0;obj.duration=+document.getElementById("pi_dur").value||1;obj.budget=+document.getElementById("pi_budget").value||0;obj.owner=document.getElementById("pi_owner").value;obj.status=document.getElementById("pi_status").value;if(!it)(p.items=p.items||[]).push(obj);p.updatedAt=today();if(!it)autoFire(p,"item_new",obj);if(obj.status!==_prevSt)autoOnStatus(p,obj);save();closeModal();renderCurrent();};
  document.getElementById("delBtn").onclick=function(){if(!confirm("Supprimer cette action ?"))return;p.items=(p.items||[]).filter(function(x){return x.id!==itemId;});save();closeModal();renderCurrent();document.getElementById("delBtn").onclick=deleteRecord;};
  document.getElementById("overlay").classList.add("open");}
-function cyclePlanItem(planId,itemId){var p=(DB.plans||[]).find(function(x){return x.id===planId;});var it=p&&(p.items||[]).find(function(x){return x.id===itemId;});if(!it)return;var order=["A faire","En cours","Termine"];it.status=order[(order.indexOf(it.status||"A faire")+1)%3];p.updatedAt=today();save();renderCurrent();}
+function cyclePlanItem(planId,itemId){var p=(DB.plans||[]).find(function(x){return x.id===planId;});var it=p&&(p.items||[]).find(function(x){return x.id===itemId;});if(!it)return;var order=["A faire","En cours","Termine"];it.status=order[(order.indexOf(it.status||"A faire")+1)%3];p.updatedAt=today();autoOnStatus(p,it);save();renderCurrent();}
 function deletePlan(id){if(!confirm("Supprimer ce plan entier ?"))return;DB.plans=(DB.plans||[]).filter(function(x){return x.id!==id;});logActivity("delete","Plan supprime");_planOpen=null;save();renderCurrent();}
 function seedPlanTemplate(){var client=prompt("Nom du client (vide = plan interne) :")||"";var budget=+((prompt("Budget total (DA) :","300000")||"0").replace(/\D/g,""))||300000;var p={id:uid(),title:"Plan Croissance 3 mois"+(client?" — "+client:""),client:client,objective:"Generer un flux regulier de leads qualifies",start:today().slice(0,7),months:3,budget:budget,createdAt:today(),updatedAt:today(),items:[
  {id:uid(),title:"Audit digital & strategie",channel:"Autre",month:0,duration:1,budget:Math.round(budget*0.05),status:"A faire"},
@@ -1050,7 +1207,7 @@ function ganttUp(){if(!_gd)return;var g=_gd;_gd=null;document.removeEventListene
 /* --- Kanban drag --- */
 var _planItemDragId=null;
 function planItemDrag(e,iid){_planItemDragId=iid;if(e.dataTransfer)e.dataTransfer.effectAllowed="move";e.stopPropagation();}
-function planDropItem(e,pid,st){e.preventDefault();var p=planById(pid);var it=p&&(p.items||[]).find(function(x){return x.id===_planItemDragId;});_planItemDragId=null;if(!it||(it.status||"A faire")===st)return;it.status=st;p.updatedAt=today();save();renderCurrent();}
+function planDropItem(e,pid,st){e.preventDefault();var p=planById(pid);var it=p&&(p.items||[]).find(function(x){return x.id===_planItemDragId;});_planItemDragId=null;if(!it||(it.status||"A faire")===st)return;it.status=st;p.updatedAt=today();autoOnStatus(p,it);save();renderCurrent();}
 /* --- Notion-style blocks --- */
 function addBlock(pid,type){var p=planById(pid);if(!p)return;(p.doc=p.doc||[]).push({id:uid(),type:type,text:type==="h"?"Nouveau titre":"",done:false});p.updatedAt=today();save();renderCurrent();setTimeout(function(){var eds=document.querySelectorAll('.blk [contenteditable]');var last=eds[eds.length-1];if(last){last.focus();try{var r=document.createRange();r.selectNodeContents(last);r.collapse(false);var s=window.getSelection();s.removeAllRanges();s.addRange(r);}catch(err){}}},80);}
 function saveBlock(pid,bid,el){var p=planById(pid);var b=p&&(p.doc||[]).find(function(x){return x.id===bid;});if(!b)return;var txt=(el.innerText||"").replace(/\n+$/,"");if(b.text===txt)return;b.text=txt;p.updatedAt=today();save();}
@@ -1253,7 +1410,7 @@ renderCurrent=function(){if(ADMINONLY.indexOf(current)>=0&&!isAdmin())current="d
 /* ===== v5.1: niches in leads + update banner ===== */
 SYSTEMS.leads.fields=function(){return [F("name","text",{req:true}),F("business"),{k:"niche",l:(curLang==="ar"?"القطاع":"Niche"),t:"select",opts:["","Promotion immobiliere","Agence immobiliere","Clinique medicale","Clinique dentaire","Clinique esthetique / greffe cheveux","Salle de sport / Gym","Restaurant / Cafe","E-commerce / Boutique","Cabinet d'avocats / Notaire","Agence de voyage","Nettoyage / Proprete","Services a domicile (plombier, electricien...)","Med spa / Institut de beaute","Salon de coiffure / Barbier","Auto / Concessionnaire","Ecole / Formation privee","Evenementiel / Mariage / Salle","Immobilier de luxe","Coach / Consultant","Batiment / Construction / Travaux","Pharmacie / Parapharmacie","Hotel / Riad / Location","Bijouterie / Luxe","Autre"]},F("phone"),F("email"),{k:"website",l:(curLang==="ar"?"الموقع":"Site web"),t:"text"},{k:"instagram",l:"Instagram",t:"text"},{k:"address",l:(curLang==="ar"?"العنوان":"Adresse"),t:"text"},F("source","select",{opts:["Google Maps","Instagram","Cold Call","Reference","Import","Autre"]}),F("city"),F("value","number"),ASSIGN,F("status","select",{opts:["Nouveau","Contacte","RDV pris","Gagne","Perdu"]}),F("notes","textarea")];};
 SYSTEMS.leads.card=function(r){return {title:r.name||"-",sub:[r.business,r.niche].filter(Boolean).join(" · ")||r.city||"",chips:[r.value?money(r.value):null,r.niche||r.source].filter(Boolean),owner:r.assignee||r.name};};
-var APP_VERSION="5.34.1";
+var APP_VERSION="5.35.0";
 var _bn=document.createElement("div");_bn.id="updBanner";
 _bn.style.cssText="display:none;position:fixed;top:0;left:0;right:0;z-index:600;background:linear-gradient(90deg,var(--brand),var(--brand-2));color:#fff;padding:10px 18px;font-size:13px;font-weight:700;text-align:center;box-shadow:0 6px 20px -6px rgba(0,0,0,.6)";
 _bn.innerHTML='<span id="updTxt"></span> <span onclick="location.reload(true)" style="text-decoration:underline;cursor:pointer;margin-inline-start:10px">↻ Rafraichir</span> <span onclick="document.getElementById(\'updBanner\').style.display=\'none\'" style="cursor:pointer;margin-inline-start:14px;opacity:.7">✕</span>';
