@@ -33,6 +33,21 @@ body{font-family:'Segoe UI',-apple-system,Roboto,Arial,sans-serif;background:var
 .docxbody p{margin:0 0 10px}
 .dl-row{text-align:center;padding:30px 10px}
 .dl-row a{display:inline-block;margin-top:12px;background:var(--brand);color:#fff;text-decoration:none;padding:11px 22px;border-radius:10px;font-weight:700;font-size:14px;font-family:'Segoe UI',Arial,sans-serif}
+.qintro{font-family:'Segoe UI',Arial,sans-serif;font-size:14.5px;color:var(--muted);line-height:1.75;white-space:pre-wrap;margin-bottom:18px}
+.qmod{display:flex;gap:12px;align-items:flex-start;padding:14px 4px;border-bottom:1px solid var(--line);font-family:'Segoe UI',Arial,sans-serif}
+.qmod:last-child{border-bottom:none}
+.qbox{width:23px;height:23px;border-radius:7px;border:2px solid var(--line);flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;color:#fff;transition:.15s;background:#fff}
+.qbox.on{background:var(--brand);border-color:var(--brand)}
+.qbox.lock{background:var(--good);border-color:var(--good);cursor:default}
+.qmod .qn{flex:1;min-width:0}
+.qmod .qt{font-size:14.5px;font-weight:700;line-height:1.35}
+.qmod .qd{font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.6}
+.qmod .qp{font-size:14.5px;font-weight:800;white-space:nowrap;color:var(--ink)}
+.qmod.off .qt,.qmod.off .qp{color:var(--muted2)}
+.qinc{font-size:10.5px;font-weight:800;color:var(--good);letter-spacing:.4px;display:block;margin-top:3px}
+.qtot{display:flex;justify-content:space-between;align-items:center;margin-top:20px;padding:16px 18px;background:linear-gradient(135deg,#2f6fed,#1c4fd1);border-radius:14px;color:#fff;font-family:'Segoe UI',Arial,sans-serif}
+.qtot .l{font-size:13px;opacity:.9;font-weight:600}
+.qtot .v{font-size:26px;font-weight:800}
 .thanks{position:fixed;inset:0;background:rgba(14,22,38,.55);display:flex;align-items:center;justify-content:center;z-index:20}
 .thanks .box{background:#fff;border-radius:18px;padding:30px 26px;max-width:340px;text-align:center;box-shadow:0 30px 70px -20px rgba(0,0,0,.5)}
 .thanks .box .ic{font-size:44px}
@@ -56,14 +71,39 @@ function state(ic,h,p){document.getElementById("app").innerHTML='<div class="sta
 var TOKEN=qs("t"),KB64=frag("k"),KEY=null,VIEW_ID=(Date.now().toString(36)+Math.random().toString(36).slice(2,8));
 var VSTATE={opened:new Date().toISOString(),activeSeconds:0,maxScrollPct:0,converted:false,bandSeconds:[0,0,0,0,0],ua:navigator.userAgent.slice(0,140)};
 function currentScrollPct(){var doc=document.documentElement;var sh=doc.scrollHeight-doc.clientHeight;return sh>0?Math.round((window.scrollY/sh)*100):100;}
-function ctaLabel(sys){if(sys==="contracts")return "✅ Je veux signer ce contrat";if(sys==="proposals")return "✅ Cette proposition m'interesse";return "✅ Cette offre m'interesse";}
+function ctaLabel(sys){if(sys==="quotes")return "✅ Je valide cette configuration";if(sys==="contracts")return "✅ Je veux signer ce contrat";if(sys==="proposals")return "✅ Cette proposition m'interesse";return "✅ Cette offre m'interesse";}
 function fileBodyHtml(doc){var ty=doc.fileType||"";var isPdf=ty.indexOf("pdf")>=0;var isImg=ty.indexOf("image")>=0;var isDocx=ty.indexOf("word")>=0||ty.indexOf("officedocument")>=0||/\.docx?$/i.test(doc.fileName||"");
  if(isPdf)return '<object class="docframe" data="'+doc.fileData+'" type="application/pdf"><iframe class="docframe" src="'+doc.fileData+'"></iframe></object>';
  if(isImg)return '<img class="docimg" src="'+doc.fileData+'" alt="'+esc(doc.fileName||"")+'">';
  if(isDocx)return '<div id="docxTarget"><div class="dl-row">⏳ Chargement du document...</div></div>';
  return '<div class="dl-row">📄 <b>'+esc(doc.fileName||"Fichier")+'</b><br><a id="dlLink" href="'+doc.fileData+'" download="'+esc(doc.fileName||"document")+'">⬇ Telecharger</a></div>';}
 function renderDocxIfNeeded(doc){var ty=doc.fileType||"";var isDocx=ty.indexOf("word")>=0||ty.indexOf("officedocument")>=0||/\.docx?$/i.test(doc.fileName||"");if(!isDocx||typeof mammoth==="undefined")return;var el=document.getElementById("docxTarget");if(!el)return;try{var b64=doc.fileData.split(",")[1];var bin=atob(b64);var buf=new ArrayBuffer(bin.length);var view=new Uint8Array(buf);for(var k=0;k<bin.length;k++)view[k]=bin.charCodeAt(k);mammoth.convertToHtml({arrayBuffer:buf}).then(function(res){el.innerHTML='<div class="docxbody">'+(res.value||"<i>Document vide</i>")+'</div>';}).catch(function(){el.innerHTML='<div class="dl-row">Impossible d\'afficher ce document.</div>';});}catch(e){el.innerHTML='<div class="dl-row">Erreur de lecture.</div>';}}
-function render(doc){var body=(doc.content&&doc.content.trim())?esc(doc.content):(doc.fileData?fileBodyHtml(doc):'<div class="dl-row" style="color:#999">Document vide</div>');
+var QUOTE=null;
+function fmtDA(n){return (+n||0).toLocaleString('fr-FR')+" DA";}
+function quoteBodyHtml(q){
+ return '<div class="qintro">'+esc(q.intro||"")+'</div><div id="qmods">'+(q.modules||[]).map(function(m,i){
+  var on=m.locked||m.on;
+  return '<div class="qmod'+(on?"":" off")+'" id="qm'+i+'"><div class="qbox'+(m.locked?" lock":(on?" on":""))+'" onclick="'+(m.locked?"":"toggleMod("+i+")")+'">'+(on?"✓":"")+'</div>'
+  +'<div class="qn"><div class="qt">'+esc(m.name||"")+'</div>'+(m.desc?'<div class="qd">'+esc(m.desc)+'</div>':'')+(m.locked?'<span class="qinc">INCLUS DANS LA BASE</span>':'')+'</div>'
+  +'<div class="qp">'+fmtDA(m.price)+'</div></div>';}).join("")
+ +'</div><div class="qtot"><span class="l">Votre configuration</span><span class="v" id="qTotal">'+fmtDA(0)+'</span></div>'
+ +'<div style="font-size:12px;color:var(--muted2);text-align:center;margin-top:10px;font-family:\'Segoe UI\',Arial,sans-serif">Cochez ou decochez les modules — le prix se met a jour en direct.</div>';}
+function quoteRecalc(){if(!QUOTE)return 0;
+ var tot=0;(QUOTE.modules||[]).forEach(function(m,i){if(m.locked||m.on)tot+=(+m.price||0);});
+ var el=document.getElementById("qTotal");if(el)el.textContent=fmtDA(tot);
+ VSTATE.quoteTotal=tot;
+ VSTATE.quoteSel=(QUOTE.modules||[]).filter(function(m){return m.locked||m.on;}).map(function(m){return m.id;});
+ return tot;}
+function toggleMod(i){var m=QUOTE&&QUOTE.modules[i];if(!m||m.locked)return;
+ m.on=!m.on;
+ VSTATE.quoteEvents=VSTATE.quoteEvents||[];
+ if(VSTATE.quoteEvents.length<60)VSTATE.quoteEvents.push({id:m.id,on:!!m.on,t:Math.round(VSTATE.activeSeconds||0)});
+ var row=document.getElementById("qm"+i);
+ if(row){row.className="qmod"+(m.on?"":" off");var bx=row.querySelector(".qbox");bx.className="qbox"+(m.on?" on":"");bx.textContent=m.on?"✓":"";}
+ quoteRecalc();encAndPush();}
+function render(doc){
+ if(doc.quote&&(doc.quote.modules||[]).length){QUOTE=doc.quote;}
+ var body=QUOTE?quoteBodyHtml(QUOTE):((doc.content&&doc.content.trim())?esc(doc.content):(doc.fileData?fileBodyHtml(doc):'<div class="dl-row" style="color:#999">Document vide</div>'));
  document.getElementById("app").innerHTML=
  '<div class="hero"><div class="b">'+esc(doc.agency||"DevelopTheOne")+'</div><h1>'+esc(doc.title||"Document")+'</h1></div>'
  +'<div class="wrap"><div class="doc"><h2>'+esc(doc.title||"")+'</h2><div class="m">'+(doc.client?'Pour : '+esc(doc.client)+' · ':'')+'Envoye le '+esc(doc.sent||"")+'</div>'+body+'</div>'
@@ -71,6 +111,7 @@ function render(doc){var body=(doc.content&&doc.content.trim())?esc(doc.content)
  +'<div class="cta-bar"><span class="sub">Une question ?</span><button class="btn" id="ctaBtn" onclick="doConvert()">'+ctaLabel(doc.sys)+'</button></div>';
  document.title=(doc.title||"Document")+" — "+(doc.agency||"DevelopTheOne");
  renderDocxIfNeeded(doc);
+ if(QUOTE)quoteRecalc();
  trackStart();}
 function encAndPush(){return crypto.subtle.encrypt({name:"AES-GCM",iv:_ivFixed=crypto.getRandomValues(new Uint8Array(12))},KEY,new TextEncoder().encode(JSON.stringify(VSTATE))).then(function(ct){
  return fetch(SUPA_URL+"/rest/v1/workspaces?on_conflict=id",{method:"POST",keepalive:true,headers:{apikey:SUPA_KEY,Authorization:"Bearer "+SUPA_KEY,"Content-Type":"application/json",Prefer:"resolution=merge-duplicates,return=minimal"},body:JSON.stringify({id:"view-"+TOKEN+"-"+VIEW_ID,data:{ct:b64e(ct),iv:b64e(_ivFixed)},updated_at:new Date().toISOString()})});

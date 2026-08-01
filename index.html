@@ -482,7 +482,7 @@ var SYSTEMS={
 var GROUPS=[{lbl:"g_pilot",items:["dashboard","calendar","leaderboard"]},{lbl:"g_acq",items:["leads","sales"]},{lbl:"g_deliv",items:["onboarding","fulfilment"]},{lbl:"g_reten",items:["success","clients360","invoices","tasks"]},{lbl:"g_res",items:["templates","hiring","team"]}];
 var DB=load(),current="dashboard",editing=null,cmdSel=0,cmdItems=[],mineOnly=false;
 function autoFlagChurn(d){(d.success||[]).forEach(function(s){if(s.health!=="Churne"&&s.lastCheckin&&daysBetween(s.lastCheckin,today())>30&&s.health!=="A risque"){s.health="A risque";s._autoFlag=true;}});}
-function fixupDB(d){migratePass(d);if(!d._log)d._log=[];if(!d._waScript)d._waScript=DEFAULT_WA;if(!d._touches)d._touches=[];if(!d._chat)d._chat=[];if(!d.plans)d.plans=[];if(!d.content)d.content=[];if(!d._portals)d._portals={};if(!d._signs)d._signs={};if(!d._shares)d._shares={};if(!d._teamDel)d._teamDel=[];if(d._teamDel.length){var td={};d._teamDel.forEach(function(id){td[id]=1;});d._team=(d._team||[]).filter(function(m){return !td[m.id];});}if(!d._chatDel)d._chatDel=[];if(d._chatDel.length){var ds={};d._chatDel.forEach(function(id){ds[id]=1;});d._chat=(d._chat||[]).filter(function(m){return !ds[m.id];});}if(typeof trimChatMedia==="function")trimChatMedia(d);(d._team||[]).forEach(function(m){if(m.commissionPct==null)m.commissionPct=isAdminRole(m.role)?0:10;});}
+function fixupDB(d){migratePass(d);if(!d._log)d._log=[];if(!d._waScript)d._waScript=DEFAULT_WA;if(!d._touches)d._touches=[];if(!d._chat)d._chat=[];if(!d.plans)d.plans=[];if(!d.content)d.content=[];if(!d._portals)d._portals={};if(!d._signs)d._signs={};if(!d._shares)d._shares={};if(!d._fin)d._fin={fixedCosts:0,cash:0,hoursMonth:160};if(!d._time)d._time=[];if(!d._teamDel)d._teamDel=[];if(d._teamDel.length){var td={};d._teamDel.forEach(function(id){td[id]=1;});d._team=(d._team||[]).filter(function(m){return !td[m.id];});}if(!d._chatDel)d._chatDel=[];if(d._chatDel.length){var ds={};d._chatDel.forEach(function(id){ds[id]=1;});d._chat=(d._chat||[]).filter(function(m){return !ds[m.id];});}if(typeof trimChatMedia==="function")trimChatMedia(d);(d._team||[]).forEach(function(m){if(m.commissionPct==null)m.commissionPct=isAdminRole(m.role)?0:10;});}
 function applyLocalIdentity(d){var me=localStorage.getItem("dto_me");if(me!=null)d._me=me;else d._me=null;return d;}
 function load(){var r=localStorage.getItem("dto_crm_v3"),d=null;if(r){try{d=JSON.parse(r);}catch(e){}}if(!d)d=seed();fixupDB(d);applyLocalIdentity(d);autoFlagChurn(d);return d;}
 function save(){localStorage.setItem("dto_crm_v3",JSON.stringify(DB));cloudPush();refreshBell();snapshot();}
@@ -631,7 +631,7 @@ function timelineSection(sys,rec){var tl=(rec.timeline||[]).slice().reverse();va
 function addRecNote(sys,id){var inp=document.getElementById("recNote");if(!inp||!inp.value.trim())return;var rec=(DB[sys]||[]).find(function(r){return r.id===id;});if(!rec)return;logRec(rec,"📝 "+inp.value.trim());rec.updatedAt=today();save();var mb=document.getElementById("modalBody");if(editing&&editing.id===id)openEdit(id);}
 function scheduleCallback(sys,id){var rec=(DB[sys]||[]).find(function(r){return r.id===id;});if(!rec)return;var when=prompt("Rappeler dans combien de jours ? (ex: 1, 3, 7)","2");if(when===null)return;var dd=new Date();dd.setDate(dd.getDate()+(parseInt(when,10)||1));var due=dd.toISOString().slice(0,10);var nm=rec.name||rec.client||rec.business||"?";(DB.tasks=DB.tasks||[]).unshift({id:uid(),title:"📞 Rappeler "+nm,due:due,linked:nm,assignee:rec.assignee||DB._me||"",priority:"Haute",done:"Non"});logRec(rec,"⏰ Rappel programme pour le "+due);rec.updatedAt=today();save();toast("⏰ Rappel cree pour le "+due);if(editing&&editing.id===id)openEdit(id);}
 function openEdit(id){var s=SYSTEMS[current],rec=(DB[current]||[]).find(function(r){return r.id===id;});editing={id:id};resetModal();document.getElementById("modalTitle").textContent=t("save");document.getElementById("delBtn").style.display="inline-flex";buildForm(s,rec);document.getElementById("modalEl").classList.add("wide");var extra=filesSection(current,rec)+'<div class="btn ghost sm" style="margin-top:10px" onclick="attachFile(\''+current+'\',\''+id+'\')">📎 Joindre un fichier du PC</div>';if(["leads","sales","success"].indexOf(current)>=0)extra+=timelineSection(current,rec);document.getElementById("modalBody").insertAdjacentHTML("beforeend",extra);document.getElementById("overlay").classList.add("open");}
-function openEditTeam(id){var m=(DB._team||[]).find(function(x){return x.id===id;});editing={id:id,team:true};resetModal();document.getElementById("modalTitle").textContent=t("team");document.getElementById("delBtn").style.display="inline-flex";var b=document.getElementById("modalBody");b.innerHTML="";[["name","Nom"],["role","Role"],["goal",t("goal")]].forEach(function(p){b.insertAdjacentHTML("beforeend",'<div class="field"><label>'+p[1]+'</label><input id="f_'+p[0]+'" value="'+esc(m[p[0]]!=null?m[p[0]]:"")+'"></div>');});b.insertAdjacentHTML("beforeend",'<div class="field"><label>Commission (% des ventes signees)</label><input id="f_commissionPct" type="number" value="'+esc(m.commissionPct!=null?m.commissionPct:10)+'"></div>');b.insertAdjacentHTML("beforeend",'<div class="field"><label>Objectif contacts / jour (0 = aucun)</label><input id="f_dailyTarget" type="number" value="'+esc(m.dailyTarget!=null?m.dailyTarget:0)+'"></div>');b.insertAdjacentHTML("beforeend",'<div class="field"><label>Nouveau mot de passe'+(m.pass?" (deja defini)":"")+'</label><input id="f_pass" type="password" placeholder="Laisser vide pour ne pas changer" autocomplete="new-password"></div>');document.getElementById("overlay").classList.add("open");}
+function openEditTeam(id){var m=(DB._team||[]).find(function(x){return x.id===id;});editing={id:id,team:true};resetModal();document.getElementById("modalTitle").textContent=t("team");document.getElementById("delBtn").style.display="inline-flex";var b=document.getElementById("modalBody");b.innerHTML="";[["name","Nom"],["role","Role"],["goal",t("goal")]].forEach(function(p){b.insertAdjacentHTML("beforeend",'<div class="field"><label>'+p[1]+'</label><input id="f_'+p[0]+'" value="'+esc(m[p[0]]!=null?m[p[0]]:"")+'"></div>');});b.insertAdjacentHTML("beforeend",'<div class="field"><label>Commission (% des ventes signees)</label><input id="f_commissionPct" type="number" value="'+esc(m.commissionPct!=null?m.commissionPct:10)+'"></div>');b.insertAdjacentHTML("beforeend",'<div class="field"><label>Objectif contacts / jour (0 = aucun)</label><input id="f_dailyTarget" type="number" value="'+esc(m.dailyTarget!=null?m.dailyTarget:0)+'"></div>');b.insertAdjacentHTML("beforeend",'<div class="field"><label>Cout mensuel charge (DA) — salaire + charges</label><input id="f_costMonth" type="number" value="'+esc(m.costMonth!=null?m.costMonth:0)+'"><div style="font-size:11px;color:var(--muted2);margin-top:5px">Sert au calcul de la rentabilite reelle et de la tresorerie. Laissez 0 si vous ne voulez pas le suivre.</div></div>');b.insertAdjacentHTML("beforeend",'<div class="field"><label>Nouveau mot de passe'+(m.pass?" (deja defini)":"")+'</label><input id="f_pass" type="password" placeholder="Laisser vide pour ne pas changer" autocomplete="new-password"></div>');document.getElementById("overlay").classList.add("open");}
 function waLink(phone){var d=String(phone||"").replace(/\D/g,"");if(!d)return "";if(d.length===10&&d[0]==="0")d="213"+d.slice(1);return "https://wa.me/"+d;}
 function mergeScript(txt,lead){return String(txt||"")
  .replace(/\[(nom|name)\]/gi,lead.name||"")
@@ -676,7 +676,7 @@ function focusSkipLead(id){_focusSkip.push(id);focusMode();}
 function editWaScript(){resetModal();editing="__wascript__";document.getElementById("modalTitle").textContent="Script WhatsApp par defaut";document.getElementById("delBtn").style.display="none";document.getElementById("modalEl").classList.add("wide");document.getElementById("modalBody").innerHTML='<p style="font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:10px">Ce message part quand un commercial clique 💬 sur une carte prospect. Variables auto-remplacees :<br><code style="color:var(--good)">[Nom]</code> [Entreprise] [Ville] [Niche] [MonNom]</p><div class="field"><label>Message</label><textarea id="waScriptTxt" style="min-height:150px">'+esc(DB._waScript||DEFAULT_WA)+'</textarea></div>';document.getElementById("saveBtn").textContent="Enregistrer";document.getElementById("saveBtn").onclick=function(){DB._waScript=document.getElementById("waScriptTxt").value||DEFAULT_WA;save();closeModal();toast("✓ Script enregistre");document.getElementById("saveBtn").onclick=saveRecord;};document.getElementById("overlay").classList.add("open");}
 function buildForm(s,rec){var b=document.getElementById("modalBody");b.innerHTML="";fieldsOf(s).forEach(function(f){var val=rec[f.k]!=null?rec[f.k]:"",inp;if(f.t==="select"||f.dyn){var opts=dynOpts(f);inp='<select id="f_'+f.k+'">'+opts.map(function(o){return '<option value="'+esc(o)+'" '+(o==val?"selected":"")+'>'+esc(stageT(o))+'</option>';}).join("")+'</select>';}else if(f.t==="textarea")inp='<textarea id="f_'+f.k+'">'+esc(val)+'</textarea>';else inp='<input id="f_'+f.k+'" type="'+f.t+'" value="'+esc(val)+'">';var quick="";if(f.k==="phone"&&val){var waMsgM=current==="leads"?mergeScript(DB._waScript||DEFAULT_WA,rec):"";quick='<div style="display:flex;gap:8px;margin-top:8px"><a href="tel:'+esc(val)+'" style="font-size:12px;font-weight:700;color:var(--good);text-decoration:none" target="_blank">📞 Appeler</a><a href="'+esc(waSendUrl(val,waMsgM))+'" style="font-size:12px;font-weight:700;color:var(--good);text-decoration:none" target="_blank" rel="noopener">💬 WhatsApp'+(current==="leads"?" (script)":"")+'</a></div>';if(current==="leads"&&rec.id&&(DB.templates||[]).length){quick+='<div style="display:flex;gap:6px;margin-top:8px;align-items:center"><select id="waTplSel" style="flex:1;min-width:0">'+(DB.templates||[]).map(function(tp){return '<option value="'+tp.id+'">'+esc((tp.category?tp.category+" · ":"")+tp.title)+'</option>';}).join("")+'</select><span class="btn ghost sm" style="white-space:nowrap" onclick="sendWaScript(\''+rec.id+'\')">💬 Envoyer le script</span></div>';}}
 if(f.k==="notes"&&current==="leads"&&rec.id){quick+='<div class="btn ghost sm" style="margin-top:10px" onclick="seqCreate(\''+rec.id+'\')">⚡ Sequence de relance auto (Appel J+1 · WhatsApp J+3 · Email J+7)</div>';}b.insertAdjacentHTML("beforeend",'<div class="field"><label>'+f.l+(f.req?' *':'')+'</label>'+inp+quick+'</div>');});}
-function saveRecord(){if(editing==="__cloud__"){cloudConnect();return;}if(editing==="__report__"){navigator.clipboard.writeText(document.getElementById("reportTxt").textContent).then(function(){toast("✓");});closeModal();return;}if(editing&&editing.team){var m=DB._team.find(function(x){return x.id===editing.id;});if(isAdminRole(m.role)&&m.name===DB._me&&!isAdminRole(document.getElementById("f_role").value))return toast("⚠️ Vous ne pouvez pas retirer votre propre acces admin.","bad");m.name=document.getElementById("f_name").value||m.name;m.role=document.getElementById("f_role").value;m.goal=+document.getElementById("f_goal").value||0;m.commissionPct=+document.getElementById("f_commissionPct").value||0;var dtEl=document.getElementById("f_dailyTarget");if(dtEl)m.dailyTarget=+dtEl.value||0;var pv=document.getElementById("f_pass");if(pv&&pv.value)m.pass=hashPass(pv.value);if(isAdminRole(m.role)&&!m.pass){var p2=prompt("Ce role a acces complet (factures, offres, contrats...). Definir un mot de passe pour "+m.name+" :");if(p2)m.pass=hashPass(p2);else return toast("⚠️ Mot de passe requis pour un role admin.","bad");}save();closeModal();renderCurrent();return;}var s=SYSTEMS[current],obj={};fieldsOf(s).forEach(function(f){obj[f.k]=document.getElementById("f_"+f.k).value;});var rq=fieldsOf(s).find(function(f){return f.req;});if(rq&&!obj[rq.k].trim())return toast("!","bad");if(current==="leads"&&!(editing&&editing.id)&&obj.phone&&obj.phone.trim()){var dup=(DB.leads||[]).find(function(r){return r.phone&&r.phone.replace(/\D/g,"")===obj.phone.replace(/\D/g,"")&&r.phone.replace(/\D/g,"").length>4;});if(dup&&!confirm("⚠️ Ce numero existe deja pour \""+dup.name+"\" (assigne a "+(dup.assignee||"personne")+"). Ajouter quand meme ?"))return;}obj.updatedAt=today();if(editing&&editing.id){var t2=DB[current].find(function(r){return r.id===editing.id;});for(var p in obj)t2[p]=obj[p];logActivity("update",t(current)+": "+(obj.name||obj.client||obj.title||obj.candidate||""));}else{obj.id=uid();obj.createdAt=today();(DB[current]=DB[current]||[]).unshift(obj);logActivity("create",t(current)+": "+(obj.name||obj.client||obj.title||obj.candidate||""));}toast("✓");save();closeModal();renderCurrent();buildNav();}
+function saveRecord(){if(editing==="__cloud__"){cloudConnect();return;}if(editing==="__report__"){navigator.clipboard.writeText(document.getElementById("reportTxt").textContent).then(function(){toast("✓");});closeModal();return;}if(editing&&editing.team){var m=DB._team.find(function(x){return x.id===editing.id;});if(isAdminRole(m.role)&&m.name===DB._me&&!isAdminRole(document.getElementById("f_role").value))return toast("⚠️ Vous ne pouvez pas retirer votre propre acces admin.","bad");m.name=document.getElementById("f_name").value||m.name;m.role=document.getElementById("f_role").value;m.goal=+document.getElementById("f_goal").value||0;m.commissionPct=+document.getElementById("f_commissionPct").value||0;var dtEl=document.getElementById("f_dailyTarget");if(dtEl)m.dailyTarget=+dtEl.value||0;var cmEl=document.getElementById("f_costMonth");if(cmEl)m.costMonth=+cmEl.value||0;var pv=document.getElementById("f_pass");if(pv&&pv.value)m.pass=hashPass(pv.value);if(isAdminRole(m.role)&&!m.pass){var p2=prompt("Ce role a acces complet (factures, offres, contrats...). Definir un mot de passe pour "+m.name+" :");if(p2)m.pass=hashPass(p2);else return toast("⚠️ Mot de passe requis pour un role admin.","bad");}save();closeModal();renderCurrent();return;}var s=SYSTEMS[current],obj={};fieldsOf(s).forEach(function(f){obj[f.k]=document.getElementById("f_"+f.k).value;});var rq=fieldsOf(s).find(function(f){return f.req;});if(rq&&!obj[rq.k].trim())return toast("!","bad");if(current==="leads"&&!(editing&&editing.id)&&obj.phone&&obj.phone.trim()){var dup=(DB.leads||[]).find(function(r){return r.phone&&r.phone.replace(/\D/g,"")===obj.phone.replace(/\D/g,"")&&r.phone.replace(/\D/g,"").length>4;});if(dup&&!confirm("⚠️ Ce numero existe deja pour \""+dup.name+"\" (assigne a "+(dup.assignee||"personne")+"). Ajouter quand meme ?"))return;}obj.updatedAt=today();if(editing&&editing.id){var t2=DB[current].find(function(r){return r.id===editing.id;});for(var p in obj)t2[p]=obj[p];logActivity("update",t(current)+": "+(obj.name||obj.client||obj.title||obj.candidate||""));}else{obj.id=uid();obj.createdAt=today();(DB[current]=DB[current]||[]).unshift(obj);logActivity("create",t(current)+": "+(obj.name||obj.client||obj.title||obj.candidate||""));}toast("✓");save();closeModal();renderCurrent();buildNav();}
 function deleteRecord(){if(!editing)return;if(editing.team){var m=DB._team.find(function(x){return x.id===editing.id;});if(m&&isAdminRole(m.role)&&(DB._team||[]).filter(function(x){return isAdminRole(x.role);}).length<=1)return toast("⚠️ Impossible de supprimer le dernier compte admin.","bad");if(confirm("?")){(DB._teamDel=DB._teamDel||[]).push(editing.id);DB._team=DB._team.filter(function(x){return x.id!==editing.id;});save();closeModal();renderCurrent();}return;}if(!confirm("?"))return;var delRec=(DB[current]||[]).find(function(r){return r.id===editing.id;});logActivity("delete",t(current)+": "+((delRec&&(delRec.name||delRec.client||delRec.title||delRec.candidate))||""));DB[current]=DB[current].filter(function(r){return r.id!==editing.id;});save();closeModal();renderCurrent();buildNav();}
 function closeModal(){document.getElementById("overlay").classList.remove("open");editing=null;resetModal();clearBlobs();}
 function bulkImport(){resetModal();editing="__bulk__";document.getElementById("modalTitle").textContent=t("importList");document.getElementById("delBtn").style.display="none";document.getElementById("modalEl").classList.add("wide");var assignOpts='<option value="">— Repartir / non assigne —</option>'+teamNames().map(function(n){return '<option'+(n===DB._me?' selected':'')+'>'+esc(n)+'</option>';}).join("");document.getElementById("modalBody").innerHTML='<p style="font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:6px">Importez un CSV (Excel, Google Maps scraper, etc.) <b>ou</b> collez vos donnees. Les colonnes (telephone, email, nom, entreprise, ville, site, Instagram...) sont <b>detectees automatiquement</b>, peu importe l\'ordre. Gardez la 1ere ligne d\'entete pour de meilleurs resultats.</p><div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap"><span class="btn ghost sm" onclick="document.getElementById(\'csvFile\').click()">📎 Importer un CSV / Excel</span><span class="btn ghost sm" onclick="editWaScript()">💬 Script WhatsApp</span><input type="file" id="csvFile" accept=".csv,.txt,.tsv" style="display:none" onchange="loadCsv(event)"></div><div class="field"><label>Assigner ces prospects a</label><select id="bulkAssign">'+assignOpts+'</select></div><div class="field"><label>Donnees (colle ou importe)</label><textarea id="bulkTxt" style="min-height:150px" oninput="bulkPreview()" placeholder="nom,telephone,email,ville,site\nKarim Benali,0555123456,karim@resto.dz,Alger,resto.dz"></textarea><div id="bulkDetect"></div></div>';document.getElementById("saveBtn").textContent=t("importList");document.getElementById("saveBtn").onclick=doBulk;document.getElementById("overlay").classList.add("open");}
@@ -1407,10 +1407,466 @@ buildNav=function(){var nav=document.getElementById("nav");nav.innerHTML="";var 
 var _origRenderCurrent=renderCurrent;
 renderCurrent=function(){if(ADMINONLY.indexOf(current)>=0&&!isAdmin())current="dashboard";var s=SYSTEMS[current];if(s.docs){document.getElementById("pageTitle").textContent=t(s.key);document.getElementById("pageSub").textContent=t(s.key+"S");document.getElementById("addBtn").style.display="inline-flex";document.getElementById("importLeadsBtn").style.display="none";document.getElementById("toggleMine").style.display="none";var c=document.getElementById("content");c.className="content fade";return renderDocs(c);}if(s.activityLog||s.insights){document.getElementById("pageTitle").textContent=t(s.key);document.getElementById("pageSub").textContent=t(s.key+"S");document.getElementById("addBtn").style.display="none";document.getElementById("importLeadsBtn").style.display="none";document.getElementById("toggleMine").style.display="none";var c2=document.getElementById("content");c2.className="content fade";return s.insights?renderInsights(c2):renderActivity(c2);}if(s.chat){document.getElementById("pageTitle").textContent=t(s.key);document.getElementById("pageSub").textContent=t(s.key+"S");document.getElementById("addBtn").style.display="none";document.getElementById("importLeadsBtn").style.display="none";document.getElementById("toggleMine").style.display="none";var c3=document.getElementById("content");c3.className="content fade";return renderChat(c3);}if(s.today){document.getElementById("pageTitle").textContent=t(s.key);document.getElementById("pageSub").textContent=t(s.key+"S");document.getElementById("addBtn").style.display="none";document.getElementById("importLeadsBtn").style.display="none";document.getElementById("toggleMine").style.display="none";var c4=document.getElementById("content");c4.className="content fade";return renderToday(c4);}if(s.growth){document.getElementById("pageTitle").textContent=t(s.key);document.getElementById("pageSub").textContent=t(s.key+"S");document.getElementById("addBtn").style.display="none";document.getElementById("importLeadsBtn").style.display="none";document.getElementById("toggleMine").style.display="none";var c5=document.getElementById("content");c5.className="content fade";return renderGrowth(c5);}if(s.plansView){document.getElementById("pageTitle").textContent=t(s.key);document.getElementById("pageSub").textContent=t(s.key+"S");document.getElementById("addBtn").style.display="none";document.getElementById("importLeadsBtn").style.display="none";document.getElementById("toggleMine").style.display="none";var c6=document.getElementById("content");c6.className="content fade";return renderPlans(c6);}if(s.contentView){document.getElementById("pageTitle").textContent=t(s.key);document.getElementById("pageSub").textContent=t(s.key+"S");document.getElementById("addBtn").style.display="none";document.getElementById("importLeadsBtn").style.display="none";document.getElementById("toggleMine").style.display="none";var c7=document.getElementById("content");c7.className="content fade";return renderContent(c7);}if(s.portalsView){document.getElementById("pageTitle").textContent=t(s.key);document.getElementById("pageSub").textContent=t(s.key+"S");document.getElementById("addBtn").style.display="none";document.getElementById("importLeadsBtn").style.display="none";document.getElementById("toggleMine").style.display="none";var c8=document.getElementById("content");c8.className="content fade";return renderPortals(c8);}return _origRenderCurrent();};
 
+/* ===================== SUITE INTELLIGENCE (v5.36) ===================== */
+var _intelLang={
+ fr:{g_intel:"Intelligence",forecast:"Previsions",forecastS:"Ce que votre pipeline va reellement rapporter",profit:"Rentabilite",profitS:"La marge reelle par client",health:"Radar sante",healthS:"Qui risque de partir, et pourquoi",cash:"Tresorerie",cashS:"Projection 12 mois et runway",capacity:"Plan de charge",capacityS:"Qui est surcharge, et quand"},
+ en:{g_intel:"Intelligence",forecast:"Forecast",forecastS:"What your pipeline will really bring in",profit:"Profitability",profitS:"True margin per client",health:"Health radar",healthS:"Who is about to churn, and why",cash:"Cash flow",cashS:"12-month projection and runway",capacity:"Capacity",capacityS:"Who is overloaded, and when"},
+ ar:{g_intel:"الذكاء",forecast:"التوقعات",forecastS:"ما سيحققه خط المبيعات فعليا",profit:"الربحية",profitS:"الهامش الحقيقي لكل عميل",health:"رادار الصحة",healthS:"من قد يغادر ولماذا",cash:"التدفق النقدي",cashS:"توقعات 12 شهرا",capacity:"خطة العمل",capacityS:"من محمل زيادة ومتى"}};
+["fr","en","ar"].forEach(function(l){for(var k in _intelLang[l])LANG[l][k]=_intelLang[l][k];});
+
+/* ---------- Noyau financier partage ---------- */
+function finCfg(){if(!DB._fin)DB._fin={fixedCosts:0,cash:0,hoursMonth:160};if(!DB._fin.hoursMonth)DB._fin.hoursMonth=160;return DB._fin;}
+function teamCostMonth(){return (DB._team||[]).reduce(function(a,m){return a+(+m.costMonth||0);},0);}
+function memberHourly(name){var m=(DB._team||[]).find(function(x){return x.name===name;});var h=+finCfg().hoursMonth||160;return (m&&+m.costMonth)?(+m.costMonth/h):0;}
+function avgHourly(){var tm=(DB._team||[]).filter(function(m){return +m.costMonth>0;});if(!tm.length)return 0;var h=+finCfg().hoursMonth||160;return tm.reduce(function(a,m){return a+(+m.costMonth/h);},0)/tm.length;}
+function intelClients(){var s={};["sales","success","fulfilment","onboarding","invoices"].forEach(function(k){(DB[k]||[]).forEach(function(r){var n=r.client||r.name;if(n)s[n]=1;});});(DB.plans||[]).forEach(function(p){if(p.client)s[p.client]=1;});return Object.keys(s).sort();}
+function clientRevenue(n){var paid=(DB.invoices||[]).filter(function(i){return i.client===n&&i.status==="Paye";}).reduce(function(a,i){return a+(+i.amount||0);},0);
+ var signed=(DB.sales||[]).filter(function(s){return s.client===n&&s.stage==="Signe";}).reduce(function(a,s){return a+(+s.value||0);},0);
+ var mrr=(DB.success||[]).filter(function(s){return s.name===n;}).reduce(function(a,s){return a+(+s.mrr||0);},0);
+ return {paid:paid,signed:signed,mrr:mrr,total:paid>0?paid:signed};}
+function clientCost(n){var logs=(DB._time||[]).filter(function(x){return x.client===n;});
+ var hours=logs.reduce(function(a,x){return a+(+x.hours||0);},0);
+ var labour=logs.reduce(function(a,x){var r=memberHourly(x.who)||avgHourly();return a+(+x.hours||0)*r;},0);
+ var ads=(DB.plans||[]).filter(function(p){return p.client===n;}).reduce(function(a,p){return a+(p.items||[]).reduce(function(x,i){return x+(+i.budget||0);},0);},0);
+ return {hours:hours,labour:Math.round(labour),ads:ads,total:Math.round(labour)+ads};}
+function intelEmpty(msg){return '<div class="empty" style="padding:44px;line-height:1.7">'+msg+'</div>';}
+function kpiTile(lbl,val,sub,col){return '<div style="flex:1;min-width:150px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px"><div style="font-size:11px;color:var(--muted);letter-spacing:.5px;font-weight:700">'+lbl+'</div><div style="font-size:24px;font-weight:800;margin-top:5px;color:'+(col||"var(--txt)")+'">'+val+'</div>'+(sub?'<div style="font-size:11.5px;color:var(--muted2);margin-top:3px">'+sub+'</div>':'')+'</div>';}
+
+/* ---------- 1. PREVISIONS MONTE CARLO ---------- */
+var STAGE_P={"RDV programme":.15,"Proposition envoyee":.35,"Negociation":.6};
+function histWinRate(){var s=DB.sales||[];var w=s.filter(function(x){return x.stage==="Signe";}).length,l=s.filter(function(x){return x.stage==="Perdu";}).length;return (w+l)>=5?w/(w+l):null;}
+function avgCycleDays(){var won=(DB.sales||[]).filter(function(s){return s.stage==="Signe"&&s.createdAt;});if(!won.length)return 30;var c=won.map(function(s){return Math.max(1,daysBetween(s.createdAt,s.updatedAt||today()));});return Math.round(c.reduce(function(a,b){return a+b;},0)/c.length);}
+function dealProb(s,cal,cyc){var base=STAGE_P[s.stage]!=null?STAGE_P[s.stage]:.2;var p=base*cal;
+ var age=s.createdAt?daysBetween(s.createdAt,today()):0;
+ if(cyc>0&&age>cyc*1.5)p*=Math.max(.25,1-((age-cyc*1.5)/(cyc*3)));
+ return Math.max(.02,Math.min(.95,p));}
+function forecastModel(){
+ var open=(DB.sales||[]).filter(function(s){return ["Signe","Perdu"].indexOf(s.stage)<0&&(+s.value||0)>0;});
+ var hw=histWinRate(),cyc=avgCycleDays();
+ var baseAvg=open.length?open.reduce(function(a,s){return a+(STAGE_P[s.stage]!=null?STAGE_P[s.stage]:.2);},0)/open.length:.25;
+ var cal=(hw!=null&&baseAvg>0)?Math.max(.35,Math.min(2.2,hw/baseAvg)):1;
+ var deals=open.map(function(s){return {name:s.client||"?",v:+s.value||0,p:dealProb(s,cal,cyc),stage:s.stage,age:s.createdAt?daysBetween(s.createdAt,today()):0};});
+ return {deals:deals,cal:cal,hw:hw,cyc:cyc};}
+function runMonteCarlo(deals,n){n=n||10000;var out=new Array(n);
+ for(var i=0;i<n;i++){var s=0;for(var j=0;j<deals.length;j++){if(Math.random()<deals[j].p)s+=deals[j].v;}out[i]=s;}
+ out.sort(function(a,b){return a-b;});return out;}
+function pctl(sorted,q){if(!sorted.length)return 0;var i=Math.min(sorted.length-1,Math.max(0,Math.round((sorted.length-1)*q)));return sorted[i];}
+function renderForecast(c){
+ var m=forecastModel();
+ if(!m.deals.length)return c.innerHTML=intelEmpty("🎲 Aucune affaire ouverte avec un montant.<br>Ajoutez des ventes en cours (avec une valeur) pour obtenir une prevision.");
+ var sims=runMonteCarlo(m.deals,10000);
+ var p10=pctl(sims,.1),p50=pctl(sims,.5),p90=pctl(sims,.9);
+ var mean=Math.round(sims.reduce(function(a,b){return a+b;},0)/sims.length);
+ var weighted=Math.round(m.deals.reduce(function(a,d){return a+d.v*d.p;},0));
+ var totalOpen=m.deals.reduce(function(a,d){return a+d.v;},0);
+ var goal=(DB._goal&&+DB._goal.target)||0;
+ var hitProb=goal>0?Math.round(sims.filter(function(v){return v>=goal;}).length/sims.length*100):null;
+ var h='<div class="panel"><h3><span class="dot"></span>🎲 Prevision probabiliste — 10 000 simulations</h3>'
+ +'<p style="font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:14px">Chaque affaire ouverte a sa propre probabilite (etape + anciennete). On simule 10 000 futurs possibles. Le resultat n\'est pas un chiffre unique mais une <b>fourchette honnete</b>.</p>'
+ +'<div style="display:flex;gap:12px;flex-wrap:wrap">'
+ +kpiTile("PESSIMISTE (P10)",money(p10),"9 chances sur 10 de faire mieux","var(--bad)")
+ +kpiTile("REALISTE (P50)",money(p50),"le scenario median","var(--brand-2)")
+ +kpiTile("OPTIMISTE (P90)",money(p90),"1 chance sur 10 de depasser","var(--good)")
+ +kpiTile("MOYENNE",money(mean),"esperance mathematique")
+ +'</div>';
+ if(hitProb!=null)h+='<div style="margin-top:14px;padding:13px 15px;border-radius:12px;background:'+(hitProb>=60?"rgba(34,192,125,.12)":hitProb>=30?"rgba(245,185,64,.12)":"rgba(244,104,95,.12)")+';border:1px solid var(--line)"><b style="font-size:14px">🎯 Probabilite d\'atteindre l\'objectif ('+money(goal)+') : <span style="color:'+(hitProb>=60?"var(--good)":hitProb>=30?"var(--warn,#f5b940)":"var(--bad)")+'">'+hitProb+'%</span></b>'+(hitProb<50?'<div style="font-size:12.5px;color:var(--muted);margin-top:6px">Il manque environ '+money(Math.max(0,goal-p50))+' au scenario median. Ajoutez du pipeline ou faites avancer les affaires en Negociation.</div>':'')+'</div>';
+ h+='</div>';
+ // Histogramme
+ var lo=sims[0],hi=sims[sims.length-1],B=18,buckets=new Array(B);for(var b=0;b<B;b++)buckets[b]=0;
+ var span=Math.max(1,hi-lo);
+ sims.forEach(function(v){var idx=Math.min(B-1,Math.floor((v-lo)/span*B));buckets[idx]++;});
+ var maxB=Math.max.apply(null,buckets);
+ h+='<div class="panel"><h3><span class="dot"></span>📊 Distribution des resultats possibles</h3><div style="display:flex;align-items:flex-end;gap:3px;height:150px;margin-top:10px">'
+ +buckets.map(function(cnt,i){var v=lo+span*(i+.5)/B;var col=v<p10?"var(--bad)":v>p90?"var(--good)":"var(--brand)";
+   return '<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%" title="'+money(Math.round(v))+' — '+Math.round(cnt/sims.length*100)+'%"><div style="width:100%;height:'+Math.max(2,Math.round(cnt/maxB*100))+'%;background:'+col+';border-radius:3px 3px 0 0;opacity:.85"></div></div>';}).join("")
+ +'</div><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted2);margin-top:6px"><span>'+money(lo)+'</span><span>'+money(Math.round((lo+hi)/2))+'</span><span>'+money(hi)+'</span></div></div>';
+ // Detail par affaire
+ var ds=m.deals.slice().sort(function(a,b){return (b.v*b.p)-(a.v*a.p);});
+ h+='<div class="panel"><h3><span class="dot"></span>🔍 Contribution de chaque affaire</h3><table class="tbl"><tr><th>Client</th><th>Etape</th><th>Age</th><th>Montant</th><th>Proba</th><th>Valeur ponderee</th></tr>'
+ +ds.map(function(d){return '<tr><td><b>'+esc(d.name)+'</b></td><td>'+esc(stageT(d.stage))+'</td><td style="color:'+(m.cyc&&d.age>m.cyc*1.5?"var(--bad)":"var(--muted2)")+'">'+d.age+'j</td><td>'+money(d.v)+'</td><td><b style="color:'+(d.p>=.5?"var(--good)":d.p>=.25?"var(--warn,#f5b940)":"var(--muted2)")+'">'+Math.round(d.p*100)+'%</b></td><td><b>'+money(Math.round(d.v*d.p))+'</b></td></tr>';}).join("")
+ +'</table><div style="font-size:11.5px;color:var(--muted2);margin-top:10px;line-height:1.7">Pipeline brut : <b>'+money(totalOpen)+'</b> · Pipeline pondere : <b>'+money(weighted)+'</b>'
+ +(m.hw!=null?' · Taux de reussite historique : <b>'+Math.round(m.hw*100)+'%</b> (le modele est calibre dessus)':' · Pas encore assez d\'historique (5 affaires cloturees) — probabilites standard utilisees')
+ +' · Cycle moyen : <b>'+m.cyc+' jours</b> (au-dela de '+Math.round(m.cyc*1.5)+'j une affaire est penalisee)</div></div>';
+ c.innerHTML=h;}
+
+/* ---------- 2. RENTABILITE REELLE ---------- */
+function renderProfit(c){
+ var hasCost=(DB._team||[]).some(function(m){return +m.costMonth>0;});
+ var rows=intelClients().map(function(n){var r=clientRevenue(n),k=clientCost(n);
+  var margin=r.total-k.total;var pct=r.total>0?Math.round(margin/r.total*100):null;
+  var eff=k.hours>0?Math.round(r.total/k.hours):null;
+  return {n:n,rev:r.total,mrr:r.mrr,hours:k.hours,labour:k.labour,ads:k.ads,cost:k.total,margin:margin,pct:pct,eff:eff};})
+  .filter(function(r){return r.rev>0||r.cost>0;})
+  .sort(function(a,b){return b.margin-a.margin;});
+ var h='<div class="panel"><h3><span class="dot"></span>💵 Rentabilite reelle par client</h3>'
+ +'<p style="font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:12px">Marge = revenus encaisses − (heures passees × cout horaire reel de l\'equipe) − budgets publicitaires des plans. C\'est le seul chiffre qui dit si un client vous rapporte <b>vraiment</b>.</p>'
+ +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"><span class="btn" onclick="openTimeLog()">⏱ Enregistrer du temps</span><span class="btn ghost sm" onclick="openFinSettings()">⚙️ Couts & parametres</span></div>';
+ if(!hasCost)h+='<div style="padding:12px 14px;border-radius:11px;background:rgba(245,185,64,.1);border:1px solid rgba(245,185,64,.35);font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:12px">⚠️ Aucun cout d\'equipe renseigne. Ouvrez <b>Equipe</b> et indiquez le <b>cout mensuel charge</b> de chaque personne — sans ca, la marge affichee ignore le cout du travail.</div>';
+ if(!rows.length)return c.innerHTML=h+intelEmpty("Aucun client avec revenus ou couts pour l'instant.")+'</div>';
+ var totRev=rows.reduce(function(a,r){return a+r.rev;},0),totCost=rows.reduce(function(a,r){return a+r.cost;},0);
+ var totMargin=totRev-totCost,totHours=rows.reduce(function(a,r){return a+r.hours;},0);
+ h+='<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px">'
+ +kpiTile("REVENUS",money(totRev),rows.length+" clients")
+ +kpiTile("COUTS REELS",money(totCost),totHours+"h passees")
+ +kpiTile("MARGE",money(totMargin),totRev>0?Math.round(totMargin/totRev*100)+"% de marge":"",totMargin>=0?"var(--good)":"var(--bad)")
+ +kpiTile("TAUX HORAIRE EFFECTIF",totHours>0?money(Math.round(totRev/totHours))+"/h":"—","ce que vous gagnez par heure")
+ +'</div>';
+ h+='<table class="tbl"><tr><th>Client</th><th>Revenus</th><th>Heures</th><th>Cout travail</th><th>Pub</th><th>Marge</th><th>%</th><th>DA/h</th><th>Verdict</th></tr>'
+ +rows.map(function(r){
+   var verdict=r.margin<0?'<span style="color:var(--bad);font-weight:700">🔴 Vous perdez de l\'argent</span>':
+     (r.pct!=null&&r.pct<25)?'<span style="color:var(--warn,#f5b940);font-weight:700">🟡 Marge faible — augmentez le prix</span>':
+     (r.pct!=null&&r.pct>=55)?'<span style="color:var(--good);font-weight:700">🟢 Excellent — dupliquez ce profil</span>':
+     '<span style="color:var(--muted2)">Correct</span>';
+   return '<tr><td><b style="cursor:pointer;text-decoration:underline dotted" onclick="showC360('+JSON.stringify(r.n)+')">'+esc(r.n)+'</b>'+(r.mrr?'<div style="font-size:11px;color:var(--muted2)">'+money(r.mrr)+'/mois</div>':'')+'</td><td>'+money(r.rev)+'</td><td>'+(r.hours||"—")+'</td><td>'+(r.labour?money(r.labour):"—")+'</td><td>'+(r.ads?money(r.ads):"—")+'</td><td><b style="color:'+(r.margin>=0?"var(--good)":"var(--bad)")+'">'+money(r.margin)+'</b></td><td>'+(r.pct!=null?r.pct+"%":"—")+'</td><td>'+(r.eff!=null?money(r.eff):"—")+'</td><td style="font-size:11.5px">'+verdict+'</td></tr>';}).join("")
+ +'</table></div>';
+ var losers=rows.filter(function(r){return r.margin<0;});
+ if(losers.length)h+='<div class="panel" style="background:linear-gradient(135deg,rgba(244,104,95,.12),transparent)"><h3><span class="dot"></span>🔴 Action requise — '+losers.length+' client(s) a perte</h3>'
+ +losers.map(function(r){var need=r.hours>0?Math.round((r.cost*1.4)/r.hours):0;
+  return '<div style="padding:11px 13px;border:1px solid var(--line);border-radius:11px;margin-bottom:8px;font-size:12.5px;line-height:1.65"><b>'+esc(r.n)+'</b> vous coute <b style="color:var(--bad)">'+money(-r.margin)+'</b> de plus qu\'il ne rapporte.'
+  +(r.hours>0?'<br>Pour degager 40% de marge il faudrait facturer <b>'+money(Math.round(r.cost*1.4))+'</b> (soit '+money(need)+'/h) ou reduire le temps passe sous <b>'+Math.round(r.rev/1.4/(memberHourly(DB._me)||avgHourly()||1))+'h</b>.':'<br>Aucune heure enregistree — le cout vient des budgets publicitaires.')+'</div>';}).join("")+'</div>';
+ c.innerHTML=h;}
+function openTimeLog(){resetModal();editing=null;document.getElementById("modalTitle").textContent="⏱ Enregistrer du temps";document.getElementById("delBtn").style.display="none";
+ var cls=intelClients();
+ document.getElementById("modalBody").innerHTML='<div class="field"><label>Client *</label><input id="tl_client" list="tlCl" placeholder="Nom du client"><datalist id="tlCl">'+cls.map(function(n){return '<option>'+esc(n)+'</option>';}).join("")+'</datalist></div>'
+ +'<div class="field"><label>Qui</label><select id="tl_who">'+[""].concat(teamNames()).map(function(n){return '<option value="'+esc(n)+'"'+(n===DB._me?" selected":"")+'>'+(n?esc(n):"—")+'</option>';}).join("")+'</select></div>'
+ +'<div class="field"><label>Heures *</label><input id="tl_hours" type="number" step="0.5" min="0" value="1"></div>'
+ +'<div class="field"><label>Date</label><input id="tl_date" type="date" value="'+today()+'"></div>'
+ +'<div class="field"><label>Note (optionnel)</label><input id="tl_note" placeholder="Reunion, production, revisions..."></div>'
+ +'<div style="font-size:11.5px;color:var(--muted2);margin-top:8px">Astuce : enregistrez le temps chaque vendredi. 2 minutes par semaine suffisent pour savoir quels clients vous rapportent vraiment.</div>';
+ document.getElementById("saveBtn").onclick=function(){var cl=document.getElementById("tl_client").value.trim(),hr=+document.getElementById("tl_hours").value;
+  if(!cl||!(hr>0))return toast("Client et heures requis","bad");
+  (DB._time=DB._time||[]).unshift({id:uid(),client:cl,who:document.getElementById("tl_who").value||DB._me||"",hours:hr,date:document.getElementById("tl_date").value||today(),note:document.getElementById("tl_note").value||""});
+  logActivity("create","Temps: "+hr+"h sur "+cl);save();closeModal();renderCurrent();toast("⏱ "+hr+"h enregistrees");};
+ document.getElementById("overlay").classList.add("open");}
+function openFinSettings(){var f=finCfg();resetModal();editing=null;document.getElementById("modalTitle").textContent="⚙️ Couts & parametres financiers";document.getElementById("delBtn").style.display="none";
+ document.getElementById("modalBody").innerHTML='<div class="field"><label>Charges fixes mensuelles hors salaires (DA)</label><input id="fs_fixed" type="number" value="'+(+f.fixedCosts||0)+'"><div style="font-size:11px;color:var(--muted2);margin-top:5px">Loyer, outils, abonnements, internet, comptable...</div></div>'
+ +'<div class="field"><label>Tresorerie actuelle (DA)</label><input id="fs_cash" type="number" value="'+(+f.cash||0)+'"><div style="font-size:11px;color:var(--muted2);margin-top:5px">Ce que vous avez en banque aujourd\'hui. Sert au calcul du runway.</div></div>'
+ +'<div class="field"><label>Heures travaillees par mois et par personne</label><input id="fs_hours" type="number" value="'+(+f.hoursMonth||160)+'"><div style="font-size:11px;color:var(--muted2);margin-top:5px">Sert a convertir un salaire mensuel en cout horaire. 160h = temps plein standard.</div></div>'
+ +'<div style="padding:11px 13px;border-radius:11px;background:var(--surface);border:1px solid var(--line);font-size:12.5px;color:var(--muted);line-height:1.7;margin-top:6px">Cout equipe actuel : <b>'+money(teamCostMonth())+'/mois</b><br>Cout horaire moyen : <b>'+money(Math.round(avgHourly()))+'/h</b><br>Total charges mensuelles : <b>'+money(teamCostMonth()+(+f.fixedCosts||0))+'</b></div>';
+ document.getElementById("saveBtn").onclick=function(){var f2=finCfg();f2.fixedCosts=+document.getElementById("fs_fixed").value||0;f2.cash=+document.getElementById("fs_cash").value||0;f2.hoursMonth=+document.getElementById("fs_hours").value||160;save();closeModal();renderCurrent();toast("✓ Parametres enregistres");};
+ document.getElementById("overlay").classList.add("open");}
+
+/* ---------- 3. RADAR SANTE CLIENT ---------- */
+function lastTouchDays(n){var ds=[];
+ (DB._touches||[]).forEach(function(t){if((t.client||t.name)===n&&t.ts)ds.push(t.ts.slice(0,10));});
+ (DB.success||[]).forEach(function(s){if(s.name===n&&s.lastCheckin)ds.push(s.lastCheckin);});
+ (DB._log||[]).forEach(function(l){if(l.detail&&l.detail.indexOf(n)>=0&&l.ts)ds.push(l.ts.slice(0,10));});
+ if(!ds.length)return null;ds.sort();return daysBetween(ds[ds.length-1],today());}
+function healthScore(n){var f=[],risk=0;
+ var ov=(DB.invoices||[]).filter(function(i){return i.client===n&&i.status!=="Paye"&&i.dueDate&&i.dueDate<today();});
+ if(ov.length){var worst=Math.max.apply(null,ov.map(function(i){return daysBetween(i.dueDate,today());}));
+  var pts=Math.min(30,Math.round(worst/2));risk+=pts;f.push({p:pts,txt:"Facture impayee depuis "+worst+" jours ("+money(ov.reduce(function(a,i){return a+(+i.amount||0);},0))+")"});}
+ var lt=lastTouchDays(n);
+ if(lt!=null&&lt>14){var p2=Math.min(25,Math.round((lt-14)/2));risk+=p2;f.push({p:p2,txt:"Aucun contact depuis "+lt+" jours"});}
+ else if(lt==null){risk+=12;f.push({p:12,txt:"Aucune trace de contact enregistree"});}
+ var sc=(DB.success||[]).find(function(s){return s.name===n;});
+ if(sc){if(sc.health==="Churne"){risk+=40;f.push({p:40,txt:"Marque comme churne"});}
+  else if(sc.health==="A risque"){risk+=22;f.push({p:22,txt:"Marque a risque"});}}
+ var late=(DB.fulfilment||[]).filter(function(x){return x.client===n&&x.status!=="Livre"&&x.deadline&&x.deadline<today();});
+ if(late.length){var p3=Math.min(20,late.length*8);risk+=p3;f.push({p:p3,txt:late.length+" livrable(s) en retard de votre cote"});}
+ var recentPosts=(DB.content||[]).filter(function(p){return p.client===n&&p.date>=today();}).length;
+ var openPlans=(DB.plans||[]).filter(function(p){return p.client===n;}).length;
+ if(!recentPosts&&!openPlans&&sc){risk+=8;f.push({p:8,txt:"Aucun travail planifie a venir"});}
+ f.sort(function(a,b){return b.p-a.p;});
+ return {risk:Math.min(100,risk),factors:f,mrr:(sc&&+sc.mrr)||0,health:sc?sc.health:null};}
+function savePlay(n,h){
+ if(!h.factors.length)return "Rien a signaler. Maintenez le rythme de contact.";
+ var top=h.factors[0].txt;
+ if(/Facture impayee/.test(top))return "Appelez aujourd'hui pour debloquer le paiement — proposez un echeancier plutot que de laisser pourrir. Ne lancez pas de nouveau travail avant regularisation.";
+ if(/Aucun contact|Aucune trace/.test(top))return "Envoyez un point de valeur (pas une relance commerciale) : resultats du mois, une idee concrete. Puis proposez un appel de 15 min.";
+ if(/churne/.test(top))return "Appel de sortie : comprenez la vraie raison. Proposez une offre de reconquete a perimetre reduit. Demandez une recommandation meme s'il part.";
+ if(/a risque/.test(top))return "Bloquez 30 min cette semaine : montrez les resultats obtenus, ecoutez les frustrations, re-engagez sur un objectif a 30 jours.";
+ if(/retard de votre cote/.test(top))return "Rattrapez le retard AVANT qu'il ne le signale. Prevenez proactivement avec une nouvelle date ferme — c'est ce qui sauve la relation.";
+ return "Reprenez contact et replanifiez la suite du travail.";}
+function renderHealth(c){
+ var rows=intelClients().map(function(n){var h=healthScore(n);return {n:n,h:h};})
+  .filter(function(r){return r.h.risk>0||r.h.mrr>0;})
+  .sort(function(a,b){return (b.h.risk*Math.max(1,b.h.mrr))-(a.h.risk*Math.max(1,a.h.mrr))||b.h.risk-a.h.risk;});
+ if(!rows.length)return c.innerHTML=intelEmpty("🩺 Aucun client a analyser.<br>Ajoutez des clients dans Fidelisation ou Production.");
+ var atRisk=rows.filter(function(r){return r.h.risk>=50;});
+ var mrrAtRisk=atRisk.reduce(function(a,r){return a+r.h.mrr;},0);
+ var h='<div class="panel"><h3><span class="dot"></span>🩺 Radar de sante client</h3>'
+ +'<p style="font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:14px">Score de risque calcule sur des signaux reels : retards de paiement, silence, livrables en retard, statut. Trie par <b>risque × valeur</b> — le client en haut est celui qui vous couterait le plus cher a perdre.</p>'
+ +'<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:6px">'
+ +kpiTile("CLIENTS A RISQUE",atRisk.length+" / "+rows.length,"score de risque ≥ 50",atRisk.length?"var(--bad)":"var(--good)")
+ +kpiTile("MRR MENACE",money(mrrAtRisk),"revenu recurrent en jeu",mrrAtRisk?"var(--bad)":"var(--good)")
+ +kpiTile("SAIN",rows.filter(function(r){return r.h.risk<25;}).length+"","risque faible","var(--good)")
+ +'</div></div>';
+ h+=rows.map(function(r){var risk=r.h.risk;
+  var col=risk>=70?"var(--bad)":risk>=40?"var(--warn,#f5b940)":"var(--good)";
+  var lbl=risk>=70?"CRITIQUE":risk>=40?"A SURVEILLER":"SAIN";
+  return '<div class="panel" style="border-inline-start:4px solid '+col+'"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><div style="flex:1;min-width:150px"><b style="font-size:15px;cursor:pointer;text-decoration:underline dotted" onclick="showC360('+JSON.stringify(r.n)+')">'+esc(r.n)+'</b>'+(r.h.mrr?'<span style="font-size:12px;color:var(--muted2)"> · '+money(r.h.mrr)+'/mois</span>':'')+'</div>'
+  +'<span style="font-size:11px;font-weight:800;letter-spacing:.5px;color:'+col+'">'+lbl+'</span>'
+  +'<div style="width:110px"><div style="height:9px;background:var(--line);border-radius:5px;overflow:hidden"><div style="height:100%;width:'+risk+'%;background:'+col+'"></div></div><div style="font-size:11px;color:var(--muted2);text-align:end;margin-top:3px">risque '+risk+'/100</div></div></div>'
+  +(r.h.factors.length?'<div style="margin-top:11px;font-size:12.5px;color:var(--muted);line-height:1.8">'+r.h.factors.slice(0,4).map(function(f){return '<div>• '+esc(f.txt)+' <span style="color:var(--muted2);font-size:11px">(+'+f.p+')</span></div>';}).join("")+'</div>':'')
+  +'<div style="margin-top:11px;padding:11px 13px;border-radius:11px;background:var(--surface);border:1px solid var(--line);font-size:12.5px;line-height:1.65"><b style="color:var(--brand-2)">▶ Plan de sauvetage :</b> '+esc(savePlay(r.n,r.h))+'</div>'
+  +'<div style="margin-top:9px;display:flex;gap:7px;flex-wrap:wrap"><span class="btn ghost sm" onclick="healthTask('+JSON.stringify(r.n)+')">📋 Creer la tache de sauvetage</span></div></div>';}).join("");
+ c.innerHTML=h;}
+function healthTask(n){var h=healthScore(n);
+ (DB.tasks=DB.tasks||[]).unshift({id:uid(),title:"🩺 Sauver "+n+" — "+(h.factors[0]?h.factors[0].txt:"reprendre contact"),due:today(),priority:"Haute",linked:n,assignee:DB._me||"",done:"Non",createdAt:today()});
+ logActivity("create","Tache de sauvetage: "+n);save();toast("📋 Tache creee — a faire aujourd'hui");}
+
+/* ---------- 4. TRESORERIE & RUNWAY ---------- */
+var _cashWhat={hire:0,priceUp:0,churn:0};
+function cashModel(){
+ var f=finCfg();
+ var mrr=(DB.success||[]).filter(function(s){return s.health!=="Churne";}).reduce(function(a,s){return a+(+s.mrr||0);},0);
+ mrr=mrr*(1-(_cashWhat.churn||0)/100)*(1+(_cashWhat.priceUp||0)/100);
+ var out=teamCostMonth()+(+f.fixedCosts||0)+(_cashWhat.hire||0);
+ var m=forecastModel();
+ var pipeline=m.deals.reduce(function(a,d){return a+d.v*d.p;},0)*(1+(_cashWhat.priceUp||0)/100);
+ var cyc=Math.max(1,Math.round(m.cyc/30))||1;
+ var months=[],cash=+f.cash||0;var now=new Date();
+ for(var i=0;i<12;i++){
+  var d=new Date(now.getFullYear(),now.getMonth()+i,1);
+  var lbl=d.toLocaleDateString('fr-FR',{month:'short',year:'2-digit'});
+  var invIn=(DB.invoices||[]).filter(function(x){return x.status!=="Paye"&&x.dueDate&&x.dueDate.slice(0,7)===d.toISOString().slice(0,7);}).reduce(function(a,x){return a+(+x.amount||0);},0);
+  var pipeIn=(i>=cyc&&i<cyc+3)?pipeline/3:0;
+  var inflow=mrr+invIn+pipeIn;
+  cash+=inflow-out;
+  months.push({lbl:lbl,inflow:Math.round(inflow),outflow:Math.round(out),net:Math.round(inflow-out),cash:Math.round(cash),mrr:Math.round(mrr),inv:invIn,pipe:Math.round(pipeIn)});
+ }
+ var runway=null;for(var j=0;j<months.length;j++){if(months[j].cash<0){runway=j;break;}}
+ return {months:months,mrr:Math.round(mrr),out:Math.round(out),runway:runway,start:+f.cash||0,pipeline:Math.round(pipeline)};}
+function renderCash(c){
+ var f=finCfg(),m=cashModel();
+ var covered=m.out>0?Math.round(m.mrr/m.out*100):0;
+ var h='<div class="panel"><h3><span class="dot"></span>🏦 Tresorerie & runway — 12 mois</h3>'
+ +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"><span class="btn ghost sm" onclick="openFinSettings()">⚙️ Couts & tresorerie</span></div>';
+ if(!m.out)h+='<div style="padding:12px 14px;border-radius:11px;background:rgba(245,185,64,.1);border:1px solid rgba(245,185,64,.35);font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:12px">⚠️ Aucune charge renseignee. Ajoutez le cout mensuel de chaque personne (Equipe) et vos charges fixes (⚙️) pour une projection reelle.</div>';
+ h+='<div style="display:flex;gap:12px;flex-wrap:wrap">'
+ +kpiTile("TRESORERIE",money(m.start),"aujourd'hui")
+ +kpiTile("MRR RECURRENT",money(m.mrr),covered+"% des charges couvertes",covered>=100?"var(--good)":covered>=60?"var(--warn,#f5b940)":"var(--bad)")
+ +kpiTile("CHARGES / MOIS",money(m.out),"equipe + fixes","var(--bad)")
+ +kpiTile("RUNWAY",m.runway==null?"12 mois +":m.runway+" mois",m.runway==null?"tresorerie positive sur 12 mois":"tresorerie negative a partir de la",m.runway==null?"var(--good)":m.runway<=3?"var(--bad)":"var(--warn,#f5b940)")
+ +'</div>';
+ if(covered<100)h+='<div style="margin-top:14px;padding:13px 15px;border-radius:12px;background:rgba(245,185,64,.1);border:1px solid var(--line);font-size:12.5px;line-height:1.7"><b>⚡ Point mort recurrent :</b> il vous manque <b>'+money(Math.max(0,m.out-m.mrr))+'/mois</b> de MRR pour que l\'agence tourne sans dependre des nouveaux contrats. Soit environ <b>'+Math.ceil(Math.max(0,m.out-m.mrr)/Math.max(1,(DB.success||[]).length?m.mrr/Math.max(1,(DB.success||[]).filter(function(s){return +s.mrr>0;}).length):35000))+' client(s) recurrent(s)</b> de plus.</div>';
+ h+='</div>';
+ // Courbe
+ var maxC=Math.max.apply(null,[1].concat(m.months.map(function(x){return Math.abs(x.cash);})));
+ h+='<div class="panel"><h3><span class="dot"></span>📈 Projection de tresorerie</h3><div style="display:flex;align-items:flex-end;gap:5px;height:170px;margin-top:12px">'
+ +m.months.map(function(x){var pos=x.cash>=0;var hgt=Math.max(3,Math.round(Math.abs(x.cash)/maxC*100));
+   return '<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%" title="'+x.lbl+' : '+money(x.cash)+'"><div style="width:100%;height:'+hgt+'%;background:'+(pos?"linear-gradient(180deg,#22c07d,#16a34a)":"linear-gradient(180deg,#f4685f,#c0392b)")+';border-radius:4px 4px 0 0"></div></div>';}).join("")
+ +'</div><div style="display:flex;gap:5px;margin-top:6px">'+m.months.map(function(x){return '<div style="flex:1;text-align:center;font-size:9.5px;color:var(--muted2)">'+x.lbl+'</div>';}).join("")+'</div></div>';
+ // What-if
+ h+='<div class="panel"><h3><span class="dot"></span>🔮 Simulateur — et si ?</h3><div style="display:flex;gap:16px;flex-wrap:wrap">'
+ +'<div style="flex:1;min-width:210px"><label style="font-size:12px;color:var(--muted);font-weight:700">Embaucher (cout DA/mois) : <b id="wfHireV">'+money(_cashWhat.hire)+'</b></label><input type="range" min="0" max="300000" step="10000" value="'+_cashWhat.hire+'" style="width:100%;margin-top:7px" oninput="_cashWhat.hire=+this.value;document.getElementById(\'wfHireV\').textContent=money(+this.value);renderCurrent();"></div>'
+ +'<div style="flex:1;min-width:210px"><label style="font-size:12px;color:var(--muted);font-weight:700">Augmenter les prix : <b id="wfPriceV">+'+_cashWhat.priceUp+'%</b></label><input type="range" min="0" max="100" step="5" value="'+_cashWhat.priceUp+'" style="width:100%;margin-top:7px" oninput="_cashWhat.priceUp=+this.value;document.getElementById(\'wfPriceV\').textContent=\'+\'+this.value+\'%\';renderCurrent();"></div>'
+ +'<div style="flex:1;min-width:210px"><label style="font-size:12px;color:var(--muted);font-weight:700">Perte de clients : <b id="wfChurnV">-'+_cashWhat.churn+'%</b></label><input type="range" min="0" max="60" step="5" value="'+_cashWhat.churn+'" style="width:100%;margin-top:7px" oninput="_cashWhat.churn=+this.value;document.getElementById(\'wfChurnV\').textContent=\'-\'+this.value+\'%\';renderCurrent();"></div>'
+ +'</div><div style="margin-top:12px"><span class="btn ghost sm" onclick="_cashWhat={hire:0,priceUp:0,churn:0};renderCurrent();">↺ Reinitialiser</span></div></div>';
+ h+='<div class="panel"><h3><span class="dot"></span>📋 Detail mois par mois</h3><table class="tbl"><tr><th>Mois</th><th>MRR</th><th>Factures</th><th>Pipeline</th><th>Entrees</th><th>Sorties</th><th>Net</th><th>Tresorerie</th></tr>'
+ +m.months.map(function(x){return '<tr><td><b>'+x.lbl+'</b></td><td>'+money(x.mrr)+'</td><td>'+(x.inv?money(x.inv):"—")+'</td><td>'+(x.pipe?money(x.pipe):"—")+'</td><td>'+money(x.inflow)+'</td><td style="color:var(--bad)">-'+money(x.outflow)+'</td><td style="color:'+(x.net>=0?"var(--good)":"var(--bad)")+'"><b>'+money(x.net)+'</b></td><td style="color:'+(x.cash>=0?"var(--good)":"var(--bad)")+'"><b>'+money(x.cash)+'</b></td></tr>';}).join("")
+ +'</table><div style="font-size:11.5px;color:var(--muted2);margin-top:10px;line-height:1.7">Le pipeline pondere ('+money(m.pipeline)+') est etale sur 3 mois a partir du cycle de vente moyen. Les factures impayees sont comptees a leur date d\'echeance.</div></div>';
+ c.innerHTML=h;}
+
+/* ---------- 5. PLAN DE CHARGE ---------- */
+var LOAD_H={task:1.5,fulfil:8,plan:6,post:1};
+function weekStart(d){var x=new Date(d);var day=(x.getDay()+6)%7;x.setDate(x.getDate()-day);x.setHours(0,0,0,0);return x;}
+function capacityModel(){
+ var f=finCfg();var perWeek=Math.round((+f.hoursMonth||160)/4.33);
+ var members=(DB._team||[]).map(function(m){return m.name;}).filter(function(v,i,a){return v&&a.indexOf(v)===i;});
+ var w0=weekStart(new Date());var weeks=[];
+ for(var i=0;i<8;i++){var ws=new Date(w0);ws.setDate(ws.getDate()+i*7);var we=new Date(ws);we.setDate(we.getDate()+6);
+  weeks.push({s:ws.toISOString().slice(0,10),e:we.toISOString().slice(0,10),lbl:ws.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'})});}
+ var grid={};members.forEach(function(n){grid[n]=weeks.map(function(){return {h:0,items:[]};});});
+ function put(who,date,hrs,label){if(!who||!date)return;if(!grid[who])return;
+  for(var i=0;i<weeks.length;i++){if(date>=weeks[i].s&&date<=weeks[i].e){grid[who][i].h+=hrs;grid[who][i].items.push(label);return;}}}
+ (DB.tasks||[]).forEach(function(t){if(t.done!=="Oui")put(t.assignee,t.due,LOAD_H.task,t.title);});
+ (DB.fulfilment||[]).forEach(function(x){if(x.status!=="Livre")put(x.owner,x.deadline,LOAD_H.fulfil,(x.client||"")+" — "+(x.service||""));});
+ (DB.content||[]).forEach(function(p){if(p.status!=="Publie")put(p.owner,p.date,LOAD_H.post,(p.channel||"")+" "+(p.title||""));});
+ (DB.plans||[]).forEach(function(p){(p.items||[]).forEach(function(it){if((it.status||"")==="Termine"||!it.owner)return;
+   var parts=(p.start||today().slice(0,7)).split("-");var d=new Date(+parts[0],(+parts[1]||1)-1+(+it.month||0),15);
+   put(it.owner,d.toISOString().slice(0,10),LOAD_H.plan,(p.title||"")+" — "+(it.title||""));});});
+ return {weeks:weeks,grid:grid,members:members,perWeek:perWeek};}
+function renderCapacity(c){
+ var m=capacityModel();
+ if(!m.members.length)return c.innerHTML=intelEmpty("📊 Aucun membre d'equipe.<br>Ajoutez votre equipe pour visualiser le plan de charge.");
+ var over=[];
+ m.members.forEach(function(n){m.grid[n].forEach(function(cell,i){if(cell.h>m.perWeek)over.push({n:n,w:m.weeks[i].lbl,h:cell.h});});});
+ var h='<div class="panel"><h3><span class="dot"></span>📊 Plan de charge — 8 prochaines semaines</h3>'
+ +'<p style="font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:14px">Charge estimee a partir des taches, livrables, posts et actions de plans assignes. Capacite : <b>'+m.perWeek+'h/semaine</b> par personne. '+(over.length?'<b style="color:var(--bad)">'+over.length+' semaine(s) en surcharge detectee(s).</b>':'<b style="color:var(--good)">Aucune surcharge detectee.</b>')+'</p>'
+ +'<div style="overflow-x:auto"><table class="tbl" style="min-width:640px"><tr><th style="min-width:120px">Equipe</th>'+m.weeks.map(function(w){return '<th style="text-align:center;font-size:11px">'+w.lbl+'</th>';}).join("")+'</tr>'
+ +m.members.map(function(n){return '<tr><td><b>'+esc(n)+'</b><div style="font-size:11px;color:var(--muted2)">'+(memberHourly(n)?money(Math.round(memberHourly(n)))+"/h":"cout non defini")+'</div></td>'
+  +m.grid[n].map(function(cell,i){var pct=m.perWeek?Math.round(cell.h/m.perWeek*100):0;
+    var bg=pct===0?"var(--line)":pct<60?"rgba(34,192,125,.35)":pct<=100?"rgba(245,185,64,.45)":"rgba(244,104,95,.55)";
+    var txt=pct>100?"var(--bad)":"var(--txt)";
+    return '<td style="text-align:center;padding:5px"><div title="'+esc(cell.items.slice(0,6).join(" · ")||"libre")+'" style="background:'+bg+';border-radius:8px;padding:9px 4px"><b style="font-size:13px;color:'+txt+'">'+(cell.h?cell.h+"h":"—")+'</b><div style="font-size:10px;color:var(--muted2)">'+(pct?pct+"%":"")+'</div></div></td>';}).join("")+'</tr>';}).join("")
+ +'</table></div><div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;font-size:11.5px;color:var(--muted)"><span>🟩 &lt;60% dispo</span><span>🟨 60-100% plein</span><span>🟥 &gt;100% surcharge</span></div></div>';
+ if(over.length)h+='<div class="panel" style="background:linear-gradient(135deg,rgba(244,104,95,.12),transparent)"><h3><span class="dot"></span>🔥 Surcharges a resoudre</h3>'
+ +over.slice(0,10).map(function(o){return '<div style="padding:10px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:7px;font-size:12.5px"><b>'+esc(o.n)+'</b> — semaine du '+esc(o.w)+' : <b style="color:var(--bad)">'+o.h+'h</b> pour '+m.perWeek+'h disponibles. <span style="color:var(--muted)">Repoussez une echeance ou reassignez.</span></div>';}).join("")+'</div>';
+ // Simulateur
+ var free=m.members.map(function(n){var tot=m.grid[n].reduce(function(a,x){return a+x.h;},0);return {n:n,free:Math.max(0,m.perWeek*8-tot),tot:tot};}).sort(function(a,b){return b.free-a.free;});
+ h+='<div class="panel"><h3><span class="dot"></span>🧮 Puis-je accepter ce projet ?</h3>'
+ +'<div class="field" style="max-width:280px"><label>Charge estimee du projet (heures)</label><input id="capH" type="number" value="40" oninput="capSim()"></div>'
+ +'<div id="capOut"></div>'
+ +'<div style="font-size:11.5px;color:var(--muted2);margin-top:10px">Capacite libre totale sur 8 semaines : <b>'+free.reduce(function(a,x){return a+x.free;},0)+'h</b></div></div>';
+ c.innerHTML=h;capSim();}
+function capSim(){var el=document.getElementById("capOut");if(!el)return;
+ var need=+((document.getElementById("capH")||{}).value)||0;
+ var m=capacityModel();
+ var free=m.members.map(function(n){var tot=m.grid[n].reduce(function(a,x){return a+x.h;},0);return {n:n,free:Math.max(0,m.perWeek*8-tot)};}).sort(function(a,b){return b.free-a.free;});
+ var total=free.reduce(function(a,x){return a+x.free;},0);
+ var solo=free.filter(function(x){return x.free>=need;});
+ var ok=total>=need;
+ // combien de personnes faut-il reellement mobiliser
+ var need2=need,split=[];
+ for(var i=0;i<free.length&&need2>0;i++){if(free[i].free<=0)continue;var take=Math.min(free[i].free,need2);split.push({n:free[i].n,h:Math.round(take)});need2-=take;}
+ var verdict,detail;
+ if(!ok){verdict='❌ Non, votre equipe est saturee';detail='Il manque <b>'+Math.round(need-total)+'h</b>. Recrutez, sous-traitez, ou repoussez la date de livraison.';}
+ else if(solo.length){verdict='✅ Oui — une seule personne peut le porter';detail='Confiez-le a <b>'+esc(solo[0].n)+'</b> ('+solo[0].free+'h libres). C\'est le scenario le plus sain : un seul responsable.';}
+ else{verdict='⚠️ Oui, mais uniquement en equipe';detail='Personne ne peut le porter seul (max libre : <b>'+Math.round(free[0].free)+'h</b> chez '+esc(free[0].n)+'). Il faut repartir sur <b>'+split.length+' personnes</b> : '+split.map(function(x){return '<b>'+esc(x.n)+'</b> '+x.h+'h';}).join(", ")+'.<br><span style="color:var(--muted2)">Attention : un projet decoupe entre '+split.length+' personnes coute plus cher en coordination. Verifiez que la marge le supporte.</span>';}
+ el.innerHTML='<div style="padding:13px 15px;border-radius:12px;background:'+(!ok?"rgba(244,104,95,.12)":solo.length?"rgba(34,192,125,.12)":"rgba(245,185,64,.12)")+';border:1px solid var(--line);font-size:13px;line-height:1.7"><b style="color:'+(!ok?"var(--bad)":solo.length?"var(--good)":"var(--warn,#f5b940)")+'">'+verdict+'</b><br>'
+ +'Besoin : <b>'+need+'h</b> · Capacite libre totale : <b>'+Math.round(total)+'h</b> sur 8 semaines.<br>'+detail+'</div>';}
+
+/* ---------- Enregistrement des pages ---------- */
+SYSTEMS.forecast={key:"forecast",icon:iconChartG(),intel:renderForecast};
+SYSTEMS.profit={key:"profit",icon:iconMoney(),intel:renderProfit};
+SYSTEMS.health={key:"health",icon:iconStar(),intel:renderHealth};
+SYSTEMS.cash={key:"cash",icon:iconInvoice(),intel:renderCash};
+SYSTEMS.capacity={key:"capacity",icon:iconTeam(),intel:renderCapacity};
+["forecast","profit","health","cash","capacity"].forEach(function(k){if(ADMINONLY.indexOf(k)<0)ADMINONLY.push(k);});
+if(!GROUPS.find(function(g){return g.lbl==="g_intel";}))GROUPS.push({lbl:"g_intel",items:["forecast","profit","health","cash","capacity"]});
+/* ---------- 6. DEVIS INTERACTIF ---------- */
+if(!DB.quotes)DB.quotes=[];
+var _qMods=[];
+function quoteById(id){return (DB.quotes||[]).find(function(q){return q.id===id;});}
+function quoteBase(q){return (q.modules||[]).filter(function(m){return m.locked;}).reduce(function(a,m){return a+(+m.price||0);},0);}
+function quoteDefault(q){return (q.modules||[]).filter(function(m){return m.locked||m.on;}).reduce(function(a,m){return a+(+m.price||0);},0);}
+function quoteMax(q){return (q.modules||[]).reduce(function(a,m){return a+(+m.price||0);},0);}
+function renderQuotes(c){
+ var arr=DB.quotes||[];
+ var h='<div class="panel"><h3><span class="dot"></span>🧮 Devis interactifs</h3>'
+ +'<p style="font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:12px">Au lieu d\'envoyer un prix fige, envoyez un devis que le client <b>configure lui-meme</b>. Il coche les modules, le prix se met a jour en direct. Vous voyez ensuite exactement ce qu\'il a choisi, ce qu\'il a active puis retire, et combien de temps il a hesite.</p>'
+ +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px"><span class="btn" onclick="openQuoteForm()">➕ Nouveau devis</span><span class="btn ghost sm" onclick="seedQuote()">✨ Modele DevelopTheOne</span></div></div>';
+ if(!arr.length)h+=intelEmpty("Aucun devis. Creez-en un ou partez du modele pret a l'emploi.");
+ else h+='<div class="grid-cards">'+arr.map(function(q){var tk=Object.keys(DB._shares||{}).find(function(k){return DB._shares[k].quoteId===q.id;});
+  return '<div class="hcard"><div class="hh"><span class="avatar" style="width:34px;height:34px;font-size:13px;background:linear-gradient(135deg,var(--brand),var(--purple))">🧮</span><span class="hname">'+esc(q.title||"Devis")+'</span></div>'
+  +(q.client?'<div class="hrow"><span>Client</span><b>'+esc(q.client)+'</b></div>':'')
+  +'<div class="hrow"><span>Modules</span><b>'+(q.modules||[]).length+'</b></div>'
+  +'<div class="hrow"><span>Base incluse</span><b>'+money(quoteBase(q))+'</b></div>'
+  +'<div class="hrow"><span>Configuration max</span><b>'+money(quoteMax(q))+'</b></div>'
+  +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:11px"><span class="btn ghost sm" onclick="openQuoteForm(\''+q.id+'\')">✏ Modifier</span><span class="btn sm" onclick="sendQuoteLink(\''+q.id+'\')">🔗 '+(tk?"Revoir le lien":"Envoyer")+'</span>'+(tk?'<span class="btn ghost sm" onclick="renderQuoteStats(\''+tk+'\')">📊 Ce qu\'il a choisi</span>':'')+'<span class="btn ghost sm" style="color:var(--bad)" onclick="delQuote(\''+q.id+'\')">🗑</span></div></div>';}).join("")+'</div>';
+ c.innerHTML=h;}
+function delQuote(id){if(!confirm("Supprimer ce devis ?"))return;DB.quotes=(DB.quotes||[]).filter(function(q){return q.id!==id;});save();renderCurrent();}
+function renderQMods(){var w=document.getElementById("qModsWrap");if(!w)return;
+ w.innerHTML=_qMods.map(function(m,i){return '<div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px">'
+ +'<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px"><input id="qm'+i+'_name" placeholder="Nom du module" value="'+esc(m.name||"")+'" style="flex:2;min-width:0"><input id="qm'+i+'_price" type="number" placeholder="Prix DA" value="'+(+m.price||0)+'" style="width:120px"><span class="chip" style="cursor:pointer;color:var(--bad)" onclick="rmQMod('+i+')">🗑</span></div>'
+ +'<input id="qm'+i+'_desc" placeholder="Description courte (ce que ca apporte au client)" value="'+esc(m.desc||"")+'" style="width:100%;margin-bottom:6px">'
+ +'<div style="display:flex;gap:14px;font-size:12px;color:var(--muted)"><label style="display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="qm'+i+'_locked" '+(m.locked?"checked":"")+'> Toujours inclus (non decochable)</label><label style="display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="qm'+i+'_on" '+(m.on?"checked":"")+'> Coche par defaut</label></div></div>';}).join("")
+ +'<span class="btn ghost sm" onclick="addQMod()">+ Ajouter un module</span>';}
+function readQMods(){_qMods=_qMods.map(function(m,i){var g=function(f){return document.getElementById("qm"+i+"_"+f);};
+ return {id:m.id||uid(),name:(g("name")||{}).value||"",desc:(g("desc")||{}).value||"",price:+((g("price")||{}).value)||0,locked:!!(g("locked")||{}).checked,on:!!(g("on")||{}).checked};});return _qMods;}
+function addQMod(){readQMods();_qMods.push({id:uid(),name:"",desc:"",price:0,locked:false,on:false});renderQMods();}
+function rmQMod(i){readQMods();_qMods.splice(i,1);if(!_qMods.length)_qMods.push({id:uid(),name:"",desc:"",price:0,locked:true,on:true});renderQMods();}
+function openQuoteForm(id){var q=id?quoteById(id):null;resetModal();editing=null;
+ document.getElementById("modalTitle").textContent=q?"Modifier le devis":"🧮 Nouveau devis interactif";
+ document.getElementById("delBtn").style.display="none";document.getElementById("modalEl").classList.add("wide");
+ _qMods=q&&(q.modules||[]).length?JSON.parse(JSON.stringify(q.modules)):[{id:uid(),name:"",desc:"",price:0,locked:true,on:true}];
+ document.getElementById("modalBody").innerHTML=
+  '<div class="field"><label>Titre du devis *</label><input id="q_title" value="'+esc(q?q.title:"")+'" placeholder="Proposition site web + croissance"></div>'
+ +'<div class="field"><label>Client</label><input id="q_client" value="'+esc(q?q.client:"")+'"></div>'
+ +'<div class="field"><label>Message d\'introduction</label><textarea id="q_intro" style="min-height:80px" placeholder="Bonjour, voici votre proposition. Composez la formule qui vous correspond.">'+esc(q?q.intro:"")+'</textarea></div>'
+ +'<div class="field"><label>Modules</label><div id="qModsWrap"></div></div>';
+ renderQMods();
+ document.getElementById("saveBtn").onclick=function(){var ti=document.getElementById("q_title").value.trim();if(!ti)return toast("Titre requis","bad");
+  var mods=readQMods().filter(function(m){return m.name.trim();});
+  if(!mods.length)return toast("Ajoutez au moins un module","bad");
+  var o=q||{id:uid(),createdAt:today()};
+  o.title=ti;o.client=document.getElementById("q_client").value.trim();o.intro=document.getElementById("q_intro").value;o.modules=mods;o.updatedAt=today();
+  if(!q)(DB.quotes=DB.quotes||[]).unshift(o);
+  logActivity(q?"update":"create","Devis: "+ti);save();closeModal();renderCurrent();toast("✓ Devis enregistre");};
+ document.getElementById("overlay").classList.add("open");}
+function seedQuote(){
+ var q={id:uid(),title:"Proposition DevelopTheOne",client:"",intro:"Bonjour,\n\nVoici votre proposition. Composez la formule qui vous correspond : cochez ou decochez les modules, le prix se met a jour en direct.",createdAt:today(),updatedAt:today(),
+  modules:[
+   {id:uid(),name:"Site web professionnel sur-mesure",desc:"Design responsive, pages illimitees, SSL, hebergement + domaine offerts",price:185000,locked:true,on:true},
+   {id:uid(),name:"Design premium personnalise",desc:"Identite visuelle poussee, animations, UX haut de gamme",price:72500,locked:false,on:true},
+   {id:uid(),name:"SEO avance",desc:"Etre trouve sur Google sur vos mots-cles principaux",price:65000,locked:false,on:true},
+   {id:uid(),name:"Campagnes publicitaires (setup)",desc:"Meta + Google Ads configures et optimises",price:55000,locked:false,on:false},
+   {id:uid(),name:"Gestion reseaux sociaux — 3 mois",desc:"12 posts/mois, calendrier editorial, community management",price:120000,locked:false,on:false},
+   {id:uid(),name:"Maintenance & support prioritaire — 12 mois",desc:"Mises a jour, sauvegardes, support sous 24h",price:90000,locked:false,on:false}
+  ]};
+ (DB.quotes=DB.quotes||[]).unshift(q);logActivity("create","Devis modele");save();renderCurrent();toast("✨ Modele cree — personnalisez-le");}
+function sendQuoteLink(qid){if(!CLOUD.on)return toast("Activez le Cloud d'abord","bad");
+ var q=quoteById(qid);if(!q)return;
+ if(!(q.modules||[]).length)return toast("Ajoutez des modules d'abord","bad");
+ var existing=Object.keys(DB._shares||{}).find(function(tk){return DB._shares[tk].quoteId===qid;});
+ var token=existing||(Date.now().toString(36)+Math.random().toString(36).slice(2,8));
+ var payload={agency:"DevelopTheOne",title:q.title||"Proposition",client:q.client||"",content:"",sent:today(),contactEmail:"contactdvp@developtheone.com",sys:"quotes",
+  quote:{intro:q.intro||"",modules:q.modules.map(function(m){return {id:m.id,name:m.name,desc:m.desc,price:+m.price||0,locked:!!m.locked,on:!!m.on};})}};
+ toast("⏳ Preparation du devis...");
+ cryptoEncWithKey(payload,existing?DB._shares[token].key:null).then(function(enc){
+  return fetch(CLOUD.url.replace(/\/$/,"")+"/rest/v1/workspaces?on_conflict=id",{method:"POST",headers:Object.assign(cloudHeaders(),{Prefer:"resolution=merge-duplicates,return=minimal"}),body:JSON.stringify({id:"share-"+token,data:{v:1,doc:{ct:enc.ct,iv:enc.iv}},updated_at:new Date().toISOString()})}).then(function(res){
+   if(!res.ok)throw new Error("cloud "+res.status);
+   if(!existing)DB._shares[token]={token:token,key:enc.k,quoteId:qid,sys:"quotes",client:q.client||"",title:q.title||"",sent:today()};
+   logActivity("update","Devis interactif "+(existing?"mis a jour":"envoye")+": "+(q.title||""));save();renderCurrent();showQuoteLink(token);});
+ }).catch(function(e){toast("Erreur: "+e.message,"bad");});}
+function showQuoteLink(token){var sh=(DB._shares||{})[token];if(!sh)return;var link=shareLink(token);
+ resetModal();editing=null;document.getElementById("modalTitle").textContent="🔗 Devis interactif — "+(sh.title||"");
+ document.getElementById("delBtn").style.display="none";document.getElementById("saveBtn").style.display="none";document.getElementById("modalEl").classList.add("wide");
+ document.getElementById("modalBody").innerHTML=localAppNote()
+ +'<p style="font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:12px">Envoyez ce lien a <b>'+esc(sh.client||"votre client")+'</b>. Il composera lui-meme sa formule. Vous verrez ensuite exactement ce qu\'il a retenu, ce qu\'il a hesite a prendre, et son budget final.</p>'
+ +'<div style="display:flex;gap:8px;margin-bottom:12px"><input id="qLinkInput" readonly value="'+esc(link)+'" style="flex:1;min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:10px;color:var(--txt);padding:10px 12px;font-size:12px"></div>'
+ +'<div style="display:flex;gap:8px;flex-wrap:wrap"><span class="btn sm" onclick="var i=document.getElementById(\'qLinkInput\');i.select();document.execCommand(\'copy\');toast(\'📋 Lien copie\')">📋 Copier</span><span class="btn ghost sm" onclick="window.open(\'https://wa.me/?text=\'+encodeURIComponent(\'Bonjour, voici votre proposition personnalisable : \'+document.getElementById(\'qLinkInput\').value),\'_blank\')">💬 WhatsApp</span><span class="btn ghost sm" onclick="renderQuoteStats(\''+token+'\')">📊 Ce qu\'il a choisi</span></div>';
+ document.getElementById("overlay").classList.add("open");}
+function renderQuoteStats(token){var sh=(DB._shares||{})[token];if(!sh)return;
+ resetModal();editing=null;document.getElementById("modalTitle").textContent="📊 "+(sh.title||"")+" — configuration client";
+ document.getElementById("delBtn").style.display="none";document.getElementById("saveBtn").style.display="none";document.getElementById("modalEl").classList.add("wide");
+ document.getElementById("modalBody").innerHTML='<div style="text-align:center;padding:30px;color:var(--muted);font-size:13px">Chargement...</div>';
+ document.getElementById("overlay").classList.add("open");
+ fetch(CLOUD.url.replace(/\/$/,"")+"/rest/v1/workspaces?id=like.view-"+token+"-*&select=data",{headers:cloudHeaders()}).then(function(r){return r.json();}).then(function(rows){
+  var views=[];var decs=rows.map(function(row){return crypto.subtle.importKey("raw",_b64d(sh.key),{name:"AES-GCM"},false,["decrypt"]).then(function(key){return decBlobWith(row.data,key);}).then(function(str){views.push(JSON.parse(str));}).catch(function(){});});
+  Promise.all(decs).then(function(){views.sort(function(a,b){return String(b.opened||"").localeCompare(String(a.opened||""));});renderQuoteStatsBody(sh,views);});
+ }).catch(function(){document.getElementById("modalBody").innerHTML='<div class="empty" style="padding:30px">Impossible de charger les statistiques.</div>';});}
+function renderQuoteStatsBody(sh,views){
+ var q=quoteById(sh.quoteId)||{modules:[]};
+ var withSel=views.filter(function(v){return v.quoteSel;});
+ var h='';
+ if(!views.length)h='<div class="empty" style="padding:36px">Pas encore ouvert par le client.</div>';
+ else{
+  h+='<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">'
+   +kpiTile("OUVERTURES",views.length+"","visites du devis")
+   +kpiTile("CONFIGURE",withSel.length+"","a compose une formule",withSel.length?"var(--good)":"var(--muted2)")
+   +kpiTile("ACCEPTE",views.filter(function(v){return v.converted;}).length+"","a valide",views.some(function(v){return v.converted;})?"var(--good)":"var(--muted2)")
+   +'</div>';
+  var last=withSel[0];
+  if(last){
+   h+='<div style="border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px"><b style="font-size:14px">🧮 Derniere configuration retenue — '+money(last.quoteTotal||0)+'</b><div style="margin-top:10px">'
+   +(q.modules||[]).map(function(m){var on=(last.quoteSel||[]).indexOf(m.id)>=0;
+     return '<div style="display:flex;gap:9px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);font-size:12.5px"><span>'+(on?"✅":"⬜")+'</span><span style="flex:1;'+(on?"":"color:var(--muted2)")+'">'+esc(m.name)+'</span><span style="color:'+(on?"var(--good)":"var(--muted2)")+';font-weight:700">'+money(m.price)+'</span></div>';}).join("")
+   +'</div></div>';
+   var maxT=quoteMax(q),got=last.quoteTotal||0;
+   var dropped=(q.modules||[]).filter(function(m){return !m.locked&&(last.quoteSel||[]).indexOf(m.id)<0;});
+   if(dropped.length)h+='<div style="padding:12px 14px;border-radius:11px;background:rgba(245,185,64,.1);border:1px solid rgba(245,185,64,.35);font-size:12.5px;line-height:1.7;margin-bottom:12px"><b>💡 Ce qu\'il n\'a pas pris ('+money(maxT-got)+' laisses sur la table) :</b><br>'+dropped.map(function(m){return "• "+esc(m.name)+" ("+money(m.price)+")";}).join("<br>")+'<br><span style="color:var(--muted)">Votre argumentaire d\'appel est deja ecrit : parlez de ces modules-la, pas des autres.</span></div>';
+  }
+  // hesitations
+  var ev=[];views.forEach(function(v){(v.quoteEvents||[]).forEach(function(e){ev.push(e);});});
+  if(ev.length){var cnt={};ev.forEach(function(e){cnt[e.id]=(cnt[e.id]||0)+1;});
+   var hes=Object.keys(cnt).map(function(id){var m=(q.modules||[]).find(function(x){return x.id===id;});return {n:m?m.name:id,c:cnt[id]};}).sort(function(a,b){return b.c-a.c;}).filter(function(x){return x.c>=2;});
+   if(hes.length)h+='<div style="padding:12px 14px;border-radius:11px;background:var(--surface);border:1px solid var(--line);font-size:12.5px;line-height:1.8;margin-bottom:12px"><b>🤔 Modules sur lesquels il a hesite</b> (coche/decoche plusieurs fois) :<br>'+hes.map(function(x){return "• <b>"+esc(x.n)+"</b> — "+x.c+" changements d\'avis";}).join("<br>")+'<br><span style="color:var(--muted)">C\'est exactement la qu\'il faut rassurer : prix, garantie, ou preuve de resultat.</span></div>';}
+  h+='<div style="font-size:12px;color:var(--muted2);line-height:1.8">'+views.map(function(v){return '<div>👤 '+new Date(v.opened).toLocaleString('fr-FR')+' · '+fmtDur(v.activeSeconds||0)+' de lecture'+(v.quoteTotal?' · configure a '+money(v.quoteTotal):'')+(v.converted?' · <b style="color:var(--good)">ACCEPTE</b>':'')+'</div>';}).join("")+'</div>';
+ }
+ document.getElementById("modalBody").innerHTML=h;}
+SYSTEMS.quotes={key:"quotes",icon:iconInvoice(),intel:renderQuotes};
+LANG.fr.quotes="Devis interactifs";LANG.fr.quotesS="Le client compose son offre, vous voyez tout";
+LANG.en.quotes="Interactive quotes";LANG.en.quotesS="The client builds their own offer";
+LANG.ar.quotes="عروض تفاعلية";LANG.ar.quotesS="العميل يكوّن عرضه بنفسه";
+if(ADMINONLY.indexOf("quotes")<0)ADMINONLY.push("quotes");
+var _gDocs2=GROUPS.find(function(g){return g.lbl==="g_docs";});if(_gDocs2&&_gDocs2.items.indexOf("quotes")<0)_gDocs2.items.push("quotes");
+
+var _rcPreIntel=renderCurrent;
+renderCurrent=function(){
+ if(ADMINONLY.indexOf(current)>=0&&!isAdmin())current="dashboard";
+ var s=SYSTEMS[current];
+ if(s&&s.intel){document.getElementById("pageTitle").textContent=t(s.key);document.getElementById("pageSub").textContent=t(s.key+"S");
+  document.getElementById("addBtn").style.display="none";document.getElementById("importLeadsBtn").style.display="none";document.getElementById("toggleMine").style.display="none";
+  var c=document.getElementById("content");c.className="content fade";return s.intel(c);}
+ return _rcPreIntel();};
+
 /* ===== v5.1: niches in leads + update banner ===== */
 SYSTEMS.leads.fields=function(){return [F("name","text",{req:true}),F("business"),{k:"niche",l:(curLang==="ar"?"القطاع":"Niche"),t:"select",opts:["","Promotion immobiliere","Agence immobiliere","Clinique medicale","Clinique dentaire","Clinique esthetique / greffe cheveux","Salle de sport / Gym","Restaurant / Cafe","E-commerce / Boutique","Cabinet d'avocats / Notaire","Agence de voyage","Nettoyage / Proprete","Services a domicile (plombier, electricien...)","Med spa / Institut de beaute","Salon de coiffure / Barbier","Auto / Concessionnaire","Ecole / Formation privee","Evenementiel / Mariage / Salle","Immobilier de luxe","Coach / Consultant","Batiment / Construction / Travaux","Pharmacie / Parapharmacie","Hotel / Riad / Location","Bijouterie / Luxe","Autre"]},F("phone"),F("email"),{k:"website",l:(curLang==="ar"?"الموقع":"Site web"),t:"text"},{k:"instagram",l:"Instagram",t:"text"},{k:"address",l:(curLang==="ar"?"العنوان":"Adresse"),t:"text"},F("source","select",{opts:["Google Maps","Instagram","Cold Call","Reference","Import","Autre"]}),F("city"),F("value","number"),ASSIGN,F("status","select",{opts:["Nouveau","Contacte","RDV pris","Gagne","Perdu"]}),F("notes","textarea")];};
 SYSTEMS.leads.card=function(r){return {title:r.name||"-",sub:[r.business,r.niche].filter(Boolean).join(" · ")||r.city||"",chips:[r.value?money(r.value):null,r.niche||r.source].filter(Boolean),owner:r.assignee||r.name};};
-var APP_VERSION="5.35.0";
+var APP_VERSION="5.36.0";
 var _bn=document.createElement("div");_bn.id="updBanner";
 _bn.style.cssText="display:none;position:fixed;top:0;left:0;right:0;z-index:600;background:linear-gradient(90deg,var(--brand),var(--brand-2));color:#fff;padding:10px 18px;font-size:13px;font-weight:700;text-align:center;box-shadow:0 6px 20px -6px rgba(0,0,0,.6)";
 _bn.innerHTML='<span id="updTxt"></span> <span onclick="location.reload(true)" style="text-decoration:underline;cursor:pointer;margin-inline-start:10px">↻ Rafraichir</span> <span onclick="document.getElementById(\'updBanner\').style.display=\'none\'" style="cursor:pointer;margin-inline-start:14px;opacity:.7">✕</span>';
