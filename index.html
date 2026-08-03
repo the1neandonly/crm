@@ -1854,6 +1854,405 @@ LANG.ar.quotes="عروض تفاعلية";LANG.ar.quotesS="العميل يكوّ�
 if(ADMINONLY.indexOf("quotes")<0)ADMINONLY.push("quotes");
 var _gDocs2=GROUPS.find(function(g){return g.lbl==="g_docs";});if(_gDocs2&&_gDocs2.items.indexOf("quotes")<0)_gDocs2.items.push("quotes");
 
+/* ===================== MACHINE A SCALER (v5.37) ===================== */
+if(!DB.playbooks)DB.playbooks=[];
+if(!DB.reports)DB.reports=[];
+if(!DB._refs)DB._refs=[];
+function addDays(d,n){var x=new Date(d);x.setDate(x.getDate()+(+n||0));return x.toISOString().slice(0,10);}
+function clientPhone(n){var l=(DB.leads||[]).find(function(x){return x.name===n||x.business===n;});return (l&&l.phone)||"";}
+function roleNames(role){return (DB._team||[]).filter(function(m){return !role||m.role===role;}).map(function(m){return m.name;});}
+
+/* ---------- 7. PLAYBOOKS ---------- */
+var _pbSteps=[];
+function pbById(id){return (DB.playbooks||[]).find(function(p){return p.id===id;});}
+function renderPlaybooks(c){
+ var arr=DB.playbooks||[];
+ var h='<div class="panel"><h3><span class="dot"></span>📘 Playbooks — vos projets en pilote automatique</h3>'
+ +'<p style="font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:12px">Un playbook, c\'est votre facon de livrer, ecrite une seule fois. Vous signez un client : <b>un clic</b> et toutes les taches, tous les livrables, toutes les echeances sont crees et assignes. C\'est ce qui fait qu\'une agence tourne <b>sans vous</b>.</p>'
+ +'<div style="display:flex;gap:8px;flex-wrap:wrap"><span class="btn" onclick="openPbForm()">➕ Nouveau playbook</span><span class="btn ghost sm" onclick="seedPlaybook()">✨ Modele — Livraison site web</span><span class="btn ghost sm" onclick="seedPlaybookSeo()">✨ Modele — SEO 3 mois</span></div></div>';
+ if(!arr.length)h+=intelEmpty("Aucun playbook. Partez d'un modele : vous l'adaptez en 5 minutes, il vous fera gagner des annees.");
+ else h+='<div class="grid-cards">'+arr.map(function(p){var nT=(p.steps||[]).filter(function(s){return s.type==="task";}).length,nD=(p.steps||[]).filter(function(s){return s.type==="deliverable";}).length;
+  var span=(p.steps||[]).reduce(function(a,s){return Math.max(a,+s.day||0);},0);
+  return '<div class="hcard"><div class="hh"><span class="avatar" style="width:34px;height:34px;font-size:13px;background:linear-gradient(135deg,var(--brand),var(--purple))">📘</span><span class="hname">'+esc(p.name||"Playbook")+'</span></div>'
+  +(p.offer?'<div class="hrow"><span>Offre</span><b>'+esc(p.offer)+'</b></div>':'')
+  +'<div class="hrow"><span>Etapes</span><b>'+(p.steps||[]).length+' ('+nT+' taches · '+nD+' livrables)</b></div>'
+  +'<div class="hrow"><span>Duree</span><b>'+span+' jours</b></div>'
+  +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:11px"><span class="btn sm" onclick="openPbRun(\''+p.id+'\')">▶ Lancer pour un client</span><span class="btn ghost sm" onclick="openPbForm(\''+p.id+'\')">✏</span><span class="btn ghost sm" style="color:var(--bad)" onclick="delPb(\''+p.id+'\')">🗑</span></div></div>';}).join("")+'</div>';
+ c.innerHTML=h;}
+function delPb(id){if(!confirm("Supprimer ce playbook ?"))return;DB.playbooks=(DB.playbooks||[]).filter(function(p){return p.id!==id;});save();renderCurrent();}
+function renderPbSteps(){var w=document.getElementById("pbStepsWrap");if(!w)return;
+ var roles=["","Fondateur","CEO","Chef de projet","Designer","Developpeur","Setter","Closer"];
+ w.innerHTML=_pbSteps.map(function(s,i){return '<div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px">'
+ +'<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px"><select id="pb'+i+'_type" style="width:130px"><option value="task"'+(s.type==="task"?" selected":"")+'>📋 Tache</option><option value="deliverable"'+(s.type==="deliverable"?" selected":"")+'>⚙️ Livrable</option></select>'
+ +'<input id="pb'+i+'_title" placeholder="Intitule de l\'etape" value="'+esc(s.title||"")+'" style="flex:1;min-width:0">'
+ +'<input id="pb'+i+'_day" type="number" min="0" title="Jour (J+)" value="'+(+s.day||0)+'" style="width:80px">'
+ +'<span class="chip" style="cursor:pointer;color:var(--bad)" onclick="rmPbStep('+i+')">🗑</span></div>'
+ +'<div style="display:flex;gap:6px"><select id="pb'+i+'_role" style="flex:1">'+roles.map(function(r){return '<option value="'+esc(r)+'"'+(s.role===r?" selected":"")+'>'+(r?esc(r):"— role indifferent —")+'</option>';}).join("")+'</select>'
+ +'<select id="pb'+i+'_service" style="flex:1">'+["Site Web","SEO","Ads","Branding","App","Autre"].map(function(x){return '<option'+(s.service===x?" selected":"")+'>'+x+'</option>';}).join("")+'</select></div></div>';}).join("")
+ +'<span class="btn ghost sm" onclick="addPbStep()">+ Ajouter une etape</span>';}
+function readPbSteps(){_pbSteps=_pbSteps.map(function(s,i){var g=function(f){return document.getElementById("pb"+i+"_"+f);};
+ return {type:(g("type")||{}).value||"task",title:(g("title")||{}).value||"",day:+((g("day")||{}).value)||0,role:(g("role")||{}).value||"",service:(g("service")||{}).value||"Autre"};});return _pbSteps;}
+function addPbStep(){readPbSteps();_pbSteps.push({type:"task",title:"",day:0,role:"",service:"Autre"});renderPbSteps();}
+function rmPbStep(i){readPbSteps();_pbSteps.splice(i,1);if(!_pbSteps.length)_pbSteps.push({type:"task",title:"",day:0,role:"",service:"Autre"});renderPbSteps();}
+function openPbForm(id){var p=id?pbById(id):null;resetModal();editing=null;
+ document.getElementById("modalTitle").textContent=p?"Modifier le playbook":"📘 Nouveau playbook";
+ document.getElementById("delBtn").style.display="none";document.getElementById("modalEl").classList.add("wide");
+ _pbSteps=p&&(p.steps||[]).length?JSON.parse(JSON.stringify(p.steps)):[{type:"task",title:"",day:0,role:"",service:"Autre"}];
+ document.getElementById("modalBody").innerHTML='<div class="field"><label>Nom du playbook *</label><input id="pb_name" value="'+esc(p?p.name:"")+'" placeholder="Livraison site web BUSINESS"></div>'
+ +'<div class="field"><label>Offre concernee</label><select id="pb_offer">'+[""].concat(["START","BUSINESS","EMPIRE","Sur-mesure"]).map(function(o){return '<option value="'+esc(o)+'"'+((p?p.offer:"")===o?" selected":"")+'>'+(o||"— toutes —")+'</option>';}).join("")+'</select></div>'
+ +'<div class="field"><label>Etapes — <span style="color:var(--muted2);font-weight:400">J+ = nombre de jours apres le lancement</span></label><div id="pbStepsWrap"></div></div>';
+ renderPbSteps();
+ document.getElementById("saveBtn").onclick=function(){var nm=document.getElementById("pb_name").value.trim();if(!nm)return toast("Nom requis","bad");
+  var st=readPbSteps().filter(function(s){return s.title.trim();});
+  if(!st.length)return toast("Ajoutez au moins une etape","bad");
+  var o=p||{id:uid(),createdAt:today()};o.name=nm;o.offer=document.getElementById("pb_offer").value;o.steps=st;o.updatedAt=today();
+  if(!p)(DB.playbooks=DB.playbooks||[]).unshift(o);
+  logActivity(p?"update":"create","Playbook: "+nm);save();closeModal();renderCurrent();toast("✓ Playbook enregistre");};
+ document.getElementById("overlay").classList.add("open");}
+function openPbRun(id){var p=pbById(id);if(!p)return;resetModal();editing=null;
+ document.getElementById("modalTitle").textContent="▶ Lancer : "+(p.name||"");
+ document.getElementById("delBtn").style.display="none";document.getElementById("modalEl").classList.add("wide");
+ var cls=intelClients();
+ var byRole={};(p.steps||[]).forEach(function(s){if(s.role)byRole[s.role]=1;});
+ document.getElementById("modalBody").innerHTML='<div class="field"><label>Client *</label><input id="pr_client" list="prCl" placeholder="Nom du client"><datalist id="prCl">'+cls.map(function(n){return '<option>'+esc(n)+'</option>';}).join("")+'</datalist></div>'
+ +'<div class="field"><label>Date de lancement</label><input id="pr_start" type="date" value="'+today()+'"></div>'
+ +'<div class="field"><label>Responsable par defaut</label><select id="pr_owner">'+[""].concat(teamNames()).map(function(n){return '<option value="'+esc(n)+'"'+(n===DB._me?" selected":"")+'>'+(n?esc(n):"— non assigne —")+'</option>';}).join("")+'</select></div>'
+ +Object.keys(byRole).map(function(r){var cand=roleNames(r);return '<div class="field"><label>Qui joue le role « '+esc(r)+' » ?</label><select id="pr_role_'+esc(r).replace(/\W/g,"")+'"><option value="">— defaut —</option>'+teamNames().map(function(n){return '<option'+(cand.indexOf(n)>=0?" selected":"")+'>'+esc(n)+'</option>';}).join("")+'</select></div>';}).join("")
+ +'<div style="padding:12px 14px;border-radius:11px;background:var(--surface);border:1px solid var(--line);font-size:12.5px;color:var(--muted);line-height:1.7">Va creer <b>'+(p.steps||[]).filter(function(s){return s.type==="task";}).length+' taches</b> et <b>'+(p.steps||[]).filter(function(s){return s.type==="deliverable";}).length+' livrables</b>, dates calculees automatiquement a partir de la date de lancement.</div>';
+ document.getElementById("saveBtn").textContent="▶ Lancer";
+ document.getElementById("saveBtn").onclick=function(){var cl=document.getElementById("pr_client").value.trim();if(!cl)return toast("Client requis","bad");
+  var st=document.getElementById("pr_start").value||today();var def=document.getElementById("pr_owner").value||"";
+  var nT=0,nD=0;
+  (p.steps||[]).forEach(function(s){
+   var who=def;
+   if(s.role){var el=document.getElementById("pr_role_"+s.role.replace(/\W/g,""));if(el&&el.value)who=el.value;}
+   var d=addDays(st,s.day);
+   if(s.type==="deliverable"){(DB.fulfilment=DB.fulfilment||[]).unshift({id:uid(),client:cl,service:s.service||"Autre",status:"A faire",deadline:d,owner:who,notes:"Playbook: "+(p.name||""),createdAt:today()});nD++;}
+   else {(DB.tasks=DB.tasks||[]).unshift({id:uid(),title:s.title,due:d,priority:"Normale",linked:cl,assignee:who,done:"Non",createdAt:today()});nT++;}
+  });
+  logActivity("create","Playbook lance pour "+cl+": "+nT+" taches, "+nD+" livrables");
+  save();closeModal();buildNav();renderCurrent();
+  toast("🚀 "+nT+" taches et "+nD+" livrables crees pour "+cl);
+  document.getElementById("saveBtn").textContent="Enregistrer";document.getElementById("saveBtn").onclick=saveRecord;};
+ document.getElementById("overlay").classList.add("open");}
+function seedPlaybook(){
+ (DB.playbooks=DB.playbooks||[]).unshift({id:uid(),name:"Livraison site web BUSINESS",offer:"BUSINESS",createdAt:today(),updatedAt:today(),steps:[
+  {type:"task",title:"Appel de kickoff + recueil des besoins",day:1,role:"Chef de projet",service:"Autre"},
+  {type:"task",title:"Recuperer logo, textes, photos, acces",day:2,role:"Chef de projet",service:"Autre"},
+  {type:"task",title:"Valider l'arborescence avec le client",day:4,role:"Chef de projet",service:"Autre"},
+  {type:"deliverable",title:"Maquette design",day:8,role:"Designer",service:"Branding"},
+  {type:"task",title:"Presenter la maquette + recueillir retours",day:9,role:"Chef de projet",service:"Autre"},
+  {type:"task",title:"Integrer les retours design (1 tour inclus)",day:12,role:"Designer",service:"Branding"},
+  {type:"deliverable",title:"Integration du site",day:18,role:"Developpeur",service:"Site Web"},
+  {type:"task",title:"Optimisation vitesse + mobile",day:20,role:"Developpeur",service:"Site Web"},
+  {type:"deliverable",title:"SEO de base + Google Business",day:22,role:"Developpeur",service:"SEO"},
+  {type:"task",title:"Recette finale interne (checklist qualite)",day:24,role:"Chef de projet",service:"Autre"},
+  {type:"task",title:"Formation du client (30 min) + remise des acces",day:26,role:"Chef de projet",service:"Autre"},
+  {type:"deliverable",title:"Mise en ligne",day:28,role:"Developpeur",service:"Site Web"},
+  {type:"task",title:"Envoyer la facture finale",day:28,role:"Fondateur",service:"Autre"},
+  {type:"task",title:"⭐ Demander un avis Google + une recommandation",day:35,role:"Fondateur",service:"Autre"},
+  {type:"task",title:"Point de suivi 30 jours + proposer la suite",day:58,role:"Fondateur",service:"Autre"}
+ ]});
+ logActivity("create","Playbook modele site web");save();renderCurrent();toast("✨ Playbook cree — adaptez-le a votre facon de travailler");}
+function seedPlaybookSeo(){
+ (DB.playbooks=DB.playbooks||[]).unshift({id:uid(),name:"Accompagnement SEO — 3 mois",offer:"Sur-mesure",createdAt:today(),updatedAt:today(),steps:[
+  {type:"task",title:"Audit SEO complet + rapport",day:3,role:"Developpeur",service:"SEO"},
+  {type:"task",title:"Presenter l'audit et valider les priorites",day:5,role:"Chef de projet",service:"SEO"},
+  {type:"deliverable",title:"Corrections techniques",day:12,role:"Developpeur",service:"SEO"},
+  {type:"deliverable",title:"Optimisation des pages cles",day:20,role:"Developpeur",service:"SEO"},
+  {type:"task",title:"Rapport de resultats mois 1",day:30,role:"Chef de projet",service:"SEO"},
+  {type:"deliverable",title:"Contenus mois 2 (4 articles)",day:50,role:"Chef de projet",service:"SEO"},
+  {type:"task",title:"Rapport de resultats mois 2",day:60,role:"Chef de projet",service:"SEO"},
+  {type:"deliverable",title:"Netlinking + citations locales",day:75,role:"Developpeur",service:"SEO"},
+  {type:"task",title:"Rapport final + proposition de reconduction",day:90,role:"Fondateur",service:"SEO"}
+ ]});
+ logActivity("create","Playbook modele SEO");save();renderCurrent();toast("✨ Playbook SEO cree");}
+
+/* ---------- 8. RECOUVREMENT ---------- */
+var DUNNING=[
+ {min:0,lvl:0,name:"A echeance",col:"var(--muted2)",act:"Rien a faire — surveillez simplement."},
+ {min:1,lvl:1,name:"Rappel amical",col:"#5b8cff",act:"Un simple oubli dans 80% des cas. Ton leger, aucune tension."},
+ {min:8,lvl:2,name:"Relance ferme",col:"#f5b940",act:"Rappelez le montant et la date. Demandez une date de paiement precise."},
+ {min:16,lvl:3,name:"Appel direct",col:"#ff8a5c",act:"Arretez d'ecrire, appelez. Obtenez un engagement date, par ecrit ensuite."},
+ {min:31,lvl:4,name:"Suspension des services",col:"#f4685f",act:"Annoncez la suspension. C'est le levier le plus efficace — utilisez-le calmement."},
+ {min:61,lvl:5,name:"Mise en demeure",col:"#c0392b",act:"Courrier formel. Au-dela de 90 jours, la probabilite de recouvrement chute fortement."}
+];
+function dunLevel(days){var r=DUNNING[0];DUNNING.forEach(function(d){if(days>=d.min)r=d;});return r;}
+function dunMsg(inv,lvl){var c=inv.client||"",a=money(+inv.amount||0),d=inv.dueDate||"";
+ if(lvl<=1)return "Bonjour "+c+",\n\nJ'espere que vous allez bien. Petit rappel amical : la facture de "+a+" (echeance du "+d+") est arrivee a echeance.\n\nSi le reglement est deja parti, merci de ne pas tenir compte de ce message.\n\nBonne journee,\nDevelopTheOne";
+ if(lvl===2)return "Bonjour "+c+",\n\nJe reviens vers vous concernant la facture de "+a+", echue depuis le "+d+".\n\nPouvez-vous m'indiquer une date de reglement afin que je mette a jour notre suivi ?\n\nMerci d'avance,\nDevelopTheOne";
+ if(lvl===3)return "Bonjour "+c+",\n\nJe n'ai pas eu de retour sur la facture de "+a+" (echeance "+d+"). Je vous appelle aujourd'hui pour en parler de vive voix.\n\nSi un point bloque, dites-le moi : on trouvera une solution (echeancier possible).\n\nCordialement,\nDevelopTheOne";
+ if(lvl===4)return "Bonjour "+c+",\n\nLa facture de "+a+" reste impayee depuis le "+d+", malgre plusieurs relances.\n\nSans reglement ou proposition d'echeancier sous 7 jours, nous serons contraints de suspendre les prestations en cours.\n\nJe reste disponible pour en discuter.\n\nCordialement,\nDevelopTheOne";
+ return "Bonjour "+c+",\n\nMalgre nos relances, la facture de "+a+" (echeance "+d+") demeure impayee.\n\nCe message constitue une mise en demeure de regler sous 8 jours. A defaut, nous engagerons les procedures de recouvrement prevues.\n\nNous privilegions une solution amiable : contactez-nous.\n\nDevelopTheOne";}
+function renderCollections(c){
+ var unpaid=(DB.invoices||[]).filter(function(i){return i.status!=="Paye";});
+ var rows=unpaid.map(function(i){var d=i.dueDate?daysBetween(i.dueDate,today()):0;return {i:i,days:i.dueDate&&i.dueDate<today()?d:0,lvl:dunLevel(i.dueDate&&i.dueDate<today()?d:0)};}).sort(function(a,b){return b.days-a.days;});
+ var late=rows.filter(function(r){return r.days>0;});
+ var totLate=late.reduce(function(a,r){return a+(+r.i.amount||0);},0);
+ var totUnpaid=unpaid.reduce(function(a,i){return a+(+i.amount||0);},0);
+ var paid=(DB.invoices||[]).filter(function(i){return i.status==="Paye";});
+ var totPaid=paid.reduce(function(a,i){return a+(+i.amount||0);},0);
+ var recov=(totPaid+totUnpaid)>0?Math.round(totPaid/(totPaid+totUnpaid)*100):0;
+ var dso=late.length?Math.round(late.reduce(function(a,r){return a+r.days;},0)/late.length):0;
+ var buckets=[{l:"0-30 j",n:0,v:0},{l:"31-60 j",n:0,v:0},{l:"61-90 j",n:0,v:0},{l:"90 j +",n:0,v:0}];
+ late.forEach(function(r){var idx=r.days<=30?0:r.days<=60?1:r.days<=90?2:3;buckets[idx].n++;buckets[idx].v+=(+r.i.amount||0);});
+ var h='<div class="panel"><h3><span class="dot"></span>💸 Recouvrement — l\'argent qui dort dehors</h3>'
+ +'<p style="font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:14px">Une facture impayee de 60 jours, c\'est du travail deja fait que vous financez a la place du client. Chaque ligne ci-dessous a un <b>message pret a envoyer</b>, adapte au niveau de retard.</p>'
+ +'<div style="display:flex;gap:12px;flex-wrap:wrap">'
+ +kpiTile("EN RETARD",money(totLate),late.length+" facture(s)",totLate?"var(--bad)":"var(--good)")
+ +kpiTile("TOTAL A ENCAISSER",money(totUnpaid),unpaid.length+" facture(s)")
+ +kpiTile("RETARD MOYEN",dso+" j","sur les factures en retard",dso>30?"var(--bad)":dso>0?"var(--warn,#f5b940)":"var(--good)")
+ +kpiTile("TAUX DE RECOUVREMENT",recov+"%",money(totPaid)+" encaisses",recov>=80?"var(--good)":"var(--warn,#f5b940)")
+ +'</div></div>';
+ if(late.length)h+='<div class="panel"><h3><span class="dot"></span>📊 Anciennete de la dette</h3><div class="funnel">'
+  +buckets.map(function(b){var mx=Math.max.apply(null,[1].concat(buckets.map(function(x){return x.v;})));
+   return '<div class="fbar"><span class="flabel">'+b.l+'</span><div class="ftrack"><div class="ffill" style="width:'+Math.max(6,Math.round(b.v/mx*100))+'%;background:'+(b.l==="90 j +"?"#c0392b":b.l==="61-90 j"?"#f4685f":b.l==="31-60 j"?"#f5b940":"#5b8cff")+';color:#08101f">'+(b.v?money(b.v)+" ("+b.n+")":"")+'</div></div></div>';}).join("")+'</div></div>';
+ if(!rows.length)h+=intelEmpty("🎉 Aucune facture impayee. Continuez comme ca.");
+ else h+=rows.map(function(r){var i=r.i,lv=r.lvl;var ph=clientPhone(i.client);
+  var msg=dunMsg(i,lv.lvl);
+  var done=(i.relances||[]).length;
+  return '<div class="panel" style="border-inline-start:4px solid '+lv.col+'"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><div style="flex:1;min-width:150px"><b style="font-size:15px">'+esc(i.client||"?")+'</b><div style="font-size:12px;color:var(--muted2)">'+money(+i.amount||0)+(i.dueDate?' · echeance '+esc(i.dueDate):'')+(i.desc?' · '+esc(i.desc):'')+'</div></div>'
+  +'<span style="font-size:11px;font-weight:800;letter-spacing:.4px;color:'+lv.col+'">'+esc(lv.name.toUpperCase())+'</span>'
+  +'<b style="font-size:15px;color:'+lv.col+'">'+(r.days>0?"+"+r.days+" j":"a jour")+'</b></div>'
+  +'<div style="margin-top:9px;font-size:12.5px;color:var(--muted);line-height:1.6">'+esc(lv.act)+(done?' <span style="color:var(--muted2)">· '+done+' relance(s) deja envoyee(s)</span>':'')+(i.promiseDate?' <span style="color:var(--good);font-weight:700">· promesse de paiement le '+esc(i.promiseDate)+'</span>':'')+'</div>'
+  +(r.days>0?'<div style="margin-top:10px;padding:11px 13px;border-radius:10px;background:var(--surface);border:1px solid var(--line);font-size:12px;color:var(--muted);white-space:pre-wrap;max-height:110px;overflow:auto">'+esc(msg)+'</div>':'')
+  +'<div style="margin-top:10px;display:flex;gap:7px;flex-wrap:wrap">'
+  +(r.days>0?'<span class="btn sm" onclick="copyDun(\''+i.id+'\')">📋 Copier le message</span>':'')
+  +(r.days>0&&ph?'<span class="btn ghost sm" onclick="waDun(\''+i.id+'\')">💬 WhatsApp</span>':'')
+  +(r.days>0?'<span class="btn ghost sm" onclick="logRelance(\''+i.id+'\')">✓ J\'ai relance</span><span class="btn ghost sm" onclick="setPromise(\''+i.id+'\')">🤝 Promesse de paiement</span>':'')
+  +'<span class="btn ghost sm" style="color:var(--good)" onclick="markPaid(\''+i.id+'\')">💰 Marquer paye</span></div></div>';}).join("");
+ c.innerHTML=h;}
+function invById(id){return (DB.invoices||[]).find(function(i){return i.id===id;});}
+function dunFor(id){var i=invById(id);if(!i)return "";var d=i.dueDate?daysBetween(i.dueDate,today()):0;return dunMsg(i,dunLevel(i.dueDate&&i.dueDate<today()?d:0).lvl);}
+function copyDun(id){var m=dunFor(id);if(navigator.clipboard)navigator.clipboard.writeText(m).then(function(){toast("📋 Message copie");});else toast("📋 "+m.slice(0,40));}
+function waDun(id){var i=invById(id);var ph=clientPhone(i.client);if(!ph)return toast("Pas de numero pour ce client","bad");window.open(waSendUrl(ph,dunFor(id)),"_blank");logRelance(id,true);}
+function logRelance(id,silent){var i=invById(id);if(!i)return;var d=i.dueDate?daysBetween(i.dueDate,today()):0;
+ (i.relances=i.relances||[]).push({date:today(),level:dunLevel(d).lvl,by:DB._me||"?"});
+ logActivity("update","Relance "+i.client+" ("+money(+i.amount||0)+")");save();if(!silent){renderCurrent();toast("✓ Relance enregistree");}}
+function setPromise(id){var i=invById(id);if(!i)return;var d=prompt("Date de paiement promise (AAAA-MM-JJ) :",addDays(today(),7));if(!d)return;
+ i.promiseDate=d;logActivity("update","Promesse de paiement "+i.client+" le "+d);
+ (DB.tasks=DB.tasks||[]).unshift({id:uid(),title:"💸 Verifier le paiement promis — "+i.client+" ("+money(+i.amount||0)+")",due:d,priority:"Haute",linked:i.client,assignee:DB._me||"",done:"Non",createdAt:today()});
+ save();renderCurrent();toast("🤝 Promesse enregistree + tache de controle creee");}
+function markPaid(id){var i=invById(id);if(!i)return;if(!confirm("Marquer cette facture comme payee ?"))return;
+ i.status="Paye";i.paidAt=today();logActivity("update","Facture payee: "+i.client+" "+money(+i.amount||0));save();renderCurrent();toast("💰 Encaisse !");}
+
+/* ---------- 9. RAPPORT ROI CLIENT ---------- */
+var _roiMetrics=[];
+function roiCollect(client,from,to){
+ var f=(DB.fulfilment||[]).filter(function(x){return x.client===client&&x.status==="Livre"&&(x.deadline||"")>=from&&(x.deadline||"")<=to;});
+ var posts=(DB.content||[]).filter(function(p){return p.client===client&&(p.date||"")>=from&&(p.date||"")<=to;});
+ var tasks=(DB.tasks||[]).filter(function(t){return t.linked===client&&t.done==="Oui"&&(t.due||"")>=from&&(t.due||"")<=to;});
+ var acts=[];(DB.plans||[]).filter(function(p){return p.client===client;}).forEach(function(p){(p.items||[]).forEach(function(it){if(it.status==="Termine")acts.push(it.title);});});
+ return {deliverables:f,posts:posts,tasks:tasks,actions:acts};}
+function renderRoi(c){
+ var arr=DB.reports||[];
+ var h='<div class="panel"><h3><span class="dot"></span>📈 Rapports ROI client</h3>'
+ +'<p style="font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:12px">La premiere raison qu\'un client part : il a <b>oublie</b> ce que vous faites pour lui. Ce rapport rassemble tout ce que vous avez livre sur la periode et le met en face des resultats obtenus. Envoye en lien tracke : vous savez s\'il l\'a lu.</p>'
+ +'<div style="display:flex;gap:8px;flex-wrap:wrap"><span class="btn" onclick="openRoiForm()">➕ Nouveau rapport</span></div></div>';
+ if(!arr.length)h+=intelEmpty("Aucun rapport. Faites-en un par client chaque mois — c'est le geste de retention le plus rentable qui existe.");
+ else h+='<div class="grid-cards">'+arr.map(function(r){var tk=Object.keys(DB._shares||{}).find(function(k){return DB._shares[k].reportId===r.id;});
+  return '<div class="hcard"><div class="hh"><span class="avatar" style="width:34px;height:34px;font-size:13px;background:linear-gradient(135deg,var(--brand),var(--purple))">📈</span><span class="hname">'+esc(r.client||"?")+'</span></div>'
+  +'<div class="hrow"><span>Periode</span><b>'+esc(r.from)+' → '+esc(r.to)+'</b></div>'
+  +'<div class="hrow"><span>Resultats</span><b>'+(r.metrics||[]).length+' indicateur(s)</b></div>'
+  +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:11px"><span class="btn sm" onclick="previewRoi(\''+r.id+'\')">👁 Apercu</span><span class="btn ghost sm" onclick="sendRoi(\''+r.id+'\')">🔗 '+(tk?"Revoir le lien":"Envoyer")+'</span><span class="btn ghost sm" onclick="openRoiForm(\''+r.id+'\')">✏</span><span class="btn ghost sm" style="color:var(--bad)" onclick="delRoi(\''+r.id+'\')">🗑</span></div></div>';}).join("")+'</div>';
+ c.innerHTML=h;}
+function delRoi(id){if(!confirm("Supprimer ce rapport ?"))return;DB.reports=(DB.reports||[]).filter(function(r){return r.id!==id;});save();renderCurrent();}
+function renderRoiMetrics(){var w=document.getElementById("roiMWrap");if(!w)return;
+ w.innerHTML=_roiMetrics.map(function(m,i){return '<div style="display:flex;gap:6px;margin-bottom:7px;flex-wrap:wrap"><input id="rm'+i+'_l" placeholder="Indicateur (ex: Leads recus)" value="'+esc(m.label||"")+'" style="flex:2;min-width:130px"><input id="rm'+i+'_b" placeholder="Avant" value="'+esc(m.before||"")+'" style="width:80px"><input id="rm'+i+'_a" placeholder="Apres" value="'+esc(m.after||"")+'" style="width:80px"><select id="rm'+i+'_d" style="width:132px" title="Dans quel sens est-ce une amelioration ?"><option value="up"'+(m.dir!=="down"?" selected":"")+'>↑ plus = mieux</option><option value="down"'+(m.dir==="down"?" selected":"")+'>↓ moins = mieux</option></select><span class="chip" style="cursor:pointer;color:var(--bad)" onclick="rmRoiM('+i+')">🗑</span></div>';}).join("")
+ +'<span class="btn ghost sm" onclick="addRoiM()">+ Ajouter un indicateur</span>'
+ +'<div style="font-size:11.5px;color:var(--muted2);margin-top:8px;line-height:1.6">Pour une position Google ou un cout par lead, choisissez <b>↓ moins = mieux</b> : le rapport affichera bien une progression et non une chute.</div>';}
+function readRoiM(){_roiMetrics=_roiMetrics.map(function(m,i){var g=function(f){return (document.getElementById("rm"+i+"_"+f)||{}).value||"";};return {label:g("l"),before:g("b"),after:g("a"),dir:g("d")||"up"};});return _roiMetrics;}
+function addRoiM(){readRoiM();_roiMetrics.push({label:"",before:"",after:"",dir:"up"});renderRoiMetrics();}
+function rmRoiM(i){readRoiM();_roiMetrics.splice(i,1);if(!_roiMetrics.length)_roiMetrics.push({label:"",before:"",after:"",dir:"up"});renderRoiMetrics();}
+function roiDelta(m){var b=parseFloat(String(m.before).replace(/[^\d.-]/g,"")),a=parseFloat(String(m.after).replace(/[^\d.-]/g,""));
+ if(isNaN(b)||isNaN(a)||b===0)return null;
+ var pct=(m.dir==="down")?((b-a)/Math.abs(b)*100):((a-b)/Math.abs(b)*100);
+ return Math.round(pct);}
+function openRoiForm(id){var r=id?(DB.reports||[]).find(function(x){return x.id===id;}):null;resetModal();editing=null;
+ document.getElementById("modalTitle").textContent=r?"Modifier le rapport":"📈 Nouveau rapport ROI";
+ document.getElementById("delBtn").style.display="none";document.getElementById("modalEl").classList.add("wide");
+ _roiMetrics=r&&(r.metrics||[]).length?JSON.parse(JSON.stringify(r.metrics)):[{label:"",before:"",after:""}];
+ var d=new Date();var defFrom=new Date(d.getFullYear(),d.getMonth()-1,1).toISOString().slice(0,10);
+ document.getElementById("modalBody").innerHTML='<div class="field"><label>Client *</label><input id="ro_client" list="roCl" value="'+esc(r?r.client:"")+'"><datalist id="roCl">'+intelClients().map(function(n){return '<option>'+esc(n)+'</option>';}).join("")+'</datalist></div>'
+ +'<div style="display:flex;gap:8px"><div class="field" style="flex:1"><label>Du</label><input id="ro_from" type="date" value="'+esc(r?r.from:defFrom)+'"></div><div class="field" style="flex:1"><label>Au</label><input id="ro_to" type="date" value="'+esc(r?r.to:today())+'"></div></div>'
+ +'<div class="field"><label>Resultats obtenus — <span style="color:var(--muted2);font-weight:400">c\'est ce qui prouve votre valeur</span></label><div id="roiMWrap"></div></div>'
+ +'<div class="field"><label>Mot de conclusion / prochaines etapes</label><textarea id="ro_notes" style="min-height:80px" placeholder="Le mois prochain nous allons...">'+esc(r?r.notes:"")+'</textarea></div>';
+ renderRoiMetrics();
+ document.getElementById("saveBtn").onclick=function(){var cl=document.getElementById("ro_client").value.trim();if(!cl)return toast("Client requis","bad");
+  var o=r||{id:uid(),createdAt:today()};o.client=cl;o.from=document.getElementById("ro_from").value;o.to=document.getElementById("ro_to").value;
+  o.metrics=readRoiM().filter(function(m){return m.label.trim();});o.notes=document.getElementById("ro_notes").value;o.updatedAt=today();
+  if(!r)(DB.reports=DB.reports||[]).unshift(o);
+  logActivity(r?"update":"create","Rapport ROI: "+cl);save();closeModal();renderCurrent();toast("✓ Rapport enregistre");};
+ document.getElementById("overlay").classList.add("open");}
+function roiHtml(r){var g=roiCollect(r.client,r.from,r.to);
+ var h='<div style="font-family:Segoe UI,Arial,sans-serif">';
+ h+='<h2 style="font-size:19px;margin-bottom:3px">Rapport de resultats — '+esc(r.client)+'</h2><div style="font-size:12.5px;color:#93a1ba;margin-bottom:18px">Periode du '+esc(r.from)+' au '+esc(r.to)+'</div>';
+ if((r.metrics||[]).length){h+='<h3 style="font-size:15px;margin:18px 0 9px">📊 Vos resultats</h3>';
+  h+=(r.metrics||[]).map(function(m){var up=roiDelta(m);
+   return '<div style="display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid #e5e9f0"><span style="font-weight:600">'+esc(m.label)+'</span><span><span style="color:#93a1ba">'+esc(m.before||"—")+'</span> → <b style="font-size:16px">'+esc(m.after||"—")+'</b>'+(up!==null?' <b style="color:'+(up>=0?"#16a34a":"#c0392b")+'">'+(up>=0?"+":"")+up+'%</b>':'')+'</span></div>';}).join("");}
+ if(g.deliverables.length){h+='<h3 style="font-size:15px;margin:20px 0 9px">✅ Livre sur la periode</h3><ul style="padding-inline-start:20px;line-height:1.9">'+g.deliverables.map(function(x){return '<li>'+esc(x.service||"")+(x.deadline?' <span style="color:#93a1ba">— '+esc(x.deadline)+'</span>':'')+'</li>';}).join("")+'</ul>';}
+ if(g.actions.length){h+='<h3 style="font-size:15px;margin:20px 0 9px">🎯 Actions marketing realisees</h3><ul style="padding-inline-start:20px;line-height:1.9">'+g.actions.slice(0,15).map(function(x){return '<li>'+esc(x)+'</li>';}).join("")+'</ul>';}
+ if(g.posts.length){h+='<h3 style="font-size:15px;margin:20px 0 9px">📅 Contenus publies</h3><div style="line-height:1.9">'+g.posts.length+' publication(s) : '+esc(g.posts.slice(0,10).map(function(p){return p.channel;}).filter(function(v,i,a){return a.indexOf(v)===i;}).join(", "))+'</div>';}
+ if(g.tasks.length){h+='<h3 style="font-size:15px;margin:20px 0 9px">🛠 Autres travaux</h3><ul style="padding-inline-start:20px;line-height:1.9">'+g.tasks.slice(0,12).map(function(x){return '<li>'+esc(x.title)+'</li>';}).join("")+'</ul>';}
+ if(r.notes)h+='<h3 style="font-size:15px;margin:20px 0 9px">➡️ Prochaines etapes</h3><div style="white-space:pre-wrap;line-height:1.8">'+esc(r.notes)+'</div>';
+ h+='</div>';return h;}
+function previewRoi(id){var r=(DB.reports||[]).find(function(x){return x.id===id;});if(!r)return;
+ resetModal();editing=null;document.getElementById("modalTitle").textContent="👁 Apercu — "+(r.client||"");
+ document.getElementById("delBtn").style.display="none";document.getElementById("saveBtn").style.display="none";document.getElementById("modalEl").classList.add("wide");
+ document.getElementById("modalBody").innerHTML='<div style="background:#fff;color:#0e1626;padding:22px;border-radius:12px">'+roiHtml(r)+'</div>';
+ document.getElementById("overlay").classList.add("open");}
+function roiPlainText(r){var g=roiCollect(r.client,r.from,r.to);
+ var s="RAPPORT DE RESULTATS — "+r.client+"\nPeriode : "+r.from+" au "+r.to+"\n";
+ if((r.metrics||[]).length){s+="\nVOS RESULTATS\n";(r.metrics||[]).forEach(function(m){var d=roiDelta(m);s+="• "+m.label+" : "+(m.before||"—")+" -> "+(m.after||"—")+(d!==null?" ("+(d>=0?"+":"")+d+"%)":"")+"\n";});}
+ if(g.deliverables.length){s+="\nLIVRE SUR LA PERIODE\n";g.deliverables.forEach(function(x){s+="• "+(x.service||"")+(x.deadline?" ("+x.deadline+")":"")+"\n";});}
+ if(g.actions.length){s+="\nACTIONS MARKETING REALISEES\n";g.actions.slice(0,15).forEach(function(x){s+="• "+x+"\n";});}
+ if(g.posts.length)s+="\nCONTENUS PUBLIES : "+g.posts.length+" publication(s)\n";
+ if(g.tasks.length){s+="\nAUTRES TRAVAUX\n";g.tasks.slice(0,12).forEach(function(x){s+="• "+x.title+"\n";});}
+ if(r.notes)s+="\nPROCHAINES ETAPES\n"+r.notes+"\n";
+ return s;}
+function sendRoi(id){if(!CLOUD.on)return toast("Activez le Cloud d'abord","bad");
+ var r=(DB.reports||[]).find(function(x){return x.id===id;});if(!r)return;
+ var existing=Object.keys(DB._shares||{}).find(function(tk){return DB._shares[tk].reportId===id;});
+ var token=existing||(Date.now().toString(36)+Math.random().toString(36).slice(2,8));
+ var payload={agency:"DevelopTheOne",title:"Rapport de resultats — "+(r.client||""),client:r.client||"",content:roiPlainText(r),sent:today(),contactEmail:"contactdvp@developtheone.com",sys:"report"};
+ toast("⏳ Preparation du rapport...");
+ cryptoEncWithKey(payload,existing?DB._shares[token].key:null).then(function(enc){
+  return fetch(CLOUD.url.replace(/\/$/,"")+"/rest/v1/workspaces?on_conflict=id",{method:"POST",headers:Object.assign(cloudHeaders(),{Prefer:"resolution=merge-duplicates,return=minimal"}),body:JSON.stringify({id:"share-"+token,data:{v:1,doc:{ct:enc.ct,iv:enc.iv}},updated_at:new Date().toISOString()})}).then(function(res){
+   if(!res.ok)throw new Error("cloud "+res.status);
+   if(!existing)DB._shares[token]={token:token,key:enc.k,reportId:id,sys:"report",client:r.client||"",title:"Rapport "+(r.client||""),sent:today()};
+   logActivity("update","Rapport ROI envoye: "+(r.client||""));save();renderCurrent();showShareLink(token);});
+ }).catch(function(e){toast("Erreur: "+e.message,"bad");});}
+
+/* ---------- 10. PARRAINAGE ---------- */
+var REF_STAGES=["Demande","Promis","Introduit","Signe","Sans suite"];
+function refAskScript(n){return "Bonjour "+n+",\n\nContent que le travail vous plaise !\n\nUne question rapide : connaissez-vous une ou deux personnes qui auraient le meme besoin que vous aviez ? Je prefere travailler avec des gens recommandes plutot que de faire de la prospection a froid.\n\nSi quelqu'un vous vient en tete, je peux vous preparer un message tout pret a lui transferer.\n\nMerci beaucoup,\nDevelopTheOne";}
+function refCandidates(){
+ return intelClients().map(function(n){
+  var h=healthScore(n);var r=clientRevenue(n);
+  var delivered=(DB.fulfilment||[]).filter(function(x){return x.client===n&&x.status==="Livre";}).length;
+  var overdue=(DB.invoices||[]).filter(function(i){return i.client===n&&i.status!=="Paye"&&i.dueDate&&i.dueDate<today();}).length;
+  var mine=(DB._refs||[]).filter(function(x){return x.from===n;});
+  var askedRecently=mine.some(function(x){return x.date&&daysBetween(x.date,today())<90;});
+  var score=0;
+  if(h.risk<25)score+=40;else if(h.risk<40)score+=15;
+  score+=Math.min(30,delivered*12);
+  if(!overdue&&r.paid>0)score+=20;
+  if(h.health==="Bonne")score+=15;
+  return {n:n,score:score,risk:h.risk,delivered:delivered,overdue:overdue,asked:mine.length,askedRecently:askedRecently,mrr:h.mrr};})
+  .filter(function(x){return x.score>=45&&!x.askedRecently;}).sort(function(a,b){return b.score-a.score;});}
+function renderReferrals(c){
+ var refs=DB._refs||[];
+ var won=refs.filter(function(r){return r.status==="Signe";});
+ var val=won.reduce(function(a,r){return a+(+r.value||0);},0);
+ var conv=refs.length?Math.round(won.length/refs.length*100):0;
+ var byFrom={};refs.forEach(function(r){if(!r.from)return;byFrom[r.from]=byFrom[r.from]||{n:0,v:0};byFrom[r.from].n++;if(r.status==="Signe")byFrom[r.from].v+=(+r.value||0);});
+ var top=Object.keys(byFrom).map(function(k){return {k:k,n:byFrom[k].n,v:byFrom[k].v};}).sort(function(a,b){return b.v-a.v||b.n-a.n;});
+ var cands=refCandidates();
+ var h='<div class="panel"><h3><span class="dot"></span>🤝 Moteur de parrainage</h3>'
+ +'<p style="font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:14px">Un client recommande coute <b>0 DA</b> en acquisition, signe plus vite et negocie moins. La plupart des agences n\'en recoivent pas parce qu\'<b>elles ne demandent jamais</b>. Ci-dessous : qui demander, quand, et quoi dire.</p>'
+ +'<div style="display:flex;gap:12px;flex-wrap:wrap">'
+ +kpiTile("RECOMMANDATIONS",refs.length+"","au total")
+ +kpiTile("SIGNEES",won.length+"",conv+"% de conversion",won.length?"var(--good)":"var(--muted2)")
+ +kpiTile("CA GENERE",money(val),"sans un dinar de publicite","var(--good)")
+ +kpiTile("A DEMANDER",cands.length+"","clients au bon moment",cands.length?"var(--warn,#f5b940)":"var(--muted2)")
+ +'</div><div style="margin-top:14px"><span class="btn" onclick="openRefForm()">➕ Enregistrer une recommandation</span></div></div>';
+ if(cands.length)h+='<div class="panel" style="background:linear-gradient(135deg,rgba(34,192,125,.1),transparent)"><h3><span class="dot"></span>⭐ Le bon moment pour demander — maintenant</h3>'
+ +'<p style="font-size:12.5px;color:var(--muted);margin-bottom:12px">Ces clients sont satisfaits, a jour de paiement et vous leur avez deja livre. C\'est le pic de satisfaction : c\'est maintenant qu\'on demande.</p>'
+ +cands.slice(0,6).map(function(x){var ph=clientPhone(x.n);
+  return '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:11px 13px;border:1px solid var(--line);border-radius:11px;margin-bottom:8px"><div style="flex:1;min-width:140px"><b>'+esc(x.n)+'</b><div style="font-size:11.5px;color:var(--muted2)">'+x.delivered+' livrable(s) · risque '+x.risk+'/100'+(x.mrr?' · '+money(x.mrr)+'/mois':'')+'</div></div>'
+  +'<span class="btn ghost sm" onclick="copyRefAsk('+JSON.stringify(x.n)+')">📋 Copier le script</span>'
+  +(ph?'<span class="btn ghost sm" onclick="waRefAsk('+JSON.stringify(x.n)+')">💬 WhatsApp</span>':'')
+  +'<span class="btn sm" onclick="quickRef('+JSON.stringify(x.n)+')">✓ J\'ai demande</span></div>';}).join("")+'</div>';
+ if(top.length)h+='<div class="panel"><h3><span class="dot"></span>🏆 Vos meilleurs ambassadeurs</h3><table class="tbl"><tr><th>Client</th><th>Recommandations</th><th>CA genere</th></tr>'
+ +top.slice(0,8).map(function(x){return '<tr><td><b>'+esc(x.k)+'</b></td><td>'+x.n+'</td><td><b style="color:var(--good)">'+money(x.v)+'</b></td></tr>';}).join("")+'</table>'
+ +'<div style="font-size:11.5px;color:var(--muted2);margin-top:10px">Ces personnes-la meritent un cadeau, une remise, ou simplement un merci sincere. C\'est le meilleur investissement marketing que vous puissiez faire.</div></div>';
+ if(refs.length)h+='<div class="panel"><h3><span class="dot"></span>📋 Suivi des recommandations</h3><table class="tbl"><tr><th>De</th><th>Vers</th><th>Statut</th><th>Valeur</th><th></th></tr>'
+ +refs.slice().sort(function(a,b){return String(b.date).localeCompare(String(a.date));}).map(function(r){
+  return '<tr><td><b>'+esc(r.from||"?")+'</b></td><td>'+esc(r.to||"?")+'</td><td><span class="chip" style="cursor:pointer" onclick="cycleRef(\''+r.id+'\')">'+esc(r.status||"Demande")+'</span></td><td>'+(r.value?money(r.value):"—")+'</td><td><span class="chip" style="cursor:pointer;color:var(--bad)" onclick="delRef(\''+r.id+'\')">🗑</span></td></tr>';}).join("")+'</table></div>';
+ c.innerHTML=h;}
+function copyRefAsk(n){var m=refAskScript(n);if(navigator.clipboard)navigator.clipboard.writeText(m).then(function(){toast("📋 Script copie");});}
+function waRefAsk(n){var ph=clientPhone(n);if(!ph)return toast("Pas de numero","bad");window.open(waSendUrl(ph,refAskScript(n)),"_blank");quickRef(n,true);}
+function quickRef(n,silent){(DB._refs=DB._refs||[]).unshift({id:uid(),from:n,to:"(en attente)",status:"Demande",value:0,date:today()});
+ logActivity("create","Demande de recommandation: "+n);save();if(!silent){renderCurrent();toast("✓ Demande enregistree");}}
+function cycleRef(id){var r=(DB._refs||[]).find(function(x){return x.id===id;});if(!r)return;
+ r.status=REF_STAGES[(REF_STAGES.indexOf(r.status||"Demande")+1)%REF_STAGES.length];
+ if(r.status==="Signe"&&!r.value){var v=prompt("Montant du contrat signe (DA) :","0");r.value=+(v||"").replace(/\D/g,"")||0;}
+ save();renderCurrent();}
+function delRef(id){DB._refs=(DB._refs||[]).filter(function(x){return x.id!==id;});save();renderCurrent();}
+function openRefForm(){resetModal();editing=null;document.getElementById("modalTitle").textContent="🤝 Nouvelle recommandation";document.getElementById("delBtn").style.display="none";
+ document.getElementById("modalBody").innerHTML='<div class="field"><label>Recommande par *</label><input id="rf_from" list="rfCl"><datalist id="rfCl">'+intelClients().map(function(n){return '<option>'+esc(n)+'</option>';}).join("")+'</datalist></div>'
+ +'<div class="field"><label>Personne / entreprise recommandee *</label><input id="rf_to"></div>'
+ +'<div class="field"><label>Telephone (optionnel)</label><input id="rf_phone"></div>'
+ +'<div class="field"><label>Statut</label><select id="rf_status">'+REF_STAGES.map(function(s){return '<option>'+s+'</option>';}).join("")+'</select></div>'
+ +'<div class="field"><label>Valeur estimee / signee (DA)</label><input id="rf_value" type="number" value="0"></div>';
+ document.getElementById("saveBtn").onclick=function(){var f=document.getElementById("rf_from").value.trim(),to=document.getElementById("rf_to").value.trim();
+  if(!f||!to)return toast("Les deux noms sont requis","bad");
+  var ph=document.getElementById("rf_phone").value.trim();
+  (DB._refs=DB._refs||[]).unshift({id:uid(),from:f,to:to,status:document.getElementById("rf_status").value,value:+document.getElementById("rf_value").value||0,phone:ph,date:today()});
+  if(ph)(DB.leads=DB.leads||[]).unshift({id:uid(),name:to,phone:ph,source:"Reference",status:"Nouveau",notes:"Recommande par "+f,assignee:DB._me||"",createdAt:today()});
+  logActivity("create","Recommandation: "+f+" -> "+to);save();closeModal();buildNav();renderCurrent();toast("🤝 Enregistre"+(ph?" + prospect cree":""));};
+ document.getElementById("overlay").classList.add("open");}
+
+/* ---------- 11. DEAL DESK ---------- */
+var _dd={hours:60,ads:0,target:60,price:257500};
+function renderDealDesk(c){
+ var hr=avgHourly();
+ var cost=Math.round(_dd.hours*hr)+(+_dd.ads||0);
+ var floor=Math.round(cost/(1-0.25));
+ var targetP=Math.round(cost/(1-(_dd.target/100)));
+ var margin=_dd.price>0?Math.round((_dd.price-cost)/_dd.price*100):0;
+ var verdict=_dd.price<cost?{t:"🔴 VOUS PERDEZ DE L'ARGENT",c:"var(--bad)"}:_dd.price<floor?{t:"🟠 SOUS VOTRE PLANCHER",c:"#ff8a5c"}:margin<_dd.target?{t:"🟡 EN DESSOUS DE LA CIBLE",c:"var(--warn,#f5b940)"}:{t:"🟢 BONNE AFFAIRE",c:"var(--good)"};
+ var h='<div class="panel"><h3><span class="dot"></span>🎯 Deal Desk — ne jamais brader par reflexe</h3>'
+ +'<p style="font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:14px">Quand le client dit « c\'est trop cher », la pire reponse est une remise immediate. Ici vous voyez votre <b>vrai plancher</b> (calcule sur le cout reel de votre equipe) et ce qu\'il faut <b>ceder a la place</b> d\'une baisse de prix.</p>';
+ if(!hr)h+='<div style="padding:12px 14px;border-radius:11px;background:rgba(245,185,64,.1);border:1px solid rgba(245,185,64,.35);font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:12px">⚠️ Aucun cout d\'equipe renseigne — le plancher affiche est faux. Ouvrez <b>Equipe</b> et indiquez le cout mensuel de chacun.</div>';
+ h+='<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px">'
+ +'<div style="flex:1;min-width:190px"><label style="font-size:12px;color:var(--muted);font-weight:700">Charge estimee : <b id="ddH">'+_dd.hours+'h</b></label><input type="range" min="5" max="400" step="5" value="'+_dd.hours+'" style="width:100%;margin-top:7px" oninput="_dd.hours=+this.value;renderCurrent();"></div>'
+ +'<div style="flex:1;min-width:190px"><label style="font-size:12px;color:var(--muted);font-weight:700">Budget pub / sous-traitance : <b>'+money(_dd.ads)+'</b></label><input type="range" min="0" max="300000" step="10000" value="'+_dd.ads+'" style="width:100%;margin-top:7px" oninput="_dd.ads=+this.value;renderCurrent();"></div>'
+ +'<div style="flex:1;min-width:190px"><label style="font-size:12px;color:var(--muted);font-weight:700">Marge cible : <b>'+_dd.target+'%</b></label><input type="range" min="20" max="80" step="5" value="'+_dd.target+'" style="width:100%;margin-top:7px" oninput="_dd.target=+this.value;renderCurrent();"></div>'
+ +'<div style="flex:1;min-width:190px"><label style="font-size:12px;color:var(--muted);font-weight:700">Prix propose : <b>'+money(_dd.price)+'</b></label><input type="range" min="0" max="900000" step="12500" value="'+_dd.price+'" style="width:100%;margin-top:7px" oninput="_dd.price=+this.value;renderCurrent();"></div>'
+ +'</div>'
+ +'<div style="display:flex;gap:12px;flex-wrap:wrap">'
+ +kpiTile("COUT REEL",money(cost),_dd.hours+"h x "+money(Math.round(hr))+"/h"+(_dd.ads?" + pub":""),"var(--bad)")
+ +kpiTile("PLANCHER ABSOLU",money(floor),"25% de marge — ne descendez jamais dessous","#ff8a5c")
+ +kpiTile("PRIX CIBLE",money(targetP),_dd.target+"% de marge","var(--good)")
+ +kpiTile("VOTRE MARGE",margin+"%",money(_dd.price-cost)+" de benefice",verdict.c)
+ +'</div>'
+ +'<div style="margin-top:14px;padding:14px 16px;border-radius:12px;background:var(--surface);border:1px solid var(--line)"><b style="font-size:15px;color:'+verdict.c+'">'+verdict.t+'</b>'
+ +'<div style="font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.7">'
+ +(_dd.price<floor?'Refusez ou reduisez le perimetre. Accepter ce prix, c\'est payer pour travailler. Retirez des modules jusqu\'a revenir au-dessus de '+money(floor)+'.':'Vous pouvez negocier jusqu\'a <b>'+money(floor)+'</b> maximum. En dessous, dites non — ce client vous coutera plus qu\'il ne vous rapporte.')
+ +'</div></div></div>';
+ h+='<div class="panel"><h3><span class="dot"></span>🪜 A ceder AVANT de baisser le prix</h3>'
+ +'<p style="font-size:12.5px;color:var(--muted);margin-bottom:12px">Dans l\'ordre. Chaque concession ne vous coute presque rien mais a de la valeur pour lui. N\'allez a l\'etape suivante que s\'il refuse la precedente.</p>'
+ +[["1. Le paiement en 3 fois sans frais","Ne coute rien, leve l'objection de tresorerie — la vraie objection dans 60% des cas."],
+   ["2. Un delai de livraison plus confortable","Vous gagnez en planification, lui a l'impression d'obtenir un geste."],
+   ["3. Un module bonus a faible cout pour vous","Ex : un audit, une formation de 30 min, des visuels supplementaires. Valeur percue elevee, cout reel faible."],
+   ["4. Une garantie renforcee","« Si vous n'etes pas satisfait au bout de 30 jours, on retravaille gratuitement. » Cout : votre confiance."],
+   ["5. Un engagement plus long contre un prix mensuel plus doux","Vous securisez du MRR, il baisse sa mensualite. Tout le monde gagne."],
+   ["6. Enfin — et seulement enfin — une remise","Et jamais sans contrepartie : paiement comptant, temoignage video, ou 2 recommandations."]]
+  .map(function(x,i){return '<div style="display:flex;gap:12px;padding:12px 0;border-bottom:'+(i<5?"1px solid var(--line)":"none")+'"><div style="flex:1"><b style="font-size:13.5px">'+esc(x[0])+'</b><div style="font-size:12.5px;color:var(--muted);margin-top:4px;line-height:1.6">'+esc(x[1])+'</div></div></div>';}).join("")+'</div>';
+ h+='<div class="panel"><h3><span class="dot"></span>💬 Reponses aux objections</h3>'
+ +[["« C\'est trop cher »","« Trop cher par rapport a quoi ? » — puis vous vous taisez. Neuf fois sur dix il compare a un devis sans le meme perimetre. Ramenez la discussion sur ce que ca lui rapporte, pas sur ce que ca coute."],
+   ["« Je vais reflechir »","« Bien sur. Juste pour que je vous envoie la bonne information : qu\'est-ce qui vous fait hesiter — le budget, le timing, ou vous n\'etes pas sur que ca marche pour vous ? »"],
+   ["« J\'ai moins cher ailleurs »","« C\'est possible, et c\'est un vrai choix. Est-ce qu\'on peut comparer ligne par ligne ? Souvent la difference c\'est "+"le suivi apres livraison — c\'est la que les projets meurent. »"],
+   ["« Je n\'ai pas le budget maintenant »","« Je comprends. Deux options : on demarre en 3 fois, ou on commence par la partie qui rapporte le plus vite et on ajoute le reste ensuite. Laquelle vous parle le plus ? »"],
+   ["« Envoyez-moi une proposition »","« Je vous l\'envoie ce soir. Pour qu\'elle soit utile : quel resultat precis voulez-vous dans 90 jours ? Et on cale 15 min vendredi pour la parcourir ensemble ? »"]]
+  .map(function(x,i){return '<div style="padding:13px 0;border-bottom:'+(i<4?"1px solid var(--line)":"none")+'"><b style="font-size:13.5px;color:var(--brand-2)">'+esc(x[0])+'</b><div style="font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.75">'+esc(x[1])+'</div></div>';}).join("")+'</div>';
+ c.innerHTML=h;}
+
+/* ---------- Enregistrement ---------- */
+var _scaleLang={
+ fr:{g_scale:"Machine a scaler",playbooks:"Playbooks",playbooksS:"Vos projets en pilote automatique",collections:"Recouvrement",collectionsS:"L'argent qui dort dehors",roi:"Rapports ROI",roiS:"Prouvez votre valeur, gardez vos clients",referrals:"Parrainage",referralsS:"Grandir sans depenser en publicite",dealdesk:"Deal Desk",dealdeskS:"Votre plancher de prix et vos scripts"},
+ en:{g_scale:"Scaling machine",playbooks:"Playbooks",playbooksS:"Your projects on autopilot",collections:"Collections",collectionsS:"Money sitting outside",roi:"ROI reports",roiS:"Prove your value, keep your clients",referrals:"Referrals",referralsS:"Grow without ad spend",dealdesk:"Deal Desk",dealdeskS:"Your price floor and scripts"},
+ ar:{g_scale:"آلة التوسع",playbooks:"أدلة التنفيذ",playbooksS:"مشاريعك على الطيار الآلي",collections:"التحصيل",collectionsS:"أموالك خارج الشركة",roi:"تقارير العائد",roiS:"أثبت قيمتك واحتفظ بعملائك",referrals:"الإحالات",referralsS:"النمو بدون إعلانات",dealdesk:"مكتب الصفقات",dealdeskS:"الحد الأدنى للسعر والنصوص"}};
+["fr","en","ar"].forEach(function(l){for(var k in _scaleLang[l])LANG[l][k]=_scaleLang[l][k];});
+SYSTEMS.playbooks={key:"playbooks",icon:iconRocket(),intel:renderPlaybooks};
+SYSTEMS.collections={key:"collections",icon:iconMoney(),intel:renderCollections};
+SYSTEMS.roi={key:"roi",icon:iconChartG(),intel:renderRoi};
+SYSTEMS.referrals={key:"referrals",icon:iconUsers(),intel:renderReferrals};
+SYSTEMS.dealdesk={key:"dealdesk",icon:iconTarget(),intel:renderDealDesk};
+["playbooks","collections","roi","referrals","dealdesk"].forEach(function(k){if(ADMINONLY.indexOf(k)<0)ADMINONLY.push(k);});
+if(!GROUPS.find(function(g){return g.lbl==="g_scale";}))GROUPS.push({lbl:"g_scale",items:["playbooks","collections","roi","referrals","dealdesk"]});
+
 var _rcPreIntel=renderCurrent;
 renderCurrent=function(){
  if(ADMINONLY.indexOf(current)>=0&&!isAdmin())current="dashboard";
@@ -1866,7 +2265,7 @@ renderCurrent=function(){
 /* ===== v5.1: niches in leads + update banner ===== */
 SYSTEMS.leads.fields=function(){return [F("name","text",{req:true}),F("business"),{k:"niche",l:(curLang==="ar"?"القطاع":"Niche"),t:"select",opts:["","Promotion immobiliere","Agence immobiliere","Clinique medicale","Clinique dentaire","Clinique esthetique / greffe cheveux","Salle de sport / Gym","Restaurant / Cafe","E-commerce / Boutique","Cabinet d'avocats / Notaire","Agence de voyage","Nettoyage / Proprete","Services a domicile (plombier, electricien...)","Med spa / Institut de beaute","Salon de coiffure / Barbier","Auto / Concessionnaire","Ecole / Formation privee","Evenementiel / Mariage / Salle","Immobilier de luxe","Coach / Consultant","Batiment / Construction / Travaux","Pharmacie / Parapharmacie","Hotel / Riad / Location","Bijouterie / Luxe","Autre"]},F("phone"),F("email"),{k:"website",l:(curLang==="ar"?"الموقع":"Site web"),t:"text"},{k:"instagram",l:"Instagram",t:"text"},{k:"address",l:(curLang==="ar"?"العنوان":"Adresse"),t:"text"},F("source","select",{opts:["Google Maps","Instagram","Cold Call","Reference","Import","Autre"]}),F("city"),F("value","number"),ASSIGN,F("status","select",{opts:["Nouveau","Contacte","RDV pris","Gagne","Perdu"]}),F("notes","textarea")];};
 SYSTEMS.leads.card=function(r){return {title:r.name||"-",sub:[r.business,r.niche].filter(Boolean).join(" · ")||r.city||"",chips:[r.value?money(r.value):null,r.niche||r.source].filter(Boolean),owner:r.assignee||r.name};};
-var APP_VERSION="5.36.0";
+var APP_VERSION="5.37.0";
 var _bn=document.createElement("div");_bn.id="updBanner";
 _bn.style.cssText="display:none;position:fixed;top:0;left:0;right:0;z-index:600;background:linear-gradient(90deg,var(--brand),var(--brand-2));color:#fff;padding:10px 18px;font-size:13px;font-weight:700;text-align:center;box-shadow:0 6px 20px -6px rgba(0,0,0,.6)";
 _bn.innerHTML='<span id="updTxt"></span> <span onclick="location.reload(true)" style="text-decoration:underline;cursor:pointer;margin-inline-start:10px">↻ Rafraichir</span> <span onclick="document.getElementById(\'updBanner\').style.display=\'none\'" style="cursor:pointer;margin-inline-start:14px;opacity:.7">✕</span>';
