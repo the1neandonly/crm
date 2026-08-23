@@ -576,6 +576,16 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;background:var(--bran
 .tour-card h3{font-size:18px;font-weight:660;letter-spacing:-.02em}
 .tour-card p{font-size:13.5px;color:var(--muted)}
 
+/* --- Lecteur de script / document --- */
+.tplreader .docsheet{width:100%;margin:0 0 14px 0;padding:26px 28px;min-height:0;box-shadow:none;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);color:var(--txt);font-family:inherit;font-size:14.5px;line-height:1.85}
+.tplreader .docsheet:last-child{margin-bottom:0}
+.tplreader .docxbody{font-family:inherit;font-size:14.5px;line-height:1.8;color:var(--txt)}
+.tplreader .docxbody h1,.tplreader .docxbody h2,.tplreader .docxbody h3{font-weight:660;letter-spacing:-.015em;margin:18px 0 8px}
+.tplreader .docxbody table{border-collapse:collapse;width:100%;font-size:13px;margin:0 0 12px}
+.tplreader .docxbody td,.tplreader .docxbody th{border:1px solid var(--line);padding:7px 10px;text-align:start}
+.filerow{display:flex;align-items:center;gap:9px;padding:9px 11px;border:1px solid var(--line);border-radius:var(--r-sm);margin-bottom:7px;font-size:12.5px}
+.filerow b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+
 /* --- Selection multiple --- */
 .card{position:relative}
 .selbox{position:absolute;top:9px;inset-inline-end:9px;width:17px;height:17px;border:1.5px solid var(--line2);border-radius:3px;background:var(--surface);cursor:pointer;z-index:3;opacity:0;transition:.12s;flex-shrink:0}
@@ -716,7 +726,7 @@ var SYSTEMS={
   clients360:{key:"clients360",icon:iconEye(),c360:true},
   invoices:{key:"invoices",icon:iconInvoice(),table:true,fields:function(){return [F("client","text",{req:true}),F("amount","number",{req:true}),F("status","select",{opts:["Impaye","Paye","Retard"]}),F("dueDate","date"),F("desc")];}},
   tasks:{key:"tasks",icon:iconCheck(),tasks:true,mine:"assignee",fields:function(){return [F("title","text",{req:true}),F("due","date"),{k:"priority",l:(curLang==="ar"?"الأولوية":curLang==="en"?"Priority":"Priorite"),t:"select",opts:["Normale","Haute","Basse"]},F("linked"),ASSIGN,F("done","select",{opts:["Non","Oui"]})];}},
-  templates:{key:"templates",icon:iconDoc(),templates:true,fields:function(){return [F("category","select",{opts:["Cold Call","DM / WhatsApp","Email","Objection","Onboarding","Autre"]}),F("title","text",{req:true}),F("content","textarea")];}},
+  templates:{key:"templates",icon:iconDoc(),templates:true,fields:function(){return [F("category","select",{opts:["Cold Call","DM / WhatsApp","Email","Objection","Onboarding","Procedure","Formation","Autre"]}),F("title","text",{req:true}),{k:"assignee",l:(curLang==="ar"?"مرئي لـ":curLang==="en"?"Visible to":"Visible par"),t:"select",dyn:"team",emptyLabel:"— toute l'equipe —"},{k:"listId",l:(curLang==="ar"?"مرتبط بقائمة":curLang==="en"?"Linked to list":"Lie a la liste"),t:"select",dyn:"lists"},F("content","textarea")];}},
   hiring:{key:"hiring",icon:iconUsers(),kanban:true,stageKey:"stage",stages:[{id:"Candidature",color:"#5b8cff"},{id:"Test",color:"#a78bfa"},{id:"Essai",color:"#f5b940"},{id:"Embauche",color:"#22c07d"},{id:"Refuse",color:"#f4685f"}],
     fields:function(){return [F("candidate","text",{req:true}),F("role","select",{opts:["Setter","Closer","Chef de projet","Designer","Developpeur","Autre"]}),F("stage","select",{opts:["Candidature","Test","Essai","Embauche","Refuse"]}),F("contact"),F("notes","textarea")];},
     card:function(r){return {title:r.candidate||"-",sub:r.role||"",chips:[r.contact].filter(Boolean),owner:r.candidate};}},
@@ -725,7 +735,7 @@ var SYSTEMS={
 var GROUPS=[{lbl:"g_pilot",items:["dashboard","calendar","leaderboard"]},{lbl:"g_acq",items:["leads","sales"]},{lbl:"g_deliv",items:["onboarding","fulfilment"]},{lbl:"g_reten",items:["success","clients360","invoices","tasks"]},{lbl:"g_res",items:["templates","hiring","team"]}];
 var DB=load(),current="dashboard",editing=null,cmdSel=0,cmdItems=[],mineOnly=false;
 function autoFlagChurn(d){(d.success||[]).forEach(function(s){if(s.health!=="Churne"&&s.lastCheckin&&daysBetween(s.lastCheckin,today())>30&&s.health!=="A risque"){s.health="A risque";s._autoFlag=true;}});}
-function fixupDB(d){migratePass(d);if(!d._log)d._log=[];if(!d._waScript)d._waScript=DEFAULT_WA;if(!d._touches)d._touches=[];if(!d._chat)d._chat=[];if(!d.plans)d.plans=[];if(!d.content)d.content=[];if(!d._portals)d._portals={};if(!d._signs)d._signs={};if(!d._shares)d._shares={};if(!d._fin)d._fin={fixedCosts:0,cash:0,hoursMonth:160};if(!d._time)d._time=[];if(!d._teamDel)d._teamDel=[];if(d._teamDel.length){var td={};d._teamDel.forEach(function(id){td[id]=1;});d._team=(d._team||[]).filter(function(m){return !td[m.id];});}if(!d._chatDel)d._chatDel=[];if(d._chatDel.length){var ds={};d._chatDel.forEach(function(id){ds[id]=1;});d._chat=(d._chat||[]).filter(function(m){return !ds[m.id];});}if(typeof trimChatMedia==="function")trimChatMedia(d);dedupeTeam(d);(d._team||[]).forEach(function(m){if(m.commissionPct==null)m.commissionPct=isAdminRole(m.role)?0:10;});}
+function fixupDB(d){migratePass(d);if(!d._log)d._log=[];if(!d._waScript)d._waScript=DEFAULT_WA;if(!d._touches)d._touches=[];if(!d._chat)d._chat=[];if(!d.plans)d.plans=[];if(!d.content)d.content=[];if(!d._portals)d._portals={};if(!d._signs)d._signs={};if(!d._shares)d._shares={};if(!d._fin)d._fin={fixedCosts:0,cash:0,hoursMonth:160};if(!d._time)d._time=[];if(!d.leadlists)d.leadlists=[];if(!d._teamDel)d._teamDel=[];if(d._teamDel.length){var td={};d._teamDel.forEach(function(id){td[id]=1;});d._team=(d._team||[]).filter(function(m){return !td[m.id];});}if(!d._chatDel)d._chatDel=[];if(d._chatDel.length){var ds={};d._chatDel.forEach(function(id){ds[id]=1;});d._chat=(d._chat||[]).filter(function(m){return !ds[m.id];});}if(typeof trimChatMedia==="function")trimChatMedia(d);dedupeTeam(d);(d._team||[]).forEach(function(m){if(m.commissionPct==null)m.commissionPct=isAdminRole(m.role)?0:10;});}
 /* Un compte = un nom. Les anciennes versions creaient un id aleatoire par appareil,
    ce qui dupliquait les comptes a chaque synchro. On fusionne ici par nom. */
 function normName(s){return String(s==null?"":s).replace(/ /g," ").trim().toLowerCase().replace(/\s+/g," ");}
@@ -809,7 +819,9 @@ function mgrHidden(key){if(key!=="leads"||!isAdmin()||!mgrHide)return [];return 
 /* Cloisonnement : un non-admin ne voit QUE ce qui lui est assigne. */
 function isScoped(){return !!DB._me&&!isAdmin();}
 function scopeRows(key,a){var s=SYSTEMS[key];if(!s||!s.mine||!DB._me)return a;if(!isScoped())return a;return a.filter(function(r){return r[s.mine]===DB._me;});}
+var _listFilter="";
 function arrOf(key){var a=DB[key]||[],s=SYSTEMS[key];
+ if(key==="leads"&&_listFilter)a=a.filter(function(l){return l.listId===_listFilter;});
  if(isScoped())a=scopeRows(key,a);
  else if(mineOnly&&s&&s.mine&&DB._me)a=a.filter(function(r){return r[s.mine]===DB._me;});
  if(key==="leads"&&isAdmin()&&mgrHide&&!mineOnly){a=a.filter(function(l){return !(l.assignee&&l.assignee!==DB._me&&isWorkerName(l.assignee)&&["Nouveau","Contacte"].indexOf(l.status)>=0);});}
@@ -833,7 +845,9 @@ function stageT(s){return (STAGE_LABELS[curLang]&&STAGE_LABELS[curLang][s])||s;}
 function leadScore(r){var v=Math.min(100,(+r.value||0)/5000);var srcW={"Reference":25,"Google Maps":15,"Instagram":10,"Cold Call":5,"Autre":8}[r.source]||8;var rec=r.updatedAt?Math.max(0,20-daysBetween(r.updatedAt,today())):0;return Math.min(100,Math.round(v*0.5+srcW+rec));}
 function stageProgressPct(s,r){if(!s.stages)return null;var idx=s.stages.findIndex(function(st){return st.id===(r[s.stageKey]||s.stages[0].id);});if(idx<0)return null;return Math.round(idx/(s.stages.length-1)*100);}
 function boardFilter(q){q=(q||"").toLowerCase().trim();document.querySelectorAll('.board .card').forEach(function(card){var id=card.dataset.id;var rec=(DB[current]||[]).find(function(r){return r.id===id;});if(!rec)return;var hay=[rec.name,rec.business,rec.phone,rec.city,rec.client,rec.email,rec.niche,rec.candidate].filter(Boolean).join(" ").toLowerCase();card.style.display=(!q||hay.indexOf(q)>=0)?"":"none";});}
-function renderBoard(c){var s=SYSTEMS[current],arr=arrOf(current),html='';if(current==="leads"){var nb=(DB.leads||[]).filter(function(l){return l.status==="Nouveau"&&(isAdmin()||l.assignee===DB._me);}).length;html+='<div style="margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span class="btn" onclick="focusMode()">🎯 Mode Focus'+(nb?' <span style="background:rgba(255,255,255,.25);border-radius:6px;padding:1px 9px;font-size:11.5px">'+nb+'</span>':'')+'</span><span class="btn ghost sm" onclick="exportLeadsCSV()">📤 Exporter CSV</span>'+(isAdmin()?'<span class="btn ghost sm" onclick="toggleMgr()">'+(mgrHide?'👁 Voir tout':'🎯 Vue manager')+'</span>':'')+(isAdmin()&&coldLeads().length?'<span class="btn ghost sm" onclick="openColdRadar()" style="border-color:#3a5a8c;color:#9dc0ff">❄️ '+coldLeads().length+' froids</span>':'')+'</div>';
+function renderBoard(c){var s=SYSTEMS[current],arr=arrOf(current),html='';if(current==="leads"){var nb=(DB.leads||[]).filter(function(l){return l.status==="Nouveau"&&(isAdmin()||l.assignee===DB._me);}).length;html+='<div style="margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span class="btn" onclick="focusMode()">🎯 Mode Focus'+(nb?' <span style="background:rgba(255,255,255,.25);border-radius:6px;padding:1px 9px;font-size:11.5px">'+nb+'</span>':'')+'</span><span class="btn ghost sm" onclick="exportLeadsCSV()">📤 Exporter CSV</span>'+(isAdmin()?'<span class="btn ghost sm" onclick="toggleMgr()">'+(mgrHide?'👁 Voir tout':'🎯 Vue manager')+'</span>':'')+(isAdmin()&&coldLeads().length?'<span class="btn ghost sm" onclick="openColdRadar()" style="border-color:#3a5a8c;color:#9dc0ff">❄️ '+coldLeads().length+' froids</span>':'')
++(_listFilter?'<span class="btn ghost sm" style="border-color:var(--brand);color:var(--brand-2)" onclick="_listFilter=\'\';renderCurrent();">📇 Liste : '+esc(listName(_listFilter))+' ✕</span>':((DB.leadlists||[]).length?'<select style="border-radius:var(--r-sm);border:1px solid var(--line);background:var(--surface);color:var(--txt);padding:8px 10px;font-size:12.5px;font-family:inherit" onchange="_listFilter=this.value;renderCurrent();"><option value="">📇 Toutes les listes</option>'+visibleLists().map(function(L){return '<option value="'+L.id+'">'+esc(L.name)+'</option>';}).join("")+'</select>':''))
++'</div>';
  if(isAdmin()&&mgrHide){var hid=mgrHidden("leads");if(hid.length){var byRep={};hid.forEach(function(l){byRep[l.assignee]=(byRep[l.assignee]||0)+1;});var reps=Object.keys(byRep).map(function(r){return esc(r)+' <b>'+byRep[r]+'</b>';}).join(' · ');html+='<div class="panel" style="margin-bottom:14px;padding:12px 16px;font-size:13px;color:var(--muted)">🎯 <b>Vue manager active</b> — '+hid.length+' prospect(s) en cours de traitement, masques jusqu\'a RDV/Gagne : '+reps+'</div>';}}}if(arr.length>6){html+='<div style="margin-bottom:12px"><input class="board-search" placeholder="🔎 Rechercher (nom, tel, ville...)" oninput="boardFilter(this.value)" autocomplete="off"></div>';}html+='<div class="board">';s.stages.forEach(function(st){var items=arr.filter(function(r){return (r[s.stageKey]||s.stages[0].id)===st.id;});var sum=items.reduce(function(a,r){return a+(+r.value||0);},0);html+='<div class="col"><div class="col-head"><span class="cdot" style="background:'+st.color+'"></span><span class="cname">'+stageT(st.id)+'</span>'+(items.length?'<span class="selall" onclick="selectStage(\''+st.id+'\')" title="Tout selectionner dans cette colonne">☑</span>':'')+'<span class="ccount">'+items.length+'</span>'+(sum?'<span class="cval">'+money(sum)+'</span>':'')+'</div><div class="col-body" data-stage="'+st.id+'" ondrop="drop(event)" ondragover="dragover(event)" ondragleave="dragleave(event)">';items.forEach(function(r){html+=cardHTML(r,s);});html+='</div><div class="add-card" onclick="openAdd(\''+st.id+'\')">+ '+t("add")+'</div></div>';});c.innerHTML=html+'</div>';}
 function cardHTML(r,s){var cfg=s.card(r),chips=(cfg.chips||[]).map(function(ch){return '<span class="chip '+(String(ch).indexOf('DA')>=0?'money':'')+'">'+esc(ch)+'</span>';}).join("");var init=(cfg.owner||"?").trim().slice(0,2).toUpperCase();var rot=r.updatedAt&&["leads","sales"].indexOf(current)>=0&&daysBetween(r.updatedAt,today())>=7&&["Gagne","Signe","Perdu"].indexOf(r[s.stageKey])<0;var scoreBadge="";if(current==="leads"){var sc=leadScore(r);scoreBadge='<span class="chip" style="background:'+(sc>=60?"var(--good)":sc>=35?"var(--warn,#f5b940)":"var(--surface2)")+';color:'+(sc>=35?"#fff":"var(--muted)")+'" title="Score du prospect">'+(sc>=60?"🔥":"")+sc+'</span>';if(isCold(r))scoreBadge+='<span class="chip" style="background:#3a5a8c;color:#cfe0ff" title="Prospect qui refroidit — pas de contact depuis '+daysBetween(r.updatedAt,today())+' jours">❄️ '+daysBetween(r.updatedAt,today())+'j</span>';}var progBar="";if(current==="onboarding"){var pct=stageProgressPct(s,r);progBar='<div style="height:5px;background:var(--line);border-radius:3px;overflow:hidden;margin:6px 0"><div style="height:100%;width:'+pct+'%;background:var(--brand)"></div></div>';}var weightChip="";if(current==="sales"){var PROBW={"RDV programme":.2,"Proposition envoyee":.4,"Negociation":.65,"Signe":1,"Perdu":0};var wv=Math.round((+r.value||0)*(PROBW[r.stage]||0));if(wv&&r.stage!=="Signe"&&r.stage!=="Perdu")weightChip='<span class="chip">≈ '+money(wv)+'</span>';}var acts="";if(current==="leads"&&r.phone){var waUrl=waSendUrl(r.phone,mergeScript(DB._waScript||DEFAULT_WA,r));acts='<div class="cardacts"><a class="cact call" href="tel:'+esc(r.phone)+'" onclick="quickCall(event,\''+r.id+'\')" title="Appeler '+esc(r.phone)+'">📞 Appeler</a><a class="cact wa" href="'+esc(waUrl||"#")+'" target="_blank" rel="noopener" onclick="return openWa(event,\''+r.id+'\')" title="Envoyer le script WhatsApp">💬 WhatsApp</a></div>';}
  var moveBtn=s.stages?'<span class="cmove" onclick="openMoveMenu(event,\''+r.id+'\')" title="Deplacer">⇄</span>':'';
@@ -869,7 +883,79 @@ function weeklyChatReport(){if(!isAdmin()||!DB._me)return;var wk=isoWeek(new Dat
 var _prioW={"Haute":0,"Normale":1,"Basse":2};
 function renderTasks(c){var arr=arrOf("tasks"),html='<div class="panel"><table class="tbl"><tr><th style="width:40px"></th><th>'+fl("title")+'</th><th>Priorite</th><th>'+fl("assignee")+'</th><th>'+fl("due")+'</th></tr>';arr.slice().sort(function(a,b){return (a.done==="Oui")-(b.done==="Oui")||(_prioW[a.priority]!=null?_prioW[a.priority]:1)-(_prioW[b.priority]!=null?_prioW[b.priority]:1)||String(a.due).localeCompare(String(b.due));}).forEach(function(x){var done=x.done==="Oui",over=!done&&x.due&&x.due<today();var pc=x.priority==="Haute"?"var(--bad)":x.priority==="Basse"?"var(--muted2)":"var(--brand)";html+='<tr class="'+(done?'task-done':'')+'"><td><span class="chkbox '+(done?'done':'')+'" onclick="event.stopPropagation();toggleTask(\''+x.id+'\')">'+(done?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5 9-11" stroke-linecap="round" stroke-linejoin="round"/></svg>':'')+'</span></td><td onclick="openEdit(\''+x.id+'\')"><b>'+esc(x.title)+'</b></td><td onclick="openEdit(\''+x.id+'\')"><span class="chip" style="color:'+pc+'">'+stageT(x.priority||"Normale")+'</span></td><td onclick="openEdit(\''+x.id+'\')">'+esc(x.assignee||"-")+'</td><td onclick="openEdit(\''+x.id+'\')" class="'+(over?'overdue-txt':'')+'">'+(x.due||"-")+(over?' ⚠️':'')+'</td></tr>';});c.innerHTML=html+'</table></div>';}
 function toggleTask(id){var x=DB.tasks.find(function(y){return y.id===id;});x.done=x.done==="Oui"?"Non":"Oui";save();renderCurrent();buildNav();}
-function renderTemplates(c){var arr=DB.templates||[],html='<div class="grid-cards">';arr.forEach(function(x){html+='<div class="tpl" onclick="openEdit(\''+x.id+'\')"><div class="tcat">'+esc(x.category||"")+'</div><div class="ttitle">'+esc(x.title)+'</div><div class="tbody">'+esc(x.content||"")+'</div><div class="tcopy" onclick="event.stopPropagation();copyTpl(\''+x.id+'\')">📋</div></div>';});c.innerHTML=html+'</div>';}
+/* Un script/document est visible par toute l'equipe si "Visible par" est vide,
+   sinon uniquement par la personne choisie (et par les admins). */
+function visibleTemplates(){return (DB.templates||[]).filter(function(x){return !x.assignee||isAdmin()||x.assignee===DB._me;});}
+/* Scripts pertinents pour un prospect : ceux de sa liste d'abord, puis les scripts d'appel generaux. */
+function leadScripts(rec){var vis=visibleTemplates();
+ var own=rec.listId?vis.filter(function(x){return x.listId===rec.listId;}):[];
+ if(own.length)return own.slice(0,4);
+ return vis.filter(function(x){return !x.listId&&["Cold Call","DM / WhatsApp","Email","Objection"].indexOf(x.category)>=0;}).slice(0,3);}
+function renderTemplates(c){
+ var arr=visibleTemplates();
+ var cats={};arr.forEach(function(x){cats[x.category||"Autre"]=1;});
+ var html='<div style="margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap"><span class="btn" onclick="openAdd()">➕ Nouveau script</span><span class="btn ghost sm" onclick="importTplDoc()">📎 Importer un document (PDF / Word)</span></div>';
+ if(!arr.length)return c.innerHTML=html+'<div class="empty" style="padding:44px">Aucun script ni document.<br>Creez un script de vente, ou importez une procedure a lire pour votre equipe.</div>';
+ html+='<div class="grid-cards">';
+ arr.forEach(function(x){
+  var nf=(x.files||[]).length;
+  var who=x.assignee?('<span class="chip" style="border-color:var(--brand);color:var(--brand-2)">👤 '+esc(x.assignee)+'</span>'):'<span class="chip">👥 Equipe</span>';
+  var lst=x.listId&&listById(x.listId)?('<span class="chip" style="border-color:var(--good);color:var(--good)">🔗 '+esc(listName(x.listId))+'</span>'):'';
+  html+='<div class="tpl" onclick="openTplReader(\''+x.id+'\')"><div class="tcat">'+esc(x.category||"")+(nf?' · 📎 '+nf+' fichier'+(nf>1?'s':''):'')+'</div><div class="ttitle">'+esc(x.title)+'</div>'
+  +'<div style="display:flex;gap:5px;flex-wrap:wrap;margin:8px 0">'+who+lst+'</div>'
+  +'<div class="tbody">'+esc(x.content||(nf?"📄 Document a lire — cliquez pour ouvrir":""))+'</div>'
+  +'<div class="tcopy" onclick="event.stopPropagation();copyTpl(\''+x.id+'\')">📋</div></div>';});
+ c.innerHTML=html+'</div>';}
+function importTplDoc(){var inp=document.createElement("input");inp.type="file";inp.accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg";
+ inp.onchange=function(){var f=inp.files[0];if(!f)return;if(f.size>2*1024*1024)return toast("Max 2 Mo par fichier","bad");
+  var isTxt=(f.type||"").indexOf("text")>=0||/\.txt$/i.test(f.name);
+  var rd=new FileReader();
+  rd.onload=function(){var rec={id:uid(),title:f.name.replace(/\.[^.]+$/,""),category:"Procedure",assignee:"",listId:"",createdAt:today(),updatedAt:today()};
+   if(isTxt)rec.content=String(rd.result);else{rec.content="";rec.files=[{name:f.name,type:f.type,size:f.size,data:rd.result}];}
+   pushUndo("Import d'un document",["templates"]);
+   (DB.templates=DB.templates||[]).unshift(rec);
+   try{save();}catch(e){DB.templates.shift();return toast("Stockage plein","bad");}
+   logActivity("create","Document: "+rec.title);renderCurrent();buildNav();toast("📎 Document importe — assignez-le a quelqu'un");openEdit(rec.id);};
+  if(isTxt)rd.readAsText(f);else rd.readAsDataURL(f);};
+ inp.click();}
+function openTplReader(id){var rec=(DB.templates||[]).find(function(r){return r.id===id;});if(!rec)return;
+ editing=null;resetModal();
+ document.getElementById("modalTitle").textContent=rec.title||"Script";
+ document.getElementById("delBtn").style.display="none";
+ document.getElementById("saveBtn").style.display="inline-flex";
+ document.getElementById("saveBtn").textContent="✎ Modifier";
+ document.getElementById("saveBtn").onclick=function(){openEdit(id);};
+ document.getElementById("modalEl").classList.add("paper");
+ var b=document.getElementById("modalBody");
+ var meta='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">'
+  +'<span class="chip">'+esc(rec.category||"Autre")+'</span>'
+  +(rec.assignee?'<span class="chip" style="border-color:var(--brand);color:var(--brand-2)">👤 '+esc(rec.assignee)+'</span>':'<span class="chip">👥 Toute l\'equipe</span>')
+  +(rec.listId&&listById(rec.listId)?'<span class="chip" style="border-color:var(--good);color:var(--good);cursor:pointer" onclick="closeModal();openList(\''+rec.listId+'\')">🔗 '+esc(listName(rec.listId))+' — voir la liste</span>':'')
+  +'</div>';
+ var body="";
+ if(rec.content&&rec.content.trim())body+='<div class="docsheet" style="white-space:pre-wrap">'+esc(rec.content)+'</div>';
+ var docxJobs=[];
+ (rec.files||[]).forEach(function(f,i){
+  var ty=f.type||"",isPdf=ty.indexOf("pdf")>=0,isImg=ty.indexOf("image")>=0,
+      isDocx=ty.indexOf("word")>=0||ty.indexOf("officedocument")>=0||/\.docx?$/i.test(f.name||"");
+  var url=blobUrlFor(f);
+  if(isPdf&&url)body+='<div class="docsheet" style="padding:0;overflow:hidden"><object data="'+url+'" type="application/pdf" style="width:100%;height:70vh;display:block;border:none"><iframe src="'+url+'" style="width:100%;height:70vh;border:none"></iframe></object></div>';
+  else if(isImg&&url)body+='<div class="docsheet" style="padding:0"><img src="'+url+'" style="width:100%;display:block;border-radius:4px"></div>';
+  else if(isDocx){var tid="tplDocx"+i;body+='<div class="docsheet" id="'+tid+'">⏳ Chargement du document…</div>';docxJobs.push({t:tid,f:f});}
+  else body+='<div class="docsheet" style="text-align:center"><b>'+fileIcon(ty)+' '+esc(f.name)+'</b><br><span class="btn ghost sm" style="margin-top:10px" onclick="viewFile(\'templates\',\''+id+'\','+i+')">⬇ Telecharger</span></div>';});
+ if(!body)body='<div class="empty" style="padding:36px">Ce script est vide. Cliquez sur Modifier pour ecrire le contenu, ou joignez un fichier.</div>';
+ b.innerHTML=meta+'<div class="tplreader">'+body+'</div>'+filesSection("templates",rec)
+  +'<div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:14px"><span class="btn ghost sm" onclick="attachFile(\'templates\',\''+id+'\')">📎 Joindre un fichier</span>'
+  +(rec.content&&rec.content.trim()?'<span class="btn ghost sm" onclick="copyTpl(\''+id+'\')">📋 Copier le texte</span>':'')+'</div>';
+ docxJobs.forEach(function(j){
+  var el=document.getElementById(j.t);if(!el)return;
+  if(typeof mammoth==="undefined"){el.innerHTML='<b>'+esc(j.f.name)+'</b><br><span style="color:var(--muted2);font-size:12px">Lecteur Word indisponible hors ligne — telechargez le fichier.</span>';return;}
+  try{var b64=j.f.data.split(",")[1],bin=atob(b64),buf=new ArrayBuffer(bin.length),v=new Uint8Array(buf);
+   for(var k=0;k<bin.length;k++)v[k]=bin.charCodeAt(k);
+   mammoth.convertToHtml({arrayBuffer:buf}).then(function(res){el.innerHTML='<div class="docxbody">'+(res.value||"<i>Document vide</i>")+'</div>';})
+    .catch(function(){el.innerHTML='<b>'+esc(j.f.name)+'</b><br><span style="color:var(--muted2);font-size:12px">Impossible d\'afficher — telechargez le fichier.</span>';});
+  }catch(e){el.innerHTML='Erreur de lecture.';}});
+ document.getElementById("overlay").classList.add("open");}
 function copyTpl(id){var x=DB.templates.find(function(y){return y.id===id;});navigator.clipboard.writeText(x.content||"").then(function(){toast("✓");});}
 function renderTeam(c){var arr=DB._team||[],html='<div class="grid-cards">';var curMonth=today().slice(0,7);arr.forEach(function(m){var closed=(DB.sales||[]).filter(function(s){return s.stage==="Signe"&&s.assignee===m.name;}).reduce(function(a,s){return a+(+s.value||0);},0);var closedMonth=(DB.sales||[]).filter(function(s){return s.stage==="Signe"&&s.assignee===m.name&&(s.updatedAt||"").slice(0,7)===curMonth;}).reduce(function(a,s){return a+(+s.value||0);},0);var commission=Math.round(closedMonth*(m.commissionPct||0)/100);var lastLog=m.lastLogin?new Date(m.lastLogin).toLocaleString('fr-FR',{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}):"-";html+='<div class="hcard" onclick="openEditTeam(\''+m.id+'\')"><div class="hh"><span class="avatar" style="width:36px;height:36px;font-size:14px">'+m.name.slice(0,2).toUpperCase()+'</span><span class="hname">'+esc(m.name)+'</span><span class="pill good">'+esc(m.role||"")+(m.pass?" 🔒":"")+'</span></div><div class="hrow"><span>'+t("goal")+'</span><b>'+money(m.goal)+'</b></div><div class="hrow"><span>Signe (total)</span><b>'+money(closed)+'</b></div>'+((m.commissionPct||0)>0?'<div class="hrow"><span>Commission (mois, '+m.commissionPct+'%)</span><b>'+money(commission)+'</b></div>':'')+'<div class="hrow"><span>Derniere connexion</span><b>'+lastLog+'</b></div></div>';});c.innerHTML=html+'</div>';}
 function renderCalendar(c){var ev=[];(DB.tasks||[]).filter(function(x){return x.done!=="Oui"&&x.due;}).forEach(function(x){ev.push({d:x.due,t:x.title,type:t("tasks"),c:"#f5b940"});});(DB.fulfilment||[]).filter(function(f){return f.deadline&&f.status!=="Livre";}).forEach(function(f){ev.push({d:f.deadline,t:f.service+" - "+f.client,type:fl("deadline"),c:"#5b8cff"});});(DB.onboarding||[]).filter(function(o){return o.kickoff;}).forEach(function(o){ev.push({d:o.kickoff,t:"Kickoff "+o.client,type:t("onboarding"),c:"#a78bfa"});});(DB.success||[]).filter(function(s){return s.nextCheckin;}).forEach(function(s){ev.push({d:s.nextCheckin,t:s.name,type:t("success"),c:"#22c07d"});});(DB.invoices||[]).filter(function(i){return i.status!=="Paye"&&i.dueDate;}).forEach(function(i){ev.push({d:i.dueDate,t:i.client+" ("+money(i.amount)+")",type:t("invoices"),c:"#f4685f"});});ev.sort(function(a,b){return String(a.d).localeCompare(String(b.d));});if(!ev.length)return c.innerHTML='<div class="empty">-</div>';var g={};ev.forEach(function(e){(g[e.d]=g[e.d]||[]).push(e);});var html="";Object.keys(g).forEach(function(d){var over=d<today();html+='<div class="agenda-day"><div class="agenda-date" style="'+(over?'color:var(--bad)':'')+'">'+(d===today()?"● ":"")+d+'<span class="bar"></span></div>';g[d].forEach(function(e){html+='<div class="ev"><span class="evdot" style="background:'+e.c+'"></span><span class="evt">'+esc(e.t)+'</span><span class="evtype">'+esc(e.type)+'</span></div>';});html+='</div>';});c.innerHTML=html;}
@@ -895,7 +981,10 @@ function moveCard(recId,stage,sysKey){var s=SYSTEMS[sysKey||current],rec=(DB[sys
 function drop(e){e.preventDefault();e.currentTarget.classList.remove("dragover");if(dragId)moveCard(dragId,e.currentTarget.dataset.stage);}
 function openMoveMenu(ev,recId){ev.stopPropagation();var s=SYSTEMS[current];if(!s.stages)return;var rec=(DB[current]||[]).find(function(r){return r.id===recId;});if(!rec)return;var cur=rec[s.stageKey]||s.stages[0].id;var html='<div style="font-size:12px;color:var(--muted);margin-bottom:10px">Deplacer vers :</div>';s.stages.forEach(function(st){html+='<div class="btn '+(st.id===cur?'':'ghost')+' sm" style="width:100%;justify-content:flex-start;margin-bottom:6px" onclick="moveCardMenu(\''+recId+'\',\''+esc(st.id).replace(/'/g,"\\'")+'\')"><span style="width:9px;height:9px;border-radius:50%;background:'+st.color+';display:inline-block;margin-inline-end:8px"></span>'+esc(stageT(st.id))+(st.id===cur?' ✓':'')+'</div>';});resetModal();editing=null;document.getElementById("modalTitle").textContent=rec.name||rec.client||rec.candidate||"Deplacer";document.getElementById("delBtn").style.display="none";document.getElementById("saveBtn").style.display="none";document.getElementById("modalBody").innerHTML=html;document.getElementById("overlay").classList.add("open");}
 function moveCardMenu(recId,stage){closeModal();moveCard(recId,stage);}
-function dynOpts(f){if(f.dyn==="team")return [""].concat(teamNames());return f.opts;}
+function dynOpts(f){if(f.dyn==="team")return [""].concat(teamNames());if(f.dyn==="lists")return [""].concat((DB.leadlists||[]).map(function(l){return l.id;}));return f.opts;}
+function listName(id){var l=(DB.leadlists||[]).find(function(x){return x.id===id;});return l?l.name:"";}
+function listById(id){return (DB.leadlists||[]).find(function(x){return x.id===id;});}
+function listLeads(id){return (DB.leads||[]).filter(function(l){return l.listId===id;});}
 function fieldsOf(s){return typeof s.fields==="function"?s.fields():s.fields;}
 function resetModal(){document.getElementById("modalFoot").style.display="flex";document.getElementById("modalEl").classList.remove("wide");document.getElementById("modalEl").classList.remove("paper");document.getElementById("saveBtn").style.display="inline-flex";document.getElementById("saveBtn").textContent=t("save");document.getElementById("saveBtn").onclick=saveRecord;}
 function openAdd(preset){var s=SYSTEMS[current];if(current==="team"){var n=prompt("Nom:");if(!n)return;var r=prompt("Role:","Membre")||"Membre";var obj={id:uid(),name:n,role:r,goal:+prompt(t("goal")+":","0")||0};if(isAdminRole(r)){var p=prompt("Ce role a acces complet (factures, offres, contrats...). Definir un mot de passe pour "+n+" :");if(p)obj.pass=hashPass(p);else return toast("⚠️ Mot de passe requis pour un role admin.","bad");}DB._team.push(obj);save();renderCurrent();buildNav();return;}editing=null;resetModal();document.getElementById("modalTitle").textContent=t("add");document.getElementById("delBtn").style.display="none";var init=preset?{}:{};if(preset)init[s.stageKey]=preset;if(s.mine&&DB._me&&fieldsOf(s).some(function(f){return f.k===s.mine;}))init[s.mine]=DB._me;buildForm(s,init);document.getElementById("overlay").classList.add("open");}
@@ -947,8 +1036,10 @@ function focusMode(){var q=focusQueue();if(!q.length&&_focusSkip.length){_focusS
 function focusSet(id,status){var l=(DB.leads||[]).find(function(r){return r.id===id;});if(!l)return;if(status==="Perdu"){var lr=prompt("Raison ? (prix, pas de reponse, pas interesse...)");if(lr)l.lossReason=lr.trim();}l.status=status;l.updatedAt=today();if(status==="RDV pris")addAutoTask("Confirmer RDV - "+(l.name||l.business||"?"),l.name,l.assignee||DB._me,1);logActivity("stage",(l.name||"?")+": Focus → "+status);save();renderCurrent();buildNav();focusMode();}
 function focusSkipLead(id){_focusSkip.push(id);focusMode();}
 function editWaScript(){resetModal();editing="__wascript__";document.getElementById("modalTitle").textContent="Script WhatsApp par defaut";document.getElementById("delBtn").style.display="none";document.getElementById("modalEl").classList.add("wide");document.getElementById("modalBody").innerHTML='<p style="font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:10px">Ce message part quand un commercial clique 💬 sur une carte prospect. Variables auto-remplacees :<br><code style="color:var(--good)">[Nom]</code> [Entreprise] [Ville] [Niche] [MonNom]</p><div class="field"><label>Message</label><textarea id="waScriptTxt" style="min-height:150px">'+esc(DB._waScript||DEFAULT_WA)+'</textarea></div>';document.getElementById("saveBtn").textContent="Enregistrer";document.getElementById("saveBtn").onclick=function(){DB._waScript=document.getElementById("waScriptTxt").value||DEFAULT_WA;save();closeModal();toast("✓ Script enregistre");document.getElementById("saveBtn").onclick=saveRecord;};document.getElementById("overlay").classList.add("open");}
-function buildForm(s,rec){var b=document.getElementById("modalBody");b.innerHTML="";fieldsOf(s).forEach(function(f){var val=rec[f.k]!=null?rec[f.k]:"",inp;if(f.t==="select"||f.dyn){var opts=dynOpts(f);inp='<select id="f_'+f.k+'">'+opts.map(function(o){return '<option value="'+esc(o)+'" '+(o==val?"selected":"")+'>'+esc(stageT(o))+'</option>';}).join("")+'</select>';}else if(f.t==="textarea")inp='<textarea id="f_'+f.k+'">'+esc(val)+'</textarea>';else inp='<input id="f_'+f.k+'" type="'+f.t+'" value="'+esc(val)+'">';var quick="";if(f.k==="phone"&&val){var waMsgM=current==="leads"?mergeScript(DB._waScript||DEFAULT_WA,rec):"";quick='<div style="display:flex;gap:8px;margin-top:8px"><a href="tel:'+esc(val)+'" style="font-size:12px;font-weight:700;color:var(--good);text-decoration:none" target="_blank">📞 Appeler</a><a href="'+esc(waSendUrl(val,waMsgM))+'" style="font-size:12px;font-weight:700;color:var(--good);text-decoration:none" target="_blank" rel="noopener">💬 WhatsApp'+(current==="leads"?" (script)":"")+'</a></div>';if(current==="leads"&&rec.id&&(DB.templates||[]).length){quick+='<div style="display:flex;gap:6px;margin-top:8px;align-items:center"><select id="waTplSel" style="flex:1;min-width:0">'+(DB.templates||[]).map(function(tp){return '<option value="'+tp.id+'">'+esc((tp.category?tp.category+" · ":"")+tp.title)+'</option>';}).join("")+'</select><span class="btn ghost sm" style="white-space:nowrap" onclick="sendWaScript(\''+rec.id+'\')">💬 Envoyer le script</span></div>';}}
-if(f.k==="notes"&&current==="leads"&&rec.id){quick+='<div class="btn ghost sm" style="margin-top:10px" onclick="seqCreate(\''+rec.id+'\')">⚡ Sequence de relance auto (Appel J+1 · WhatsApp J+3 · Email J+7)</div>';}b.insertAdjacentHTML("beforeend",'<div class="field"><label>'+f.l+(f.req?' *':'')+'</label>'+inp+quick+'</div>');});}
+function buildForm(s,rec){var b=document.getElementById("modalBody");b.innerHTML="";fieldsOf(s).forEach(function(f){var val=rec[f.k]!=null?rec[f.k]:"",inp;if(f.t==="select"||f.dyn){var opts=dynOpts(f);var lab=f.dyn==="lists"?function(o){return o?(listName(o)||"(liste supprimee)"):(f.emptyLabel||"— aucune —");}:(f.dyn==="team"?function(o){return o||(f.emptyLabel||"—");}:function(o){return stageT(o);});inp='<select id="f_'+f.k+'">'+opts.map(function(o){return '<option value="'+esc(o)+'" '+(o==val?"selected":"")+'>'+esc(lab(o))+'</option>';}).join("")+'</select>';}else if(f.t==="textarea")inp='<textarea id="f_'+f.k+'">'+esc(val)+'</textarea>';else inp='<input id="f_'+f.k+'" type="'+f.t+'" value="'+esc(val)+'">';var quick="";if(f.k==="phone"&&val){var waMsgM=current==="leads"?mergeScript(DB._waScript||DEFAULT_WA,rec):"";quick='<div style="display:flex;gap:8px;margin-top:8px"><a href="tel:'+esc(val)+'" style="font-size:12px;font-weight:700;color:var(--good);text-decoration:none" target="_blank">📞 Appeler</a><a href="'+esc(waSendUrl(val,waMsgM))+'" style="font-size:12px;font-weight:700;color:var(--good);text-decoration:none" target="_blank" rel="noopener">💬 WhatsApp'+(current==="leads"?" (script)":"")+'</a></div>';if(current==="leads"&&rec.id&&(DB.templates||[]).length){quick+='<div style="display:flex;gap:6px;margin-top:8px;align-items:center"><select id="waTplSel" style="flex:1;min-width:0">'+(DB.templates||[]).map(function(tp){return '<option value="'+tp.id+'">'+esc((tp.category?tp.category+" · ":"")+tp.title)+'</option>';}).join("")+'</select><span class="btn ghost sm" style="white-space:nowrap" onclick="sendWaScript(\''+rec.id+'\')">💬 Envoyer le script</span></div>';}}
+if(f.k==="notes"&&current==="leads"&&rec.id){quick+='<div class="btn ghost sm" style="margin-top:10px" onclick="seqCreate(\''+rec.id+'\')">⚡ Sequence de relance auto (Appel J+1 · WhatsApp J+3 · Email J+7)</div>';
+ var scripts=leadScripts(rec);
+ if(scripts.length)quick+='<div style="margin-top:10px;padding:11px 13px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--surface2)"><div style="font-size:10px;letter-spacing:.1em;font-weight:700;color:var(--muted2);margin-bottom:8px">SCRIPT'+(scripts.length>1?'S':'')+' A UTILISER'+(rec.listId&&listName(rec.listId)?' — '+esc(listName(rec.listId)):'')+'</div>'+scripts.map(function(x){return '<div class="btn ghost sm" style="margin:0 6px 6px 0" onclick="closeModal();openTplReader(\''+x.id+'\')">'+((x.files||[]).length?"📎":"📄")+' '+esc(x.title)+'</div>';}).join("")+'</div>';}b.insertAdjacentHTML("beforeend",'<div class="field"><label>'+f.l+(f.req?' *':'')+'</label>'+inp+quick+'</div>');});}
 function saveRecord(){if(editing==="__cloud__"){cloudConnect();return;}if(editing==="__report__"){navigator.clipboard.writeText(document.getElementById("reportTxt").textContent).then(function(){toast("✓");});closeModal();return;}if(editing&&editing.team){var m=DB._team.find(function(x){return x.id===editing.id;});if(isAdminRole(m.role)&&m.name===DB._me&&!isAdminRole(document.getElementById("f_role").value))return toast("⚠️ Vous ne pouvez pas retirer votre propre acces admin.","bad");m.name=document.getElementById("f_name").value||m.name;m.role=document.getElementById("f_role").value;m.goal=+document.getElementById("f_goal").value||0;m.commissionPct=+document.getElementById("f_commissionPct").value||0;var dtEl=document.getElementById("f_dailyTarget");if(dtEl)m.dailyTarget=+dtEl.value||0;var cmEl=document.getElementById("f_costMonth");if(cmEl)m.costMonth=+cmEl.value||0;var pv=document.getElementById("f_pass");if(pv&&pv.value)m.pass=hashPass(pv.value);if(isAdminRole(m.role)&&!m.pass){var p2=prompt("Ce role a acces complet (factures, offres, contrats...). Definir un mot de passe pour "+m.name+" :");if(p2)m.pass=hashPass(p2);else return toast("⚠️ Mot de passe requis pour un role admin.","bad");}save();closeModal();renderCurrent();return;}var s=SYSTEMS[current],obj={};fieldsOf(s).forEach(function(f){obj[f.k]=document.getElementById("f_"+f.k).value;});var rq=fieldsOf(s).find(function(f){return f.req;});if(rq&&!obj[rq.k].trim())return toast("!","bad");if(current==="leads"&&!(editing&&editing.id)&&obj.phone&&obj.phone.trim()){var dup=(DB.leads||[]).find(function(r){return r.phone&&r.phone.replace(/\D/g,"")===obj.phone.replace(/\D/g,"")&&r.phone.replace(/\D/g,"").length>4;});if(dup&&!confirm("⚠️ Ce numero existe deja pour \""+dup.name+"\" (assigne a "+(dup.assignee||"personne")+"). Ajouter quand meme ?"))return;}obj.updatedAt=today();pushUndo((editing&&editing.id?"Modification":"Ajout")+" — "+t(current),[current]);if(editing&&editing.id){var t2=DB[current].find(function(r){return r.id===editing.id;});for(var p in obj)t2[p]=obj[p];logActivity("update",t(current)+": "+(obj.name||obj.client||obj.title||obj.candidate||""));}else{obj.id=uid();obj.createdAt=today();(DB[current]=DB[current]||[]).unshift(obj);logActivity("create",t(current)+": "+(obj.name||obj.client||obj.title||obj.candidate||""));}toast("✓");save();closeModal();renderCurrent();buildNav();}
 function deleteRecord(){if(!editing)return;if(editing.team){var m=DB._team.find(function(x){return x.id===editing.id;});if(m&&isAdminRole(m.role)&&(DB._team||[]).filter(function(x){return isAdminRole(x.role);}).length<=1)return toast("⚠️ Impossible de supprimer le dernier compte admin.","bad");if(confirm("Supprimer le compte de "+((m&&m.name)||"ce membre")+" ?\n\nSes prospects et ventes ne sont pas supprimes, ils restent a son nom.")){pushUndo("Suppression du compte "+((m&&m.name)||""),["_team","_teamDel"]);(DB._teamDel=DB._teamDel||[]).push(editing.id);DB._team=DB._team.filter(function(x){return x.id!==editing.id;});save();closeModal();renderCurrent();toast("🗑 Compte supprime · Ctrl+Z pour annuler");}return;}
  var delRec=(DB[current]||[]).find(function(r){return r.id===editing.id;});
@@ -957,7 +1048,7 @@ function deleteRecord(){if(!editing)return;if(editing.team){var m=DB._team.find(
  pushUndo("Suppression de "+label,[current]);
  logActivity("delete",t(current)+": "+label);DB[current]=DB[current].filter(function(r){return r.id!==editing.id;});save();closeModal();renderCurrent();buildNav();toast("🗑 Supprime · Ctrl+Z pour annuler");}
 function closeModal(){document.getElementById("overlay").classList.remove("open");editing=null;resetModal();clearBlobs();}
-function bulkImport(){resetModal();editing="__bulk__";document.getElementById("modalTitle").textContent=t("importList");document.getElementById("delBtn").style.display="none";document.getElementById("modalEl").classList.add("wide");var assignOpts=isAdmin()?('<option value="">— Repartir / non assigne —</option>'+teamNames().map(function(n){return '<option'+(n===DB._me?' selected':'')+'>'+esc(n)+'</option>';}).join("")):('<option selected>'+esc(DB._me||"")+'</option>');document.getElementById("modalBody").innerHTML='<p style="font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:6px">Importez un CSV (Excel, Google Maps scraper, etc.) <b>ou</b> collez vos donnees. Les colonnes (telephone, email, nom, entreprise, ville, site, Instagram...) sont <b>detectees automatiquement</b>, peu importe l\'ordre. Gardez la 1ere ligne d\'entete pour de meilleurs resultats.</p><div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap"><span class="btn ghost sm" onclick="document.getElementById(\'csvFile\').click()">📎 Importer un CSV / Excel</span><span class="btn ghost sm" onclick="editWaScript()">💬 Script WhatsApp</span><input type="file" id="csvFile" accept=".csv,.txt,.tsv" style="display:none" onchange="loadCsv(event)"></div><div class="field"><label>Assigner ces prospects a</label><select id="bulkAssign">'+assignOpts+'</select></div><div class="field"><label>Donnees (colle ou importe)</label><textarea id="bulkTxt" style="min-height:150px" oninput="bulkPreview()" placeholder="nom,telephone,email,ville,site\nKarim Benali,0555123456,karim@resto.dz,Alger,resto.dz"></textarea><div id="bulkDetect"></div></div>';document.getElementById("saveBtn").textContent=t("importList");document.getElementById("saveBtn").onclick=doBulk;document.getElementById("overlay").classList.add("open");}
+function bulkImport(){resetModal();editing="__bulk__";document.getElementById("modalTitle").textContent=t("importList");document.getElementById("delBtn").style.display="none";document.getElementById("modalEl").classList.add("wide");var assignOpts=isAdmin()?('<option value="">— Repartir / non assigne —</option>'+teamNames().map(function(n){return '<option'+(n===DB._me?' selected':'')+'>'+esc(n)+'</option>';}).join("")):('<option selected>'+esc(DB._me||"")+'</option>');document.getElementById("modalBody").innerHTML='<p style="font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:6px">Importez un CSV (Excel, Google Maps scraper, etc.) <b>ou</b> collez vos donnees. Les colonnes (telephone, email, nom, entreprise, ville, site, Instagram...) sont <b>detectees automatiquement</b>, peu importe l\'ordre. Gardez la 1ere ligne d\'entete pour de meilleurs resultats.</p><div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap"><span class="btn ghost sm" onclick="document.getElementById(\'csvFile\').click()">📎 Importer un CSV / Excel</span><span class="btn ghost sm" onclick="editWaScript()">💬 Script WhatsApp</span><input type="file" id="csvFile" accept=".csv,.txt,.tsv" style="display:none" onchange="loadCsv(event)"></div><div class="field"><label>Nom de cette liste *</label><input id="bulkList" placeholder="ex : Restaurants Alger — Aout" value="Import du '+today()+'"><div style="font-size:11px;color:var(--muted2);margin-top:5px">Elle apparaitra dans <b>Listes de prospection</b> avec son avancement, et vous pourrez y attacher un script.</div></div><div class="field"><label>Assigner ces prospects a</label><select id="bulkAssign">'+assignOpts+'</select></div><div class="field"><label>Donnees (colle ou importe)</label><textarea id="bulkTxt" style="min-height:150px" oninput="bulkPreview()" placeholder="nom,telephone,email,ville,site\nKarim Benali,0555123456,karim@resto.dz,Alger,resto.dz"></textarea><div id="bulkDetect"></div></div>';document.getElementById("saveBtn").textContent=t("importList");document.getElementById("saveBtn").onclick=doBulk;document.getElementById("overlay").classList.add("open");}
 function stripBom(s){return String(s==null?"":s).replace(/^﻿/,"");}
 function cleanCell(c){return String(c==null?"":c).replace(/ /g," ").replace(/[​-‍﻿]/g,"").trim();}
 function appendCsv(txt){var ta=document.getElementById("bulkTxt");if(!ta)return;ta.value=(ta.value.trim()?ta.value+"\n":"")+stripBom(txt);bulkPreview();}
@@ -1037,7 +1128,11 @@ function doBulk(){var a=analyzeBulk();if(!a||!a.dataRows.length)return toast("Ri
  var reps=teamNames().filter(function(n){var m=(DB._team||[]).find(function(x){return x.name===n;});return m&&!isAdminRole(m.role);});
  var existing={};(DB.leads||[]).forEach(function(l){var d=normPhone(l.phone);if(d)existing[d]=1;});
  var rr=0,n=0,dupes=0,skipped=0,map=a.map;
- pushUndo("Import de prospects",["leads"]);
+ pushUndo("Import de prospects",["leads","leadlists"]);
+ var lnEl=document.getElementById("bulkList");
+ var lname=(lnEl&&lnEl.value.trim())||("Import du "+today());
+ var listRec={id:uid(),name:lname,createdAt:today(),createdBy:DB._me||"",owner:who||"",source:"CSV"};
+ (DB.leadlists=DB.leadlists||[]).unshift(listRec);
  a.dataRows.forEach(function(p){
   if(!p.some(function(c){return c;}))return;
   if(guessHeader(p)&&!looksLikeData(p)){skipped++;return;}   // ligne d'en-tete repetee au milieu du fichier
@@ -1050,9 +1145,9 @@ function doBulk(){var a=analyzeBulk();if(!a||!a.dataRows.length)return toast("Ri
   if(nd)existing[nd]=1;
   var asg=who;
   if(!asg&&reps.length){asg=reps[rr%reps.length];rr++;}
-  (DB.leads=DB.leads||[]).unshift({id:uid(),name:name,business:g("business"),phone:phone,email:g("email"),city:g("city"),address:g("address"),website:g("website"),instagram:g("instagram")||g("facebook"),niche:g("niche"),notes:g("notes"),value:+((g("value")||"").replace(/[^\d]/g,""))||"",source:"Import",status:"Nouveau",assignee:asg||"",createdAt:today(),updatedAt:today()});
+  (DB.leads=DB.leads||[]).unshift({id:uid(),name:name,business:g("business"),phone:phone,email:g("email"),city:g("city"),address:g("address"),website:g("website"),instagram:g("instagram")||g("facebook"),niche:g("niche"),notes:g("notes"),value:+((g("value")||"").replace(/[^\d]/g,""))||"",source:"Import",status:"Nouveau",assignee:asg||"",listId:listRec.id,createdAt:today(),updatedAt:today()});
   n++;});
- if(!n)return toast("Aucune ligne exploitable — verifiez le format","bad");
+ if(!n){DB.leadlists=(DB.leadlists||[]).filter(function(x){return x.id!==listRec.id;});return toast("Aucune ligne exploitable — verifiez le format","bad");}
  logActivity("create",n+" prospects importes"+(who?" → "+who:" (repartis)")+(dupes?" ("+dupes+" doublons ignores)":""));
  save();document.getElementById("saveBtn").onclick=saveRecord;closeModal();renderCurrent();buildNav();
  toast(n+" importes"+(dupes?" · "+dupes+" doublons":"")+(skipped?" · "+skipped+" ignorees":"")+" ✓");}
@@ -2697,12 +2792,118 @@ function renderDealDesk(c){
   .map(function(x,i){return '<div style="padding:13px 0;border-bottom:'+(i<4?"1px solid var(--line)":"none")+'"><b style="font-size:13.5px;color:var(--brand-2)">'+esc(x[0])+'</b><div style="font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.75">'+esc(x[1])+'</div></div>';}).join("")+'</div>';
  c.innerHTML=h;}
 
+/* ---------- 12. LISTES DE PROSPECTION ---------- */
+var _openList=null;
+function listStats(id){var ls=listLeads(id);
+ var st={total:ls.length,nouveau:0,contacte:0,rdv:0,gagne:0,perdu:0,value:0};
+ ls.forEach(function(l){var s=l.status||"Nouveau";
+  if(s==="Nouveau")st.nouveau++;else if(s==="Contacte")st.contacte++;else if(s==="RDV pris")st.rdv++;else if(s==="Gagne"){st.gagne++;st.value+=(+l.value||0);}else if(s==="Perdu")st.perdu++;});
+ st.worked=st.total-st.nouveau;
+ st.progress=st.total?Math.round(st.worked/st.total*100):0;
+ st.conv=st.total?Math.round(st.gagne/st.total*100):0;
+ st.rdvRate=st.worked?Math.round((st.rdv+st.gagne)/st.worked*100):0;
+ var owners={};ls.forEach(function(l){if(l.assignee)owners[l.assignee]=(owners[l.assignee]||0)+1;});
+ st.owners=Object.keys(owners).map(function(k){return {n:k,c:owners[k]};}).sort(function(a,b){return b.c-a.c;});
+ return st;}
+function visibleLists(){var all=DB.leadlists||[];if(isAdmin())return all;
+ return all.filter(function(L){return listLeads(L.id).some(function(l){return l.assignee===DB._me;});});}
+function renderLists(c){
+ if(_openList){var L0=listById(_openList);if(L0)return renderListDetail(c,L0);_openList=null;}
+ var arr=visibleLists();
+ var h='<div class="panel"><h3><span class="dot"></span>📇 Listes de prospection</h3>'
+ +'<p style="font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:12px">Chaque import CSV cree une liste. Vous voyez son avancement reel, qui la travaille, et vous pouvez y attacher le script a utiliser — vos commerciaux l\'ont alors sous la main sur chaque prospect.</p>'
+ +(isAdmin()?'<div style="display:flex;gap:8px;flex-wrap:wrap"><span class="btn" onclick="bulkImport()">📥 Importer une nouvelle liste</span></div>':'')+'</div>';
+ if(!arr.length)return c.innerHTML=h+intelEmpty("Aucune liste. Importez un CSV : donnez-lui un nom et elle apparaitra ici.");
+ h+='<div class="grid-cards">'+arr.map(function(L){var st=listStats(L.id);
+  var tpl=(DB.templates||[]).find(function(x){return x.listId===L.id;});
+  return '<div class="hcard" onclick="openList(\''+L.id+'\')">'
+  +'<div class="hh"><span class="avatar" style="width:34px;height:34px;font-size:13px">📇</span><span class="hname">'+esc(L.name)+'</span><span class="pill '+(st.progress>=80?"good":st.progress>=30?"warn":"bad")+'">'+st.progress+'%</span></div>'
+  +'<div class="hrow"><span>Prospects</span><b>'+st.total+'</b></div>'
+  +'<div class="hrow"><span>Travailles</span><b>'+st.worked+' / '+st.total+'</b></div>'
+  +'<div class="hrow"><span>RDV + Gagnes</span><b>'+(st.rdv+st.gagne)+'</b></div>'
+  +'<div class="hrow"><span>Signes</span><b style="color:var(--good)">'+st.gagne+(st.value?' · '+money(st.value):'')+'</b></div>'
+  +(st.owners.length?'<div class="hrow"><span>Assignee a</span><b>'+esc(st.owners.map(function(o){return o.n+" ("+o.c+")";}).join(", ").slice(0,40))+'</b></div>':'')
+  +(tpl?'<div class="hrow"><span>Script</span><b style="color:var(--brand-2)">📄 '+esc(tpl.title.slice(0,26))+'</b></div>':'')
+  +'<div style="height:5px;background:var(--line);border-radius:2px;margin-top:10px;overflow:hidden"><div style="height:100%;width:'+st.progress+'%;background:var(--brand)"></div></div></div>';}).join("")+'</div>';
+ c.innerHTML=h;}
+function openList(id){_openList=id;go("lists");}
+function renderListDetail(c,L){
+ var st=listStats(L.id),ls=listLeads(L.id);
+ var mine=isScoped()?ls.filter(function(l){return l.assignee===DB._me;}):ls;
+ var tpls=(DB.templates||[]).filter(function(x){return x.listId===L.id;});
+ var h='<div style="margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span class="btn ghost sm" onclick="_openList=null;renderCurrent();">← Listes</span>'
+ +(isAdmin()?'<span class="btn ghost sm" onclick="renameList(\''+L.id+'\')">✏ Renommer</span><span class="btn ghost sm" onclick="assignList(\''+L.id+'\')">👤 Assigner toute la liste</span><span class="btn ghost sm" onclick="attachScriptToList(\''+L.id+'\')">📄 Attacher un script</span>':'')
+ +'<span class="btn ghost sm" onclick="viewListLeads(\''+L.id+'\')">👁 Voir les prospects</span>'
+ +(isAdmin()?'<span class="btn ghost sm" style="color:var(--bad)" onclick="deleteList(\''+L.id+'\')">🗑 Supprimer la liste</span>':'')+'</div>';
+ h+='<div class="panel"><div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;align-items:center"><div><div style="font-size:19px;font-weight:680;letter-spacing:-.02em">'+esc(L.name)+'</div><div style="color:var(--muted);font-size:12.5px;margin-top:3px">Importee le '+esc(L.createdAt||"")+(L.createdBy?' par '+esc(L.createdBy):'')+(L.source?' · '+esc(L.source):'')+'</div></div></div></div>';
+ h+='<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">'
+ +kpiTile("PROSPECTS",st.total+"",st.worked+" deja travailles")
+ +kpiTile("AVANCEMENT",st.progress+"%",st.nouveau+" jamais contactes",st.progress>=80?"var(--good)":st.progress>=30?"var(--warn,#f5b940)":"var(--bad)")
+ +kpiTile("TAUX DE RDV",st.rdvRate+"%","sur les prospects travailles",st.rdvRate>=20?"var(--good)":"var(--muted2)")
+ +kpiTile("SIGNES",st.gagne+"",st.value?money(st.value):"aucun revenu encore","var(--good)")
+ +'</div>';
+ // entonnoir
+ var steps=[{l:"Nouveau",v:st.nouveau,c:"#5b8cff"},{l:"Contacte",v:st.contacte,c:"#a78bfa"},{l:"RDV pris",v:st.rdv,c:"#f5b940"},{l:"Gagne",v:st.gagne,c:"#22c07d"},{l:"Perdu",v:st.perdu,c:"#f4685f"}];
+ var mx=Math.max.apply(null,[1].concat(steps.map(function(s){return s.v;})));
+ h+='<div class="panel"><h3><span class="dot"></span>Avancement de la liste</h3><div class="funnel">'
+ +steps.map(function(s){return '<div class="fbar"><span class="flabel">'+esc(stageT(s.l))+'</span><div class="ftrack"><div class="ffill" style="width:'+Math.max(6,Math.round(s.v/mx*100))+'%;background:'+s.c+';color:#fff">'+s.v+'</div></div></div>';}).join("")+'</div></div>';
+ // scripts attaches
+ h+='<div class="panel"><h3><span class="dot"></span>📄 Scripts & documents de cette liste</h3>';
+ if(!tpls.length)h+='<div class="empty" style="padding:22px">Aucun script attache.'+(isAdmin()?' Cliquez sur <b>Attacher un script</b> — vos commerciaux l\'auront sous la main sur chaque prospect de la liste.':'')+'</div>';
+ else h+=tpls.map(function(x){return '<div style="display:flex;align-items:center;gap:10px;padding:11px 13px;border:1px solid var(--line);border-radius:var(--r-sm);margin-bottom:8px;cursor:pointer" onclick="openTplReader(\''+x.id+'\')"><span>'+((x.files||[]).length?"📎":"📄")+'</span><div style="flex:1;min-width:0"><b style="font-size:13.5px">'+esc(x.title)+'</b><div style="font-size:11.5px;color:var(--muted2)">'+esc(x.category||"")+(x.assignee?' · reserve a '+esc(x.assignee):' · toute l\'equipe')+'</div></div><span class="btn ghost sm">Ouvrir</span></div>';}).join("");
+ h+='</div>';
+ // repartition
+ if(st.owners.length)h+='<div class="panel"><h3><span class="dot"></span>Repartition</h3><table class="tbl"><tr><th>Commercial</th><th>Prospects</th><th>Travailles</th><th>RDV+Gagnes</th></tr>'
+  +st.owners.map(function(o){var sub=ls.filter(function(l){return l.assignee===o.n;});
+   var w=sub.filter(function(l){return (l.status||"Nouveau")!=="Nouveau";}).length;
+   var r=sub.filter(function(l){return ["RDV pris","Gagne"].indexOf(l.status)>=0;}).length;
+   return '<tr><td><b>'+esc(o.n)+'</b></td><td>'+o.c+'</td><td>'+w+'</td><td><b style="color:'+(r?"var(--good)":"var(--muted2)")+'">'+r+'</b></td></tr>';}).join("")+'</table></div>';
+ c.innerHTML=h;}
+function viewListLeads(id){_openList=null;_listFilter=id;go("leads");toast("Filtre sur la liste : "+listName(id));}
+function renameList(id){var L=listById(id);if(!L)return;var n=prompt("Nom de la liste :",L.name);if(!n||!n.trim())return;
+ pushUndo("Renommage de liste",["leadlists"]);L.name=n.trim();save();renderCurrent();toast("✓ Renommee");}
+function assignList(id){var L=listById(id);if(!L)return;
+ var names=teamNames();if(!names.length)return toast("Aucun membre d'equipe","bad");
+ var who=prompt("Assigner TOUS les prospects de « "+L.name+" » a :\n\n"+names.join(" · ")+"\n\n(laissez vide pour desassigner)","");
+ if(who===null)return;who=who.trim();
+ if(who&&names.indexOf(who)<0)return toast("Nom inconnu — respectez l'orthographe exacte","bad");
+ var ls=listLeads(id);if(!ls.length)return toast("Cette liste est vide","bad");
+ pushUndo("Assignation de la liste "+L.name,["leads"]);
+ ls.forEach(function(l){l.assignee=who;l.updatedAt=today();});
+ L.owner=who;logActivity("update",ls.length+" prospects de "+L.name+" → "+(who||"personne"));
+ save();renderCurrent();toast("👤 "+ls.length+" prospects → "+(who||"personne")+" · Ctrl+Z pour annuler");}
+function attachScriptToList(id){var L=listById(id);if(!L)return;
+ var avail=(DB.templates||[]);
+ if(!avail.length)return toast("Creez d'abord un script dans Scripts & modeles","bad");
+ resetModal();editing=null;
+ document.getElementById("modalTitle").textContent="📄 Attacher un script a « "+L.name+" »";
+ document.getElementById("delBtn").style.display="none";document.getElementById("saveBtn").style.display="none";
+ document.getElementById("modalBody").innerHTML='<p style="font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:12px">Le script choisi apparaitra directement sur chaque prospect de cette liste, pour la personne qui la travaille.</p>'
+ +avail.map(function(x){var on=x.listId===L.id;
+  return '<div style="display:flex;align-items:center;gap:10px;padding:11px 13px;border:1px solid '+(on?"var(--brand)":"var(--line)")+';border-radius:var(--r-sm);margin-bottom:8px"><div style="flex:1;min-width:0"><b style="font-size:13.5px">'+esc(x.title)+'</b><div style="font-size:11.5px;color:var(--muted2)">'+esc(x.category||"")+((x.files||[]).length?' · 📎 '+x.files.length:'')+'</div></div><span class="btn '+(on?"":"ghost ")+'sm" onclick="toggleTplList(\''+x.id+'\',\''+L.id+'\')">'+(on?"✓ Attache":"Attacher")+'</span></div>';}).join("");
+ document.getElementById("overlay").classList.add("open");}
+function toggleTplList(tplId,listId){var x=(DB.templates||[]).find(function(r){return r.id===tplId;});if(!x)return;
+ pushUndo("Lien script ↔ liste",["templates"]);
+ x.listId=(x.listId===listId)?"":listId;x.updatedAt=today();save();attachScriptToList(listId);renderCurrent();
+ toast(x.listId?"🔗 Script attache":"Lien retire");}
+function deleteList(id){var L=listById(id);if(!L)return;var ls=listLeads(id);
+ var alsoLeads=ls.length&&confirm("Supprimer aussi les "+ls.length+" prospects de cette liste ?\n\nOK = supprimer la liste ET ses prospects\nAnnuler = garder les prospects (ils perdent juste le lien)");
+ if(!confirm("Confirmer la suppression de la liste « "+L.name+" » ?\n\nVous pourrez annuler avec Ctrl+Z."))return;
+ pushUndo("Suppression de la liste "+L.name,["leadlists","leads","templates"]);
+ if(alsoLeads)DB.leads=(DB.leads||[]).filter(function(l){return l.listId!==id;});
+ else (DB.leads||[]).forEach(function(l){if(l.listId===id)l.listId="";});
+ (DB.templates||[]).forEach(function(x){if(x.listId===id)x.listId="";});
+ DB.leadlists=(DB.leadlists||[]).filter(function(x){return x.id!==id;});
+ _openList=null;logActivity("delete","Liste supprimee: "+L.name);save();buildNav();renderCurrent();
+ toast("🗑 Liste supprimee · Ctrl+Z pour annuler");}
+
 /* ---------- Enregistrement ---------- */
 var _scaleLang={
- fr:{g_scale:"Machine a scaler",playbooks:"Playbooks",playbooksS:"Vos projets en pilote automatique",collections:"Recouvrement",collectionsS:"L'argent qui dort dehors",roi:"Rapports ROI",roiS:"Prouvez votre valeur, gardez vos clients",referrals:"Parrainage",referralsS:"Grandir sans depenser en publicite",dealdesk:"Deal Desk",dealdeskS:"Votre plancher de prix et vos scripts"},
- en:{g_scale:"Scaling machine",playbooks:"Playbooks",playbooksS:"Your projects on autopilot",collections:"Collections",collectionsS:"Money sitting outside",roi:"ROI reports",roiS:"Prove your value, keep your clients",referrals:"Referrals",referralsS:"Grow without ad spend",dealdesk:"Deal Desk",dealdeskS:"Your price floor and scripts"},
- ar:{g_scale:"آلة التوسع",playbooks:"أدلة التنفيذ",playbooksS:"مشاريعك على الطيار الآلي",collections:"التحصيل",collectionsS:"أموالك خارج الشركة",roi:"تقارير العائد",roiS:"أثبت قيمتك واحتفظ بعملائك",referrals:"الإحالات",referralsS:"النمو بدون إعلانات",dealdesk:"مكتب الصفقات",dealdeskS:"الحد الأدنى للسعر والنصوص"}};
+ fr:{lists:"Listes de prospection",listsS:"Vos imports, leur avancement, qui les travaille",g_scale:"Machine a scaler",playbooks:"Playbooks",playbooksS:"Vos projets en pilote automatique",collections:"Recouvrement",collectionsS:"L'argent qui dort dehors",roi:"Rapports ROI",roiS:"Prouvez votre valeur, gardez vos clients",referrals:"Parrainage",referralsS:"Grandir sans depenser en publicite",dealdesk:"Deal Desk",dealdeskS:"Votre plancher de prix et vos scripts"},
+ en:{lists:"Lead lists",listsS:"Your imports, their progress, who works them",g_scale:"Scaling machine",playbooks:"Playbooks",playbooksS:"Your projects on autopilot",collections:"Collections",collectionsS:"Money sitting outside",roi:"ROI reports",roiS:"Prove your value, keep your clients",referrals:"Referrals",referralsS:"Grow without ad spend",dealdesk:"Deal Desk",dealdeskS:"Your price floor and scripts"},
+ ar:{lists:"قوائم العملاء المحتملين",listsS:"عمليات الاستيراد وتقدمها",g_scale:"آلة التوسع",playbooks:"أدلة التنفيذ",playbooksS:"مشاريعك على الطيار الآلي",collections:"التحصيل",collectionsS:"أموالك خارج الشركة",roi:"تقارير العائد",roiS:"أثبت قيمتك واحتفظ بعملائك",referrals:"الإحالات",referralsS:"النمو بدون إعلانات",dealdesk:"مكتب الصفقات",dealdeskS:"الحد الأدنى للسعر والنصوص"}};
 ["fr","en","ar"].forEach(function(l){for(var k in _scaleLang[l])LANG[l][k]=_scaleLang[l][k];});
+SYSTEMS.lists={key:"lists",icon:iconTarget(),intel:renderLists};
 SYSTEMS.playbooks={key:"playbooks",icon:iconRocket(),intel:renderPlaybooks};
 SYSTEMS.collections={key:"collections",icon:iconMoney(),intel:renderCollections};
 SYSTEMS.roi={key:"roi",icon:iconChartG(),intel:renderRoi};
@@ -2710,6 +2911,8 @@ SYSTEMS.referrals={key:"referrals",icon:iconUsers(),intel:renderReferrals};
 SYSTEMS.dealdesk={key:"dealdesk",icon:iconTarget(),intel:renderDealDesk};
 ["playbooks","collections","roi","referrals","dealdesk"].forEach(function(k){if(ADMINONLY.indexOf(k)<0)ADMINONLY.push(k);});
 if(!GROUPS.find(function(g){return g.lbl==="g_scale";}))GROUPS.push({lbl:"g_scale",items:["playbooks","collections","roi","referrals","dealdesk"]});
+/* Les listes sont visibles par les commerciaux : elles vivent avec les prospects. */
+var _gAcq=GROUPS.find(function(g){return g.lbl==="g_acq";});if(_gAcq&&_gAcq.items.indexOf("lists")<0)_gAcq.items.splice(1,0,"lists");
 
 var _rcPreIntel=renderCurrent;
 renderCurrent=function(){
@@ -2723,7 +2926,7 @@ renderCurrent=function(){
 /* ===== v5.1: niches in leads + update banner ===== */
 SYSTEMS.leads.fields=function(){return [F("name","text",{req:true}),F("business"),{k:"niche",l:(curLang==="ar"?"القطاع":"Niche"),t:"select",opts:["","Promotion immobiliere","Agence immobiliere","Clinique medicale","Clinique dentaire","Clinique esthetique / greffe cheveux","Salle de sport / Gym","Restaurant / Cafe","E-commerce / Boutique","Cabinet d'avocats / Notaire","Agence de voyage","Nettoyage / Proprete","Services a domicile (plombier, electricien...)","Med spa / Institut de beaute","Salon de coiffure / Barbier","Auto / Concessionnaire","Ecole / Formation privee","Evenementiel / Mariage / Salle","Immobilier de luxe","Coach / Consultant","Batiment / Construction / Travaux","Pharmacie / Parapharmacie","Hotel / Riad / Location","Bijouterie / Luxe","Autre"]},F("phone"),F("email"),{k:"website",l:(curLang==="ar"?"الموقع":"Site web"),t:"text"},{k:"instagram",l:"Instagram",t:"text"},{k:"address",l:(curLang==="ar"?"العنوان":"Adresse"),t:"text"},F("source","select",{opts:["Google Maps","Instagram","Cold Call","Reference","Import","Autre"]}),F("city"),F("value","number"),ASSIGN,F("status","select",{opts:["Nouveau","Contacte","RDV pris","Gagne","Perdu"]}),F("notes","textarea")];};
 SYSTEMS.leads.card=function(r){return {title:r.name||"-",sub:[r.business,r.niche].filter(Boolean).join(" · ")||r.city||"",chips:[r.value?money(r.value):null,r.niche||r.source].filter(Boolean),owner:r.assignee||r.name};};
-var APP_VERSION="5.40.0";
+var APP_VERSION="5.41.0";
 var _bn=document.createElement("div");_bn.id="updBanner";
 _bn.style.cssText="display:none;position:fixed;top:0;left:0;right:0;z-index:600;background:var(--brand);color:#fff;padding:10px 18px;font-size:13px;font-weight:700;text-align:center;box-shadow:0 6px 20px -6px rgba(0,0,0,.6)";
 _bn.innerHTML='<span id="updTxt"></span> <span onclick="location.reload(true)" style="text-decoration:underline;cursor:pointer;margin-inline-start:10px">↻ Rafraichir</span> <span onclick="document.getElementById(\'updBanner\').style.display=\'none\'" style="cursor:pointer;margin-inline-start:14px;opacity:.7">✕</span>';
