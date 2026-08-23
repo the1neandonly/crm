@@ -805,7 +805,28 @@ function passOk(m,typed){
 function liveMember(idOrName){var t=DB._team||[];
  return t.find(function(x){return x.id===idOrName;})||t.find(function(x){return normName(x.name)===normName(idOrName);})||null;}
 function isAdminRole(role){role=(role||"").toLowerCase();return role.indexOf("fondateur")>=0||role.indexOf("ceo")>=0||role.indexOf("founder")>=0||role.indexOf("direction")>=0||role.indexOf("admin")>=0;}
-function migratePass(d){var did=false;(d._team||[]).forEach(function(m){if(isAdminRole(m.role)&&!m.pass){m.pass=hashPass("DTO2026!Secure");did=true;}});if(did&&!localStorage.getItem("dto_pass_notified")){localStorage.setItem("dto_pass_notified","1");setTimeout(function(){toast("🔒 Mot de passe admin: DTO2026!Secure - changez-le dans Equipe","bad");},1200);}}
+/* Remise a zero unique des mots de passe (demandee le 2026-08-23).
+   Le drapeau est stocke dans la base : il part au cloud, donc l'operation
+   se fait une seule fois pour tout le monde et ne se repete jamais. */
+var PASS_RESET_TAG="reset-2026-08-23";
+var _passResetCount=0;
+function oneTimePassReset(d){
+ if(!d||d._passReset===PASS_RESET_TAG)return 0;
+ var n=0;
+ (d._team||[]).forEach(function(m){if(m.pass){delete m.pass;delete m.passSetAt;delete m.passSetBy;n++;}});
+ d._passReset=PASS_RESET_TAG;
+ return n;}
+/* ANCIEN PIEGE SUPPRIME : cette fonction attribuait en silence le mot de passe
+   "DTO2026!Secure" a tout compte admin qui n'en avait pas, a chaque chargement.
+   C'est ce qui enfermait le proprietaire dehors avec un mot de passe qu'il
+   n'avait jamais choisi. On ne force plus rien : on rappelle simplement. */
+function migratePass(d){
+ var n=oneTimePassReset(d);
+ if(n)_passResetCount=n;
+ var open=(d._team||[]).filter(function(m){return isAdminRole(m.role)&&!m.pass;}).length;
+ if(open&&!_passResetCount&&!localStorage.getItem("dto_pass_nag_"+today())){
+  localStorage.setItem("dto_pass_nag_"+today(),"1");
+  setTimeout(function(){toast("🔓 "+open+" compte(s) admin sans mot de passe — protegez-les dans Equipe","bad");},1500);}}
 function logActivity(action,detail){(DB._log=DB._log||[]).unshift({ts:new Date().toISOString(),user:(DB&&DB._me)||"?",action:action,detail:detail||""});if(DB._log.length>400)DB._log.length=400;}
 var DEFAULT_WA="Bonjour [Nom], ici [MonNom] de DevelopTheOne. Je vous contacte car j'ai remarque [Entreprise] et je pense qu'on peut vous aider a avoir plus de clients en ligne. Auriez-vous 2 minutes ?";
 function seed(){return{_goal:2000000,_cac:15000,_me:null,_log:[],_waScript:DEFAULT_WA,
@@ -3024,7 +3045,7 @@ renderCurrent=function(){
 /* ===== v5.1: niches in leads + update banner ===== */
 SYSTEMS.leads.fields=function(){return [F("name","text",{req:true}),F("business"),{k:"niche",l:(curLang==="ar"?"القطاع":"Niche"),t:"select",opts:["","Promotion immobiliere","Agence immobiliere","Clinique medicale","Clinique dentaire","Clinique esthetique / greffe cheveux","Salle de sport / Gym","Restaurant / Cafe","E-commerce / Boutique","Cabinet d'avocats / Notaire","Agence de voyage","Nettoyage / Proprete","Services a domicile (plombier, electricien...)","Med spa / Institut de beaute","Salon de coiffure / Barbier","Auto / Concessionnaire","Ecole / Formation privee","Evenementiel / Mariage / Salle","Immobilier de luxe","Coach / Consultant","Batiment / Construction / Travaux","Pharmacie / Parapharmacie","Hotel / Riad / Location","Bijouterie / Luxe","Autre"]},F("phone"),F("email"),{k:"website",l:(curLang==="ar"?"الموقع":"Site web"),t:"text"},{k:"instagram",l:"Instagram",t:"text"},{k:"address",l:(curLang==="ar"?"العنوان":"Adresse"),t:"text"},F("source","select",{opts:["Google Maps","Instagram","Cold Call","Reference","Import","Autre"]}),F("city"),F("value","number"),ASSIGN,F("status","select",{opts:["Nouveau","Contacte","RDV pris","Gagne","Perdu"]}),F("notes","textarea")];};
 SYSTEMS.leads.card=function(r){return {title:r.name||"-",sub:[r.business,r.niche].filter(Boolean).join(" · ")||r.city||"",chips:[r.value?money(r.value):null,r.niche||r.source].filter(Boolean),owner:r.assignee||r.name};};
-var APP_VERSION="5.42.0";
+var APP_VERSION="5.43.0";
 var _bn=document.createElement("div");_bn.id="updBanner";
 _bn.style.cssText="display:none;position:fixed;top:0;left:0;right:0;z-index:600;background:var(--brand);color:#fff;padding:10px 18px;font-size:13px;font-weight:700;text-align:center;box-shadow:0 6px 20px -6px rgba(0,0,0,.6)";
 _bn.innerHTML='<span id="updTxt"></span> <span onclick="location.reload(true)" style="text-decoration:underline;cursor:pointer;margin-inline-start:10px">↻ Rafraichir</span> <span onclick="document.getElementById(\'updBanner\').style.display=\'none\'" style="cursor:pointer;margin-inline-start:14px;opacity:.7">✕</span>';
@@ -3040,6 +3061,12 @@ document.addEventListener("click",function(e){var p=document.getElementById("bel
 /* la barre de selection et l'etat des boutons doivent survivre a chaque rendu */
 var _rcBeforeSel=renderCurrent;
 renderCurrent=function(){var r=_rcBeforeSel.apply(this,arguments);try{renderSelBar();refreshUndoBtn();}catch(e){}return r;};
+/* La remise a zero doit etre ecrite sur le disque ET poussee au cloud,
+   sinon elle serait refaite a chaque ouverture ou annulee par la synchro. */
+if(_passResetCount){
+ try{localStorage.setItem("dto_crm_v3",JSON.stringify(DB));}catch(e){}
+ setTimeout(function(){try{cloudPush();}catch(e){}
+  toast("🔓 "+_passResetCount+" mot(s) de passe efface(s) — entrez, puis definissez les nouveaux dans Equipe");},1000);}
 if(DB._me&&(DB._team||[]).some(function(m){return m.name===DB._me;})){document.getElementById("loginOv").style.display="none";}else{showLogin();}
 setTimeout(function(){try{autoMRRInvoices();weeklyChatReport();buildNav();}catch(e){}},12000);
 </script>
