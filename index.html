@@ -743,7 +743,9 @@ var SYSTEMS={
 var GROUPS=[{lbl:"g_pilot",items:["dashboard","calendar","leaderboard"]},{lbl:"g_acq",items:["leads","sales"]},{lbl:"g_deliv",items:["onboarding","fulfilment"]},{lbl:"g_reten",items:["success","clients360","invoices","tasks"]},{lbl:"g_res",items:["templates","hiring","team"]}];
 var DB=load(),current="dashboard",editing=null,cmdSel=0,cmdItems=[],mineOnly=false;
 function autoFlagChurn(d){(d.success||[]).forEach(function(s){if(s.health!=="Churne"&&s.lastCheckin&&daysBetween(s.lastCheckin,today())>30&&s.health!=="A risque"){s.health="A risque";s._autoFlag=true;}});}
-function fixupDB(d){migratePass(d);if(!d._log)d._log=[];if(!d._waScript)d._waScript=DEFAULT_WA;if(!d._touches)d._touches=[];if(!d._chat)d._chat=[];if(!d.plans)d.plans=[];if(!d.content)d.content=[];if(!d._portals)d._portals={};if(!d._signs)d._signs={};if(!d._shares)d._shares={};if(!d._fin)d._fin={fixedCosts:0,cash:0,hoursMonth:160};if(!d._time)d._time=[];if(!d.leadlists)d.leadlists=[];if(!d._teamDel)d._teamDel=[];if(d._teamDel.length){var td={};d._teamDel.forEach(function(id){td[id]=1;});d._team=(d._team||[]).filter(function(m){return !td[m.id];});}if(!d._chatDel)d._chatDel=[];if(d._chatDel.length){var ds={};d._chatDel.forEach(function(id){ds[id]=1;});d._chat=(d._chat||[]).filter(function(m){return !ds[m.id];});}if(typeof trimChatMedia==="function")trimChatMedia(d);dedupeTeam(d);(d._team||[]).forEach(function(m){if(m.commissionPct==null)m.commissionPct=isAdminRole(m.role)?0:10;});}
+function fixupDB(d){migratePass(d);if(!d._log)d._log=[];if(!d._waScript)d._waScript=DEFAULT_WA;if(!d._touches)d._touches=[];if(!d._chat)d._chat=[];if(!d.plans)d.plans=[];if(!d.content)d.content=[];if(!d._portals)d._portals={};if(!d._signs)d._signs={};if(!d._shares)d._shares={};if(!d._fin)d._fin={fixedCosts:0,cash:0,hoursMonth:160};if(!d._time)d._time=[];if(!d.leadlists)d.leadlists=[];
+if(!d._seen)d._seen={};
+if(!d._seenInit){(d.leads||[]).forEach(function(l){var p=normPhone(l.phone)||(normName(l.name||l.business)?("n:"+normName(l.name||l.business)):"");if(p&&!d._seen[p])d._seen[p]={first:l.createdAt||today(),last:l.updatedAt||today(),n:1,status:l.status||"Nouveau",name:l.name||l.business||""};});d._seenInit=1;}if(!d._teamDel)d._teamDel=[];if(d._teamDel.length){var td={};d._teamDel.forEach(function(id){td[id]=1;});d._team=(d._team||[]).filter(function(m){return !td[m.id];});}if(!d._chatDel)d._chatDel=[];if(d._chatDel.length){var ds={};d._chatDel.forEach(function(id){ds[id]=1;});d._chat=(d._chat||[]).filter(function(m){return !ds[m.id];});}if(typeof trimChatMedia==="function")trimChatMedia(d);dedupeTeam(d);(d._team||[]).forEach(function(m){if(m.commissionPct==null)m.commissionPct=isAdminRole(m.role)?0:10;});}
 /* Un compte = un nom. Les anciennes versions creaient un id aleatoire par appareil,
    ce qui dupliquait les comptes a chaque synchro. On fusionne ici par nom. */
 function normName(s){return String(s==null?"":s).replace(/ /g," ").trim().toLowerCase().replace(/\s+/g," ");}
@@ -1087,7 +1089,7 @@ function dragend(e){e.target.classList.remove("dragging");}
 function dragover(e){e.preventDefault();e.currentTarget.classList.add("dragover");}
 function dragleave(e){e.currentTarget.classList.remove("dragover");}
 function addAutoTask(title,linked,assignee,daysAhead){var d=new Date();d.setDate(d.getDate()+(daysAhead||1));(DB.tasks=DB.tasks||[]).unshift({id:uid(),title:title,due:d.toISOString().slice(0,10),linked:linked||"",assignee:assignee||"",done:"Non"});}
-function moveCard(recId,stage,sysKey){var s=SYSTEMS[sysKey||current],rec=(DB[sysKey||current]||[]).find(function(r){return r.id===recId;});if(!rec)return;var was=rec[s.stageKey];if(was===stage)return;var sys=sysKey||current;pushUndo("Deplacement vers "+stageT(stage),[sys]);rec[s.stageKey]=stage;rec.updatedAt=today();logRec(rec,"↔ "+stageT(was)+" → "+stageT(stage));logActivity("stage",(rec.client||rec.name||"?")+": "+was+" → "+stage);if(stage==="Perdu"&&was!=="Perdu"){var lr=prompt("Raison de la perte ? (prix, concurrent, pas de reponse, timing, autre...)");if(lr)rec.lossReason=lr.trim();}if(sys==="leads"&&stage==="RDV pris"&&was!=="RDV pris"){addAutoTask("Confirmer RDV - "+(rec.name||rec.business||"?"),rec.name,rec.assignee,1);toast("📅 Tache auto creee");}if(sys==="sales"){if(stage==="Negociation"&&was!=="Negociation"){addAutoTask("Relancer "+(rec.client||"?")+" (negociation)",rec.client,rec.assignee,3);toast("⏰ Tache de relance creee");}if(stage==="Signe"&&was!=="Signe"){confetti();(DB.invoices=DB.invoices||[]).unshift({id:uid(),client:rec.client,amount:Math.round((+rec.value||0)*0.5),status:"Impaye",dueDate:today(),desc:"Acompte 50%"});if(!(DB.onboarding||[]).some(function(o){return o.client===rec.client;})){(DB.onboarding=DB.onboarding||[]).unshift({id:uid(),client:rec.client,offer:rec.offer||"",step:"Bienvenue",updatedAt:today()});}toast("🎉");}}if(sys==="onboarding"&&stage==="Pret"&&was!=="Pret"){if(!(DB.success||[]).some(function(x){return x.name===rec.client;})){var nc=new Date();nc.setDate(nc.getDate()+30);(DB.success=DB.success||[]).unshift({id:uid(),name:rec.client,mrr:0,health:"Bonne",lastCheckin:today(),nextCheckin:nc.toISOString().slice(0,10),referrals:0});}addAutoTask("Premier check-in client - "+(rec.client||"?"),rec.client,"",7);toast("✅ Client passe en Fidelisation");}if(sys==="hiring"&&stage==="Embauche"&&was!=="Embauche"){if(!(DB._team||[]).some(function(m){return m.name===rec.candidate;})){DB._team.push({id:uid(),name:rec.candidate,role:rec.role||"Membre",goal:0,commissionPct:10});addAutoTask("Envoyer les acces - "+rec.candidate,rec.candidate,DB._me,1);addAutoTask("Formation produit - "+rec.candidate,rec.candidate,DB._me,3);addAutoTask("Presenter les scripts & modeles - "+rec.candidate,rec.candidate,DB._me,3);toast("👋 "+rec.candidate+" ajoute a l'equipe + checklist creee");}}save();renderCurrent();buildNav();}
+function moveCard(recId,stage,sysKey){var s=SYSTEMS[sysKey||current],rec=(DB[sysKey||current]||[]).find(function(r){return r.id===recId;});if(!rec)return;var was=rec[s.stageKey];if(was===stage)return;var sys=sysKey||current;pushUndo("Deplacement vers "+stageT(stage),[sys,"_seen"]);rec[s.stageKey]=stage;rec.updatedAt=today();if(sys==="leads")rememberLead(rec);logRec(rec,"↔ "+stageT(was)+" → "+stageT(stage));logActivity("stage",(rec.client||rec.name||"?")+": "+was+" → "+stage);if(stage==="Perdu"&&was!=="Perdu"){var lr=prompt("Raison de la perte ? (prix, concurrent, pas de reponse, timing, autre...)");if(lr)rec.lossReason=lr.trim();}if(sys==="leads"&&stage==="RDV pris"&&was!=="RDV pris"){addAutoTask("Confirmer RDV - "+(rec.name||rec.business||"?"),rec.name,rec.assignee,1);toast("📅 Tache auto creee");}if(sys==="sales"){if(stage==="Negociation"&&was!=="Negociation"){addAutoTask("Relancer "+(rec.client||"?")+" (negociation)",rec.client,rec.assignee,3);toast("⏰ Tache de relance creee");}if(stage==="Signe"&&was!=="Signe"){confetti();(DB.invoices=DB.invoices||[]).unshift({id:uid(),client:rec.client,amount:Math.round((+rec.value||0)*0.5),status:"Impaye",dueDate:today(),desc:"Acompte 50%"});if(!(DB.onboarding||[]).some(function(o){return o.client===rec.client;})){(DB.onboarding=DB.onboarding||[]).unshift({id:uid(),client:rec.client,offer:rec.offer||"",step:"Bienvenue",updatedAt:today()});}toast("🎉");}}if(sys==="onboarding"&&stage==="Pret"&&was!=="Pret"){if(!(DB.success||[]).some(function(x){return x.name===rec.client;})){var nc=new Date();nc.setDate(nc.getDate()+30);(DB.success=DB.success||[]).unshift({id:uid(),name:rec.client,mrr:0,health:"Bonne",lastCheckin:today(),nextCheckin:nc.toISOString().slice(0,10),referrals:0});}addAutoTask("Premier check-in client - "+(rec.client||"?"),rec.client,"",7);toast("✅ Client passe en Fidelisation");}if(sys==="hiring"&&stage==="Embauche"&&was!=="Embauche"){if(!(DB._team||[]).some(function(m){return m.name===rec.candidate;})){DB._team.push({id:uid(),name:rec.candidate,role:rec.role||"Membre",goal:0,commissionPct:10});addAutoTask("Envoyer les acces - "+rec.candidate,rec.candidate,DB._me,1);addAutoTask("Formation produit - "+rec.candidate,rec.candidate,DB._me,3);addAutoTask("Presenter les scripts & modeles - "+rec.candidate,rec.candidate,DB._me,3);toast("👋 "+rec.candidate+" ajoute a l'equipe + checklist creee");}}save();renderCurrent();buildNav();}
 function drop(e){e.preventDefault();e.currentTarget.classList.remove("dragover");if(dragId)moveCard(dragId,e.currentTarget.dataset.stage);}
 function openMoveMenu(ev,recId){ev.stopPropagation();var s=SYSTEMS[current];if(!s.stages)return;var rec=(DB[current]||[]).find(function(r){return r.id===recId;});if(!rec)return;var cur=rec[s.stageKey]||s.stages[0].id;var html='<div style="font-size:12px;color:var(--muted);margin-bottom:10px">Deplacer vers :</div>';s.stages.forEach(function(st){html+='<div class="btn '+(st.id===cur?'':'ghost')+' sm" style="width:100%;justify-content:flex-start;margin-bottom:6px" onclick="moveCardMenu(\''+recId+'\',\''+esc(st.id).replace(/'/g,"\\'")+'\')"><span style="width:9px;height:9px;border-radius:50%;background:'+st.color+';display:inline-block;margin-inline-end:8px"></span>'+esc(stageT(st.id))+(st.id===cur?' ✓':'')+'</div>';});resetModal();editing=null;document.getElementById("modalTitle").textContent=rec.name||rec.client||rec.candidate||"Deplacer";document.getElementById("delBtn").style.display="none";document.getElementById("saveBtn").style.display="none";document.getElementById("modalBody").innerHTML=html;document.getElementById("overlay").classList.add("open");}
 function moveCardMenu(recId,stage){closeModal();moveCard(recId,stage);}
@@ -1115,6 +1117,33 @@ function mergeScript(txt,lead){return String(txt||"")
  .replace(/\[(ville|city)\]/gi,lead.city||"")
  .replace(/\[(monnom|myname|moi)\]/gi,DB._me||"DevelopTheOne")
  .replace(/\[(niche|secteur)\]/gi,lead.niche||"");}
+/* ===== MEMOIRE DES PROSPECTS =====
+   Chaque numero deja importe ou travaille est retenu, meme si le prospect est
+   supprime ensuite. Reimporter la meme liste ne repart donc jamais de zero. */
+var LEAD_ORDER=["Nouveau","Contacte","RDV pris","Gagne","Perdu"];
+/* Cle = le numero quand il existe, sinon le nom : un prospect sans telephone
+   doit aussi etre reconnu s'il revient dans un import. */
+function seenKey(phone,name){
+ var p=normPhone(phone);
+ if(p)return p;
+ var n=normName(name);
+ return n?("n:"+n):"";}
+function rememberLead(l){
+ if(!l)return;var k=seenKey(l.phone,l.name||l.business);if(!k)return;
+ DB._seen=DB._seen||{};
+ var e=DB._seen[k]||{first:today(),n:0};
+ e.last=today();
+ e.name=l.name||l.business||e.name||"";
+ var st=l.status||"Nouveau";
+ if(LEAD_ORDER.indexOf(st)>=LEAD_ORDER.indexOf(e.status||"Nouveau"))e.status=st;
+ DB._seen[k]=e;}
+function seenOf(phone,name){var k=seenKey(phone,name);return k?(DB._seen||{})[k]:null;}
+/* Statut a donner a un prospect deja connu : jamais "Nouveau". */
+function statusFromMemory(mem){
+ if(!mem)return "Nouveau";
+ var st=mem.status||"Contacte";
+ if(LEAD_ORDER.indexOf(st)<=0)return "Contacte";
+ return st;}
 function normPhone(phone){var raw=String(phone||"").trim();var plus=raw.indexOf("+")===0;var d=raw.replace(/\D/g,"");if(!d)return "";if(d.indexOf("00")===0)d=d.slice(2);// 00 international prefix
  else if(plus){/* already has country code */}
  else if(d.length===10&&d[0]==="0")d="213"+d.slice(1);// DZ local 0X...
@@ -1159,7 +1188,8 @@ function saveRecord(){if(editing==="__cloud__"){cloudConnect();return;}if(editin
  if(isAdminRole(m.role)&&!m.pass){var p2=normPass(prompt("Ce role a acces complet (factures, offres, contrats...). Definir un mot de passe pour "+m.name+" :"));if(p2)setPassFor(m,p2);else return toast("⚠️ Mot de passe requis pour un role admin.","bad");}
  save();closeModal();renderCurrent();
  if(newPass)showPassCard(m.name,newPass);
- return;}var s=SYSTEMS[current],obj={};fieldsOf(s).forEach(function(f){obj[f.k]=document.getElementById("f_"+f.k).value;});var rq=fieldsOf(s).find(function(f){return f.req;});if(rq&&!obj[rq.k].trim())return toast("!","bad");if(current==="leads"&&!(editing&&editing.id)&&obj.phone&&obj.phone.trim()){var dup=(DB.leads||[]).find(function(r){return r.phone&&r.phone.replace(/\D/g,"")===obj.phone.replace(/\D/g,"")&&r.phone.replace(/\D/g,"").length>4;});if(dup&&!confirm("⚠️ Ce numero existe deja pour \""+dup.name+"\" (assigne a "+(dup.assignee||"personne")+"). Ajouter quand meme ?"))return;}obj.updatedAt=today();pushUndo((editing&&editing.id?"Modification":"Ajout")+" — "+t(current),[current]);if(editing&&editing.id){var t2=DB[current].find(function(r){return r.id===editing.id;});for(var p in obj)t2[p]=obj[p];logActivity("update",t(current)+": "+(obj.name||obj.client||obj.title||obj.candidate||""));}else{obj.id=uid();obj.createdAt=today();(DB[current]=DB[current]||[]).unshift(obj);logActivity("create",t(current)+": "+(obj.name||obj.client||obj.title||obj.candidate||""));}toast("✓");save();closeModal();renderCurrent();buildNav();}
+ return;}var s=SYSTEMS[current],obj={};fieldsOf(s).forEach(function(f){obj[f.k]=document.getElementById("f_"+f.k).value;});var rq=fieldsOf(s).find(function(f){return f.req;});if(rq&&!obj[rq.k].trim())return toast("!","bad");if(current==="leads"&&!(editing&&editing.id)&&obj.phone&&obj.phone.trim()){var dup=(DB.leads||[]).find(function(r){return r.phone&&r.phone.replace(/\D/g,"")===obj.phone.replace(/\D/g,"")&&r.phone.replace(/\D/g,"").length>4;});if(dup&&!confirm("⚠️ Ce numero existe deja pour \""+dup.name+"\" (assigne a "+(dup.assignee||"personne")+"). Ajouter quand meme ?"))return;}obj.updatedAt=today();pushUndo((editing&&editing.id?"Modification":"Ajout")+" — "+t(current),[current,"_seen"]);if(editing&&editing.id){var t2=DB[current].find(function(r){return r.id===editing.id;});for(var p in obj)t2[p]=obj[p];logActivity("update",t(current)+": "+(obj.name||obj.client||obj.title||obj.candidate||""));}else{obj.id=uid();obj.createdAt=today();(DB[current]=DB[current]||[]).unshift(obj);logActivity("create",t(current)+": "+(obj.name||obj.client||obj.title||obj.candidate||""));}if(current==="leads")rememberLead(editing&&editing.id?DB.leads.find(function(r){return r.id===editing.id;}):obj);
+ toast("✓");save();closeModal();renderCurrent();buildNav();}
 function deleteRecord(){if(!editing)return;if(editing.team){var m=DB._team.find(function(x){return x.id===editing.id;});if(m&&isAdminRole(m.role)&&(DB._team||[]).filter(function(x){return isAdminRole(x.role);}).length<=1)return toast("⚠️ Impossible de supprimer le dernier compte admin.","bad");if(confirm("Supprimer le compte de "+((m&&m.name)||"ce membre")+" ?\n\nSes prospects et ventes ne sont pas supprimes, ils restent a son nom.")){pushUndo("Suppression du compte "+((m&&m.name)||""),["_team","_teamDel"]);(DB._teamDel=DB._teamDel||[]).push(editing.id);DB._team=DB._team.filter(function(x){return x.id!==editing.id;});save();closeModal();renderCurrent();toast("🗑 Compte supprime · Ctrl+Z pour annuler");}return;}
  var delRec=(DB[current]||[]).find(function(r){return r.id===editing.id;});
  var label=(delRec&&(delRec.name||delRec.client||delRec.title||delRec.candidate))||"cet element";
@@ -1221,7 +1251,8 @@ function fixPhoneCell(v){var s=cleanCell(v).replace(/^['=]+/,"");
  if(sci){var n=Number(sci[1].replace(",","."))*Math.pow(10,+sci[2]);if(isFinite(n)&&n>0)s=n.toFixed(0);}
  return s;}
 var LEAD_ALIASES={
- name:["contact","nom","name","full name","fullname","nom complet","responsable","gerant","gérant","proprietaire","propriétaire","personne","owner","prenom","prénom","contact name","contact_name","first name","nom du contact","interlocuteur"],
+ name:["contact","nom","name","full name","fullname","nom complet","gerant","gérant","proprietaire","propriétaire","personne","prenom","prénom","contact name","contact_name","first name","nom du contact","interlocuteur"],
+ assignee:["responsable","sales rep","salesrep","commercial","assigne","assigné","assignee","charge de compte","chargé de compte","rep","agent","vendeur","owner"],
  business:["entreprise","business","company","societe","société","raison sociale","enseigne","etablissement","établissement","nom entreprise","company name","title","nom du commerce","company_name","business name","business_name","organisation","organization","shop","magasin","marque"],
  phone:["telephone","téléphone","phone","tel","tél","mobile","gsm","numero","numéro","number","phone number","tel1","whatsapp","phone1","telephone1","phone_number","phonenumber","international_phone_number","formatted_phone_number","contact number","numero de telephone","numéro de téléphone","tel portable","portable","phones","telefono","tel."],
  email:["email","e-mail","mail","courriel","adresse email","emails","e mail","email_1","email1","adresse e-mail","mail address"],
@@ -1247,9 +1278,23 @@ function mapByHeader(cells){var map={},used={};
 function digitRatio(s){var d=(s.match(/\d/g)||[]).length;return s.length?d/s.length:0;}
 function mapByContent(rows){var vote={};function bump(f,i){vote[f]=vote[f]||{};vote[f][i]=(vote[f][i]||0)+1;}rows.slice(0,25).forEach(function(r){r.forEach(function(cell,i){var c=(cell||"").trim();if(!c)return;if(/@/.test(c)&&/\.[a-z]{2,}/i.test(c))bump("email",i);else if(/instagram\.com/i.test(c)||/^@[\w.]{2,}$/.test(c))bump("instagram",i);else if(/facebook\.com|fb\.com/i.test(c))bump("facebook",i);else if(/(https?:\/\/|www\.)/i.test(c)&&!/@/.test(c))bump("website",i);else if(digitRatio(c)>0.55){var dg=c.replace(/\D/g,"").length;if(dg>=8&&dg<=15)bump("phone",i);}});});var map={};for(var f in vote){map[f]=+Object.keys(vote[f]).sort(function(a,b){return vote[f][b]-vote[f][a];})[0];}return map;}
 function analyzeBulk(){var rows=parseCSVText(document.getElementById("bulkTxt").value);if(!rows.length)return null;var header=null,map={},dataRows=rows;if(guessHeader(rows[0])){header=rows[0];map=mapByHeader(header);dataRows=rows.slice(1);}var content=mapByContent(dataRows);["phone","email","website","instagram","facebook","name"].forEach(function(f){if(map[f]==null&&content[f]!=null)map[f]=content[f];});if(map.name==null)map.name=(map.business===0?1:0);return {map:map,dataRows:dataRows,header:header};}
-function bulkPreview(){var a=analyzeBulk(),el=document.getElementById("bulkDetect");if(!el)return;if(!a){el.innerHTML="";return;}var labels={name:"Nom",business:"Entreprise",phone:"📞 Tel",email:"✉ Email",city:"Ville",address:"Adresse",website:"🌐 Site",instagram:"📸 Insta",facebook:"👍 FB",niche:"Niche",value:"Valeur",notes:"Notes"};var found=Object.keys(a.map).filter(function(f){return labels[f];}).map(function(f){return '<span class="chip" style="background:var(--good);color:#fff">'+labels[f]+'</span>';}).join(" ");var sci=0;if(a.map.phone!=null)a.dataRows.forEach(function(r){if(isSciPhone(r[a.map.phone]))sci++;});
+function bulkPreview(){var a=analyzeBulk(),el=document.getElementById("bulkDetect");if(!el)return;if(!a){el.innerHTML="";return;}var labels={name:"Nom",business:"Entreprise",phone:"📞 Tel",email:"✉ Email",city:"Ville",address:"Adresse",website:"🌐 Site",instagram:"📸 Insta",facebook:"👍 FB",niche:"Niche",value:"Valeur",notes:"Notes"};var found=Object.keys(a.map).filter(function(f){return labels[f];}).map(function(f){return '<span class="chip" style="background:var(--good);color:#fff">'+labels[f]+'</span>';}).join(" ");var sci=0,known=0,fresh=0,inCrm=0;
+ if(a.map.phone!=null){
+  var live={};(DB.leads||[]).forEach(function(l){var p=normPhone(l.phone);if(p)live[p]=1;});
+  var nmCol=a.map.name!=null?a.map.name:a.map.business;
+  a.dataRows.forEach(function(r){
+   if(isSciPhone(r[a.map.phone]))sci++;
+   var raw=fixPhoneCell(r[a.map.phone]);
+   var nm=nmCol!=null?cleanCell(r[nmCol]):"";
+   var p=normPhone(raw);
+   if(p&&live[p]){inCrm++;return;}
+   var key=seenKey(raw,nm);if(!key)return;
+   if((DB._seen||{})[key])known++;else fresh++;});}
  var warn='';
  if(a.map.phone==null)warn+='<div style="color:var(--bad);margin-top:4px">⚠ Aucun telephone detecte — verifiez que la colonne existe.</div>';
+ else warn+='<div style="margin-top:6px;line-height:1.7">🆕 <b>'+fresh+'</b> vraiment nouveaux → <b>Nouveau</b>'
+  +(known?'<br>↩ <b>'+known+'</b> deja travailles par le passe → ils reviendront en <b>Contacte</b>, pas en Nouveau':'')
+  +(inCrm?'<br>⏭ <b>'+inCrm+'</b> deja presents dans le CRM → ignores':'')+'</div>';
  if(sci)warn+='<div style="color:var(--bad);margin-top:4px;line-height:1.6">⚠ <b>'+sci+' numero(s) abimes par Excel</b> (affiches en 2,13E+11). Les chiffres sont <b>definitivement perdus</b> dans le fichier.<br>Dans Excel : selectionnez la colonne telephone → Format de cellule → <b>Texte</b>, puis re-exportez. Ou exportez en CSV depuis la source d\'origine.</div>';
  el.innerHTML='<div style="font-size:11.5px;color:var(--muted);margin-top:6px">'+a.dataRows.length+' prospects · colonnes detectees : '+(found||'<span style="color:var(--bad)">aucune - verifiez le format</span>')+warn+'</div>';}
 function doBulk(){var a=analyzeBulk();if(!a||!a.dataRows.length)return toast("Rien a importer","bad");
@@ -1257,7 +1302,7 @@ function doBulk(){var a=analyzeBulk();if(!a||!a.dataRows.length)return toast("Ri
  if(!isAdmin())who=DB._me||"";                       // un non-admin ne peut assigner qu'a lui-meme
  var reps=teamNames().filter(function(n){var m=(DB._team||[]).find(function(x){return x.name===n;});return m&&!isAdminRole(m.role);});
  var existing={};(DB.leads||[]).forEach(function(l){var d=normPhone(l.phone);if(d)existing[d]=1;});
- var rr=0,n=0,dupes=0,skipped=0,map=a.map;
+ var rr=0,n=0,dupes=0,skipped=0,revived=0,map=a.map,matchedAsg=0,unknownAsg={};
  pushUndo("Import de prospects",["leads","leadlists"]);
  var lnEl=document.getElementById("bulkList");
  var lname=(lnEl&&lnEl.value.trim())||("Import du "+today());
@@ -1273,14 +1318,33 @@ function doBulk(){var a=analyzeBulk();if(!a||!a.dataRows.length)return toast("Ri
   var nd=normPhone(phone);
   if(nd&&existing[nd]){dupes++;return;}
   if(nd)existing[nd]=1;
+  // memoire : deja vu par le passe ? alors il ne redevient pas "Nouveau"
+  var memKey=seenKey(phone,name);
+  var mem=memKey?(DB._seen||{})[memKey]:null;
+  var startStatus=mem?statusFromMemory(mem):"Nouveau";
+  if(mem)revived++;
+  // une colonne "Responsable / Sales Rep" du fichier prime, mais uniquement si
+  // le nom correspond a un membre reel de l'equipe (sinon le lead serait invisible)
   var asg=who;
+  var colAsg=g("assignee");
+  if(colAsg&&isAdmin()){var hit=teamNames().find(function(nm){return normName(nm)===normName(colAsg);});if(hit){asg=hit;matchedAsg++;}else{unknownAsg[colAsg]=1;}}
   if(!asg&&reps.length){asg=reps[rr%reps.length];rr++;}
-  (DB.leads=DB.leads||[]).unshift({id:uid(),name:name,business:g("business"),phone:phone,email:g("email"),city:g("city"),address:g("address"),website:g("website"),instagram:g("instagram")||g("facebook"),niche:g("niche"),notes:g("notes"),value:+((g("value")||"").replace(/[^\d]/g,""))||"",source:"Import",status:"Nouveau",assignee:asg||"",listId:listRec.id,createdAt:today(),updatedAt:today()});
+  (DB.leads=DB.leads||[]).unshift({id:uid(),name:name,business:g("business"),phone:phone,email:g("email"),city:g("city"),address:g("address"),website:g("website"),instagram:g("instagram")||g("facebook"),niche:g("niche"),notes:g("notes"),value:+((g("value")||"").replace(/[^\d]/g,""))||"",source:"Import",status:startStatus,assignee:asg||"",listId:listRec.id,createdAt:today(),updatedAt:today()});
+  var created=DB.leads[0];
+  if(mem){
+   created.notes=(created.notes?created.notes+"\n":"")
+    +"↩ Deja dans votre historique — vu "+(mem.n||1)+" fois, derniere trace le "+(mem.last||"?")
+    +(mem.status&&mem.status!=="Nouveau"?" (statut atteint : "+mem.status+")":"")+".";
+   mem.n=(mem.n||1)+1;mem.last=today();
+  }
+  rememberLead(created);
   n++;});
  if(!n){DB.leadlists=(DB.leadlists||[]).filter(function(x){return x.id!==listRec.id;});return toast("Aucune ligne exploitable — verifiez le format","bad");}
- logActivity("create",n+" prospects importes"+(who?" → "+who:" (repartis)")+(dupes?" ("+dupes+" doublons ignores)":""));
+ var unk=Object.keys(unknownAsg);
+ logActivity("create",n+" prospects importes"+(who?" → "+who:" (repartis)")+(dupes?" ("+dupes+" doublons ignores)":"")+(revived?" ("+revived+" deja connus)":""));
  save();document.getElementById("saveBtn").onclick=saveRecord;closeModal();renderCurrent();buildNav();
- toast(n+" importes"+(dupes?" · "+dupes+" doublons":"")+(skipped?" · "+skipped+" ignorees":"")+" ✓");}
+ toast(n+" importes"+(revived?" · "+revived+" deja connus → Contacte":"")+(dupes?" · "+dupes+" doublons":"")+(skipped?" · "+skipped+" ignorees":"")+" ✓");
+ if(unk.length)setTimeout(function(){toast("⚠️ Responsable inconnu ignore : "+unk.slice(0,3).join(", ")+" — verifiez l'orthographe dans Equipe","bad");},2200);}
 function exportLeadsCSV(){var arr=arrOf("leads");if(!arr.length)return toast("Aucun prospect","bad");var cols=["name","business","phone","email","city","address","website","instagram","niche","source","status","value","assignee","notes"];var head=["Nom","Entreprise","Telephone","Email","Ville","Adresse","Site","Instagram","Niche","Source","Statut","Valeur","Responsable","Notes"];function esc2(v){v=String(v==null?"":v);return /[",;\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}var lines=[head.join(";")];arr.forEach(function(l){lines.push(cols.map(function(c){return esc2(l[c]);}).join(";"));});var blob=new Blob(["﻿"+lines.join("\r\n")],{type:"text/csv;charset=utf-8"});var url=URL.createObjectURL(blob);var link=document.createElement("a");link.href=url;link.download="DTO-prospects-"+today()+".csv";link.click();setTimeout(function(){URL.revokeObjectURL(url);},30000);toast("📤 "+arr.length+" prospects exportes");}
 function clearCache(){if(!confirm("Vider le cache de l'application ?\n\nVos donnees (prospects, ventes...) NE seront PAS supprimees"+(CLOUD.on?" (elles sont dans le Cloud)":"")+".\nCela libere l'espace et recharge la derniere version.")) return;try{clearBlobs();}catch(e){}try{localStorage.removeItem("dto_snaps");}catch(e){}if(!CLOUD.on){try{exportData();}catch(e){}}toast("🧹 Cache vide, rechargement...");setTimeout(function(){location.reload(true);},700);}
 function openCmd(){document.getElementById("cmdOverlay").classList.add("open");document.getElementById("cmdInput").value="";document.getElementById("cmdInput").placeholder=t("search");cmdSel=0;renderCmd();setTimeout(function(){document.getElementById("cmdInput").focus();},50);}
@@ -3056,7 +3120,7 @@ renderCurrent=function(){
 /* ===== v5.1: niches in leads + update banner ===== */
 SYSTEMS.leads.fields=function(){return [F("name","text",{req:true}),F("business"),{k:"niche",l:(curLang==="ar"?"القطاع":"Niche"),t:"select",opts:["","Promotion immobiliere","Agence immobiliere","Clinique medicale","Clinique dentaire","Clinique esthetique / greffe cheveux","Salle de sport / Gym","Restaurant / Cafe","E-commerce / Boutique","Cabinet d'avocats / Notaire","Agence de voyage","Nettoyage / Proprete","Services a domicile (plombier, electricien...)","Med spa / Institut de beaute","Salon de coiffure / Barbier","Auto / Concessionnaire","Ecole / Formation privee","Evenementiel / Mariage / Salle","Immobilier de luxe","Coach / Consultant","Batiment / Construction / Travaux","Pharmacie / Parapharmacie","Hotel / Riad / Location","Bijouterie / Luxe","Autre"]},F("phone"),F("email"),{k:"website",l:(curLang==="ar"?"الموقع":"Site web"),t:"text"},{k:"instagram",l:"Instagram",t:"text"},{k:"address",l:(curLang==="ar"?"العنوان":"Adresse"),t:"text"},F("source","select",{opts:["Google Maps","Instagram","Cold Call","Reference","Import","Autre"]}),F("city"),F("value","number"),ASSIGN,F("status","select",{opts:["Nouveau","Contacte","RDV pris","Gagne","Perdu"]}),F("notes","textarea")];};
 SYSTEMS.leads.card=function(r){return {title:r.name||"-",sub:[r.business,r.niche].filter(Boolean).join(" · ")||r.city||"",chips:[r.value?money(r.value):null,r.niche||r.source].filter(Boolean),owner:r.assignee||r.name};};
-var APP_VERSION="5.44.0";
+var APP_VERSION="5.45.0";
 var _bn=document.createElement("div");_bn.id="updBanner";
 _bn.style.cssText="display:none;position:fixed;top:0;left:0;right:0;z-index:600;background:var(--brand);color:#fff;padding:10px 18px;font-size:13px;font-weight:700;text-align:center;box-shadow:0 6px 20px -6px rgba(0,0,0,.6)";
 _bn.innerHTML='<span id="updTxt"></span> <span onclick="location.reload(true)" style="text-decoration:underline;cursor:pointer;margin-inline-start:10px">↻ Rafraichir</span> <span onclick="document.getElementById(\'updBanner\').style.display=\'none\'" style="cursor:pointer;margin-inline-start:14px;opacity:.7">✕</span>';
