@@ -967,8 +967,9 @@ function cardHTML(r,s){var cfg=s.card(r),chips=(cfg.chips||[]).map(function(ch){
 function healthScore(r){var recPts=r.lastCheckin?Math.max(0,40-daysBetween(r.lastCheckin,today())*1.3):10;var mrrPts=Math.min(30,(+r.mrr||0)/2000);var refPts=Math.min(20,(+r.referrals||0)*7);var base=r.health==="Churne"?0:10;return Math.max(0,Math.min(100,Math.round(recPts+mrrPts+refPts+base)));}
 function renderCards(c){var arr=arrOf(current);if(!arr.length)return c.innerHTML='<div class="empty">-</div>';var html='<div class="grid-cards">';arr.forEach(function(r){var h=r.health||"Bonne",cls=h==="Bonne"?"good":h==="A risque"?"warn":"bad",init=(r.name||"?").slice(0,2).toUpperCase(),ltv=(+r.mrr||0)*12,hs=healthScore(r);html+='<div class="hcard" onclick="openEdit(\''+r.id+'\')"><div class="hh"><span class="avatar" style="width:34px;height:34px;font-size:13px">'+init+'</span><span class="hname">'+esc(r.name)+'</span><span class="pill '+cls+'">'+stageT(h)+(r._autoFlag?' 🤖':'')+'</span></div><div class="hrow"><span>MRR</span><b>'+money(r.mrr)+'</b></div><div class="hrow"><span>LTV</span><b>'+money(ltv)+'</b></div><div class="hrow"><span>Health Score</span><b>'+hs+'/100</b></div><div class="hrow"><span>'+fl("nextCheckin")+'</span><b>'+(r.nextCheckin||"-")+'</b></div></div>';});c.innerHTML=html+'</div>';}
 function stcls(s){return s==="Paye"?"st-p":s==="Retard"?"st-r":"st-u";}
+function invLateDays(i){return (i.status==="Impaye"&&i.dueDate&&i.dueDate<today())?daysBetween(i.dueDate,today()):0;}
 function agingBucket(days){if(days<=0)return "0";if(days<=30)return "30";if(days<=60)return "60";if(days<=90)return "90";return "90+";}
-function renderInvoices(c){var arr=arrOf("invoices"),paid=arr.filter(function(i){return i.status==="Paye";}).reduce(function(a,i){return a+(+i.amount||0);},0),unpaid=arr.filter(function(i){return i.status!=="Paye";}).reduce(function(a,i){return a+(+i.amount||0);},0);var buckets={"0":0,"30":0,"60":0,"90":0,"90+":0};arr.filter(function(i){return i.status!=="Paye"&&i.dueDate;}).forEach(function(i){var d=daysBetween(i.dueDate,today());buckets[agingBucket(d)]+=(+i.amount||0);});var html='<div class="stat-grid" style="grid-template-columns:repeat(3,1fr)"><div class="stat"><div class="ic">'+iconMoney()+'</div><div class="lbl">'+t("collected")+'</div><div class="val">'+paid.toLocaleString('fr-FR')+'<small> DA</small></div></div><div class="stat"><div class="ic">'+iconInvoice()+'</div><div class="lbl">'+t("remaining")+'</div><div class="val">'+unpaid.toLocaleString('fr-FR')+'<small> DA</small></div></div><div class="stat"><div class="ic">'+iconCheck()+'</div><div class="lbl">Total</div><div class="val">'+(paid+unpaid).toLocaleString('fr-FR')+'<small> DA</small></div></div></div><div class="panel" style="margin-bottom:16px"><h3><span class="dot"></span>Balance agee (impayes)</h3><div class="stat-grid" style="grid-template-columns:repeat(4,1fr);margin-top:12px"><div class="stat"><div class="lbl">0-30j</div><div class="val" style="font-size:20px">'+(buckets["30"]/1000).toFixed(0)+'<small>k</small></div></div><div class="stat"><div class="lbl">31-60j</div><div class="val" style="font-size:20px">'+(buckets["60"]/1000).toFixed(0)+'<small>k</small></div></div><div class="stat"><div class="lbl">61-90j</div><div class="val" style="font-size:20px">'+(buckets["90"]/1000).toFixed(0)+'<small>k</small></div></div><div class="stat"><div class="lbl" style="color:var(--bad)">90j+</div><div class="val" style="font-size:20px;color:var(--bad)">'+(buckets["90+"]/1000).toFixed(0)+'<small>k</small></div></div></div></div><div class="panel"><table class="tbl"><tr><th style="width:28px"><span class="selall" onclick="selectAllVisible()" title="Tout selectionner">☑</span></th><th>'+fl("client")+'</th><th>'+fl("desc")+'</th><th>'+fl("amount")+'</th><th>'+fl("dueDate")+'</th><th>'+fl("status")+'</th><th style="width:40px"></th></tr>';arr.forEach(function(i){html+='<tr data-id="'+i.id+'"'+(isSel(i.id)?' class="selected"':'')+' onclick="openEdit(\''+i.id+'\')"><td style="width:28px"><span class="selbox tbl-box'+(isSel(i.id)?' on':'')+'" onclick="toggleSel(event,\''+i.id+'\')"></span></td><td><b>'+esc(i.client)+'</b></td><td>'+esc(i.desc||"")+'</td><td>'+money(i.amount)+'</td><td>'+(i.dueDate||"-")+'</td><td><span class="st-pill '+stcls(i.status)+'">'+stageT(i.status)+'</span></td><td><span class="cmove" onclick="printInvoice(event,\''+i.id+'\')" title="Imprimer / PDF">🖨</span></td></tr>';});c.innerHTML=html+'</table></div>';try{autoMRRInvoices();}catch(e){}}
+function renderInvoices(c){var arr=arrOf("invoices"),paid=arr.filter(function(i){return i.status==="Paye";}).reduce(function(a,i){return a+(+i.amount||0);},0),unpaid=arr.filter(function(i){return i.status!=="Paye";}).reduce(function(a,i){return a+(+i.amount||0);},0);var buckets={"0":0,"30":0,"60":0,"90":0,"90+":0};arr.filter(function(i){return i.status!=="Paye"&&i.dueDate;}).forEach(function(i){var d=daysBetween(i.dueDate,today());buckets[agingBucket(d)]+=(+i.amount||0);});var html='<div class="stat-grid" style="grid-template-columns:repeat(3,1fr)"><div class="stat"><div class="ic">'+iconMoney()+'</div><div class="lbl">'+t("collected")+'</div><div class="val">'+paid.toLocaleString('fr-FR')+'<small> DA</small></div></div><div class="stat"><div class="ic">'+iconInvoice()+'</div><div class="lbl">'+t("remaining")+'</div><div class="val">'+unpaid.toLocaleString('fr-FR')+'<small> DA</small></div></div><div class="stat"><div class="ic">'+iconCheck()+'</div><div class="lbl">Total</div><div class="val">'+(paid+unpaid).toLocaleString('fr-FR')+'<small> DA</small></div></div></div><div class="panel" style="margin-bottom:16px"><h3><span class="dot"></span>Balance agee (impayes)</h3><div class="stat-grid" style="grid-template-columns:repeat(4,1fr);margin-top:12px"><div class="stat"><div class="lbl">0-30j</div><div class="val" style="font-size:20px">'+(buckets["30"]/1000).toFixed(0)+'<small>k</small></div></div><div class="stat"><div class="lbl">31-60j</div><div class="val" style="font-size:20px">'+(buckets["60"]/1000).toFixed(0)+'<small>k</small></div></div><div class="stat"><div class="lbl">61-90j</div><div class="val" style="font-size:20px">'+(buckets["90"]/1000).toFixed(0)+'<small>k</small></div></div><div class="stat"><div class="lbl" style="color:var(--bad)">90j+</div><div class="val" style="font-size:20px;color:var(--bad)">'+(buckets["90+"]/1000).toFixed(0)+'<small>k</small></div></div></div></div><div class="panel"><table class="tbl"><tr><th style="width:28px"><span class="selall" onclick="selectAllVisible()" title="Tout selectionner">☑</span></th><th>'+fl("client")+'</th><th>'+fl("desc")+'</th><th>'+fl("amount")+'</th><th>'+fl("dueDate")+'</th><th>'+fl("status")+'</th><th style="width:40px"></th></tr>';arr.forEach(function(i){var lateD=invLateDays(i),effSt=lateD?"Retard":i.status,label=lateD?(stageT("Retard")+" · "+lateD+"j"):stageT(i.status);html+='<tr data-id="'+i.id+'"'+(isSel(i.id)?' class="selected"':'')+' onclick="openEdit(\''+i.id+'\')"><td style="width:28px"><span class="selbox tbl-box'+(isSel(i.id)?' on':'')+'" onclick="toggleSel(event,\''+i.id+'\')"></span></td><td><b>'+esc(i.client)+'</b></td><td>'+esc(i.desc||"")+'</td><td>'+money(i.amount)+'</td><td>'+(i.dueDate||"-")+'</td><td><span class="st-pill '+stcls(effSt)+'" title="'+(lateD?"Echeance depassee - statut encore Impaye, mettez a jour si deja relance":"")+'">'+label+'</span></td><td><span class="cmove" onclick="printInvoice(event,\''+i.id+'\')" title="Imprimer / PDF">🖨</span></td></tr>';});c.innerHTML=html+'</table></div>';try{autoMRRInvoices();}catch(e){}}
 function numToWordsFR(n){n=Math.round(+n||0);if(n===0)return "zero";var U=["","un","deux","trois","quatre","cinq","six","sept","huit","neuf","dix","onze","douze","treize","quatorze","quinze","seize","dix-sept","dix-huit","dix-neuf"];var T=["","","vingt","trente","quarante","cinquante","soixante","","quatre-vingt",""];
  function b100(x){if(x<20)return U[x];var d=Math.floor(x/10),u=x%10;if(d===7||d===9){return (d===7?"soixante":"quatre-vingt")+"-"+U[10+u];}var w=T[d];if(u===0)return w+(d===8?"s":"");if(u===1&&d!==8)return w+" et un";return w+"-"+U[u];}
  function b1000(x){var c=Math.floor(x/100),r=x%100,cw="";if(c>0)cw=(c>1?U[c]+" ":"")+"cent"+(c>1&&r===0?"s":"");if(r>0)cw=(cw?cw+" ":"")+b100(r);return cw;}
@@ -3125,7 +3126,367 @@ renderCurrent=function(){
 /* ===== v5.1: niches in leads + update banner ===== */
 SYSTEMS.leads.fields=function(){return [F("name","text",{req:true}),F("business"),{k:"niche",l:(curLang==="ar"?"القطاع":"Niche"),t:"select",opts:["","Promotion immobiliere","Agence immobiliere","Clinique medicale","Clinique dentaire","Clinique esthetique / greffe cheveux","Salle de sport / Gym","Restaurant / Cafe","E-commerce / Boutique","Cabinet d'avocats / Notaire","Agence de voyage","Nettoyage / Proprete","Services a domicile (plombier, electricien...)","Med spa / Institut de beaute","Salon de coiffure / Barbier","Auto / Concessionnaire","Ecole / Formation privee","Evenementiel / Mariage / Salle","Immobilier de luxe","Coach / Consultant","Batiment / Construction / Travaux","Pharmacie / Parapharmacie","Hotel / Riad / Location","Bijouterie / Luxe","Autre"]},F("phone"),F("email"),{k:"website",l:(curLang==="ar"?"الموقع":"Site web"),t:"text"},{k:"instagram",l:"Instagram",t:"text"},{k:"address",l:(curLang==="ar"?"العنوان":"Adresse"),t:"text"},F("source","select",{opts:["Google Maps","Instagram","Cold Call","Reference","Import","Autre"]}),F("city"),F("value","number"),ASSIGN,F("status","select",{opts:["Nouveau","Contacte","RDV pris","Gagne","Perdu"]}),F("notes","textarea")];};
 SYSTEMS.leads.card=function(r){return {title:r.name||"-",sub:[r.business,r.niche].filter(Boolean).join(" · ")||r.city||"",chips:[r.value?money(r.value):null,r.niche||r.source].filter(Boolean),owner:r.assignee||r.name};};
-var APP_VERSION="5.47.0";
+/* ===================== v5.48 — SESSION D'APPELS · OBJECTIONS · TERRITOIRES ===================== */
+var _v548Lang={
+ fr:{g_field:"Terrain",session:"Session d'appels",sessionS:"Enchainez vos appels sans quitter l'ecran",
+     objections:"Objections",objectionsS:"Pourquoi vous perdez, et quoi repondre",
+     territory:"Territoires",territoryS:"Couverture par wilaya : ou vous n'existez pas encore"},
+ en:{g_field:"Field",session:"Call session",sessionS:"Run your calls back to back without leaving the screen",
+     objections:"Objections",objectionsS:"Why you lose, and what to say back",
+     territory:"Territories",territoryS:"Coverage by wilaya: where you do not exist yet"},
+ ar:{g_field:"الميدان",session:"جلسة مكالمات",sessionS:"أجرِ مكالماتك تباعا دون مغادرة الشاشة",
+     objections:"الاعتراضات",objectionsS:"لماذا تخسر وماذا تجيب",
+     territory:"المناطق",territoryS:"التغطية حسب الولاية"}};
+["fr","en","ar"].forEach(function(l){for(var k in _v548Lang[l])LANG[l][k]=_v548Lang[l][k];});
+
+function _sDays(iso,n){var d=new Date(iso||today());d.setDate(d.getDate()+(n||0));return d.toISOString().slice(0,10);}
+function _sFold(s){s=String(s==null?"":s).toLowerCase();try{s=s.normalize("NFD").replace(new RegExp("[\u0300-\u036f]","g"),"");}catch(e){}return s.replace(/[^a-z0-9]+/g," ").trim();}
+
+/* ---------- Raisons de perte : la donnee qui manque le plus dans un CRM ---------- */
+var LOSS_REASONS=[
+ {l:"Trop cher / budget",fix:"Ne baissez pas le prix, baissez le ticket d'entree : paiement en 3 fois, ou une phase 1 a perimetre reduit. Puis chiffrez devant lui ce que lui coute un site invisible en clients perdus."},
+ {l:"A deja un site",fix:"Un site qui existe n'est pas un site qui vend. Demandez : combien de contacts par mois ? Faites l'audit gratuit en direct, montrez sa position Google reelle."},
+ {l:"Pas le moment",fix:"Acceptez, mais datez : « je vous rappelle le X ». Mettez le rappel tout de suite. Sans date precise, c'est un non deguise."},
+ {l:"Ne repond plus",fix:"Changez de canal et d'heure : si vous appeliez le matin, essayez 17h-19h. Un WhatsApp court avec une preuve (un site que vous avez livre dans sa wilaya) rouvre la porte."},
+ {l:"Fait en interne",fix:"Ne combattez pas la personne en interne, completez-la. Positionnez-vous sur ce qu'elle ne sait pas faire : SEO local, vitesse, conversion."},
+ {l:"A choisi un concurrent",fix:"Demandez pourquoi et notez-le. Restez en contact : beaucoup de projets d'agence deraillent. Recontactez a 3 mois."},
+ {l:"Mauvais interlocuteur",fix:"Vous avez parle a quelqu'un qui ne decide pas. Redemandez le nom du gerant, puis rappelez en le nommant."},
+ {l:"Numero faux / injoignable",fix:"Cherchez le vrai numero sur Instagram, Google Maps ou Facebook. Si le contact est vraiment mort, sortez-le de la liste pour ne plus perdre de temps."},
+ {l:"Autre",fix:"Ecrivez la vraie raison dans les notes. Une objection qu'on ne nomme pas revient toujours."}];
+function lossFix(lbl){var r=LOSS_REASONS.filter(function(x){return x.l===lbl;})[0];return r?r.fix:"";}
+
+/* ---------- Les 58 wilayas + variantes d'ecriture rencontrees dans les imports ---------- */
+var WILAYAS=[
+ {n:"Adrar",a:["adrar"]},{n:"Chlef",a:["chlef","chelef"]},{n:"Laghouat",a:["laghouat"]},
+ {n:"Oum El Bouaghi",a:["oum el bouaghi","oum elbouaghi"]},{n:"Batna",a:["batna"]},
+ {n:"Bejaia",a:["bejaia","bgayet"]},{n:"Biskra",a:["biskra"]},{n:"Bechar",a:["bechar"]},
+ {n:"Blida",a:["blida","boufarik","ouled yaich"]},{n:"Bouira",a:["bouira","lakhdaria"]},
+ {n:"Tamanrasset",a:["tamanrasset","tamanghasset"]},{n:"Tebessa",a:["tebessa"]},
+ {n:"Tlemcen",a:["tlemcen","maghnia"]},{n:"Tiaret",a:["tiaret"]},
+ {n:"Tizi Ouzou",a:["tizi ouzou","tiziouzou","azazga"]},
+ {n:"Alger",a:["alger","algiers","el djazair","dely brahim","hydra","cheraga","bab ezzouar","kouba","birkhadem","staoueli","ain benian","el biar","bir mourad rais","hussein dey","reghaia","rouiba","zeralda","ouled fayet","draria","baraki","bordj el kiffan","el harrach","mohammadia","ben aknoun","birtouta","said hamdine","chevalley","sidi yahia"]},
+ {n:"Djelfa",a:["djelfa"]},{n:"Jijel",a:["jijel"]},{n:"Setif",a:["setif","el eulma"]},
+ {n:"Saida",a:["saida"]},{n:"Skikda",a:["skikda"]},
+ {n:"Sidi Bel Abbes",a:["sidi bel abbes","sidi belabbes"]},{n:"Annaba",a:["annaba"]},
+ {n:"Guelma",a:["guelma"]},{n:"Constantine",a:["constantine","qacentina","ali mendjeli"]},
+ {n:"Medea",a:["medea"]},{n:"Mostaganem",a:["mostaganem"]},{n:"MSila",a:["m sila","msila"]},
+ {n:"Mascara",a:["mascara"]},{n:"Ouargla",a:["ouargla","hassi messaoud"]},
+ {n:"Oran",a:["oran","wahran","bir el djir","es senia","arzew","ain el turck"]},
+ {n:"El Bayadh",a:["el bayadh"]},{n:"Illizi",a:["illizi"]},
+ {n:"Bordj Bou Arreridj",a:["bordj bou arreridj","bordj bou areridj"]},
+ {n:"Boumerdes",a:["boumerdes","boudouaou","bordj menaiel"]},{n:"El Tarf",a:["el tarf"]},
+ {n:"Tindouf",a:["tindouf"]},{n:"Tissemsilt",a:["tissemsilt"]},{n:"El Oued",a:["el oued"]},
+ {n:"Khenchela",a:["khenchela"]},{n:"Souk Ahras",a:["souk ahras"]},
+ {n:"Tipaza",a:["tipaza","tipasa","kolea","bou ismail"]},{n:"Mila",a:["mila","chelghoum laid"]},
+ {n:"Ain Defla",a:["ain defla","khemis miliana"]},{n:"Naama",a:["naama"]},
+ {n:"Ain Temouchent",a:["ain temouchent"]},{n:"Ghardaia",a:["ghardaia"]},
+ {n:"Relizane",a:["relizane"]},{n:"Timimoun",a:["timimoun"]},
+ {n:"Bordj Badji Mokhtar",a:["bordj badji mokhtar"]},{n:"Ouled Djellal",a:["ouled djellal"]},
+ {n:"Beni Abbes",a:["beni abbes"]},{n:"In Salah",a:["in salah"]},{n:"In Guezzam",a:["in guezzam"]},
+ {n:"Touggourt",a:["touggourt"]},{n:"Djanet",a:["djanet"]},{n:"El MGhair",a:["el m ghair","el mghair"]},
+ {n:"El Meniaa",a:["el meniaa","el menia"]}];
+var _wilIdx=null;
+function wilIndex(){if(_wilIdx)return _wilIdx;_wilIdx=[];
+ WILAYAS.forEach(function(w){w.a.forEach(function(al){_wilIdx.push({f:_sFold(al),n:w.n});});});
+ _wilIdx.sort(function(a,b){return b.f.length-a.f.length;});return _wilIdx;}
+/* Recherche par mots entiers : sinon « Algerie » serait compte comme « Alger ». */
+function leadWilaya(l){
+ var hay=" "+_sFold([l.city,l.address,l.business,l.name].filter(Boolean).join(" "))+" ";
+ if(hay.length<3)return "";
+ var ix=wilIndex();
+ for(var i=0;i<ix.length;i++){if(hay.indexOf(" "+ix[i].f+" ")>=0)return ix[i].n;}
+ return "";}
+
+/* ============================ 1. SESSION D'APPELS ============================ */
+var _sess={on:false,queue:[],i:0,done:0,rdv:0,started:0,ask:"",listId:""};
+function sessQueue(listId){
+ var me=DB._me||"",adm=isAdmin(),td=today();
+ var arr=(DB.leads||[]).filter(function(l){
+  if(listId&&l.listId!==listId)return false;
+  if(!adm&&l.assignee!==me)return false;
+  var st=l.status||"Nouveau";
+  if(st==="Gagne"||st==="Perdu")return false;
+  if(!normPhone(l.phone))return false;
+  if(l.nextAction&&l.nextAction>td)return false;
+  return true;});
+ arr.sort(function(a,b){
+  var ra=a.nextAction||"",rb=b.nextAction||"";
+  var da=(ra&&ra<=td)?0:1,db=(rb&&rb<=td)?0:1;
+  if(da!==db)return da-db;
+  if(da===0)return ra<rb?-1:(ra>rb?1:0);
+  var na=(a.status||"Nouveau")==="Nouveau"?0:1,nb=(b.status||"Nouveau")==="Nouveau"?0:1;
+  if(na!==nb)return na-nb;
+  var ta=a.lastTouch||"",tb=b.lastTouch||"";
+  return ta<tb?-1:(ta>tb?1:0);});
+ return arr;}
+function sessStart(){
+ var sel=document.getElementById("sessList");
+ _sess.listId=sel?sel.value:"";
+ _sess.queue=sessQueue(_sess.listId);
+ if(!_sess.queue.length){toast("Aucun prospect a appeler dans cette selection");return;}
+ _sess.on=true;_sess.i=0;_sess.done=0;_sess.rdv=0;_sess.ask="";_sess.started=Date.now();
+ renderCurrent();}
+function sessStop(){
+ var d=_sess.done,r=_sess.rdv;
+ _sess.on=false;_sess.ask="";
+ if(d){logActivity("session","Session d'appels : "+d+" appel(s), "+r+" RDV");save();}
+ renderCurrent();
+ if(d)toast("Session terminee : "+d+" appel(s), "+r+" RDV");}
+function sessSkip(){_sess.ask="";_sess.i++;renderCurrent();}
+function sessAsk(w){_sess.ask=w;renderCurrent();}
+function sessCur(){return _sess.queue[_sess.i]||null;}
+function sessApply(l){
+ l.attempts=(+l.attempts||0)+1;l.lastTouch=today();
+ trackOutreach("call");_sess.done++;}
+function sessNoAns(){
+ var l=sessCur();if(!l)return;
+ pushUndo("Session d'appels",["leads"]);
+ sessApply(l);l.nextAction=_sDays(today(),1);
+ save();_sess.ask="";_sess.i++;renderCurrent();}
+function sessCallback(days){
+ var l=sessCur();if(!l)return;
+ pushUndo("Session d'appels",["leads"]);
+ sessApply(l);l.nextAction=_sDays(today(),days);
+ if((l.status||"Nouveau")==="Nouveau")l.status="Contacte";
+ save();_sess.ask="";_sess.i++;renderCurrent();
+ toast("Rappel programme le "+l.nextAction);}
+function sessRdv(){
+ var l=sessCur();if(!l)return;
+ pushUndo("Session d'appels",["leads","tasks"]);
+ sessApply(l);l.status="RDV pris";l.nextAction="";_sess.rdv++;
+ var nm=l.name||l.business||"?";
+ addAutoTask("Preparer le RDV - "+nm,nm,l.assignee||DB._me||"",1);
+ logActivity("update","RDV pris (session) : "+nm);
+ save();_sess.ask="";_sess.i++;renderCurrent();buildNav();
+ toast("RDV pris — tache de preparation creee");}
+function sessWon(){
+ var l=sessCur();if(!l)return;
+ pushUndo("Session d'appels",["leads"]);
+ sessApply(l);l.status="Gagne";l.nextAction="";l.lossReason="";
+ logActivity("update","Lead gagne (session) : "+(l.name||l.business||"?"));
+ save();_sess.ask="";_sess.i++;renderCurrent();buildNav();toast("Gagne");}
+function sessLost(reason){
+ var l=sessCur();if(!l)return;
+ pushUndo("Session d'appels",["leads"]);
+ sessApply(l);l.status="Perdu";l.nextAction="";l.lossReason=reason;
+ logActivity("update","Lead perdu (session) : "+(l.name||l.business||"?")+" — "+reason);
+ save();_sess.ask="";_sess.i++;renderCurrent();buildNav();}
+function sessWa(){
+ var l=sessCur();if(!l)return;
+ var url=waSendUrl(l.phone,mergeScript(DB._waScript||DEFAULT_WA,l));
+ if(!url){toast("Numero invalide");return;}
+ pushUndo("Session d'appels",["leads"]);
+ l.lastTouch=today();trackOutreach("wa");save();
+ window.open(url,"_blank");}
+
+function renderSession(c){
+ var lists=(DB.leadlists||[]);
+ if(!_sess.on){
+  var q=sessQueue(document.getElementById("sessList")?document.getElementById("sessList").value:"");
+  var td=today();
+  var late=q.filter(function(l){return l.nextAction&&l.nextAction<=td;}).length;
+  var fresh=q.filter(function(l){return (l.status||"Nouveau")==="Nouveau";}).length;
+  var h='<div class="panel"><h3><span class="dot"></span>Session d\'appels</h3>'
+  +'<p style="font-size:12.5px;color:var(--muted);line-height:1.7;margin-bottom:16px">Un prospect a la fois, plein ecran, avec son script et ses notes sous les yeux. Vous cliquez le resultat, le CRM enregistre l\'appel, programme la relance et passe au suivant. Plus de va-et-vient entre les fiches.</p>'
+  +'<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">'
+  +kpiTile("A APPELER","<b>"+q.length+"</b>","dans la file")
+  +kpiTile("RAPPELS DUS","<b>"+late+"</b>","promis pour aujourd'hui ou avant",late?"var(--bad)":"var(--muted2)")
+  +kpiTile("JAMAIS APPELES","<b>"+fresh+"</b>","statut Nouveau")
+  +'</div>'
+  +'<div class="field" style="max-width:340px"><label>Filtrer sur une liste</label><select id="sessList" onchange="renderCurrent()"><option value="">Toutes mes listes</option>'
+  +lists.map(function(x){return '<option value="'+esc(x.id)+'"'+(_sess.listId===x.id?' selected':'')+'>'+esc(x.name||"Liste")+'</option>';}).join("")
+  +'</select></div>';
+  if(q.length)h+='<div class="btn" style="margin-top:6px" onclick="sessStart()">Demarrer la session ('+q.length+')</div>';
+  else h+=intelEmpty("Rien a appeler ici.<br><span style=\"font-size:12.5px\">Soit tout est traite, soit les rappels sont programmes plus tard, soit les fiches n'ont pas de numero.</span>");
+  return c.innerHTML=h+'</div>';}
+
+ if(_sess.i>=_sess.queue.length){
+  var mins=Math.max(1,Math.round((Date.now()-_sess.started)/60000));
+  return c.innerHTML='<div class="panel"><h3><span class="dot"></span>File terminee</h3>'
+   +'<div style="display:flex;gap:12px;flex-wrap:wrap;margin:14px 0">'
+   +kpiTile("APPELS","<b>"+_sess.done+"</b>",mins+" min de session")
+   +kpiTile("RDV PRIS","<b>"+_sess.rdv+"</b>","",_sess.rdv?"var(--good)":"var(--muted2)")
+   +kpiTile("RYTHME","<b>"+(mins?(Math.round(_sess.done/mins*60)):0)+"</b>","appels / heure")
+   +'</div><div class="btn" onclick="sessStop()">Terminer</div></div>';}
+
+ var l=sessCur();
+ var nm=l.name||l.business||"?";
+ var ph=normPhone(l.phone);
+ var wil=leadWilaya(l);
+ var chips=[l.niche,l.city,wil&&wil!==l.city?wil:"",l.value?money(l.value):""].filter(Boolean);
+ var att=+l.attempts||0;
+ var scr=(DB.templates||[]).filter(function(x){return x.category==="Cold Call";})[0];
+
+ var h='<div class="panel" style="padding-bottom:8px">'
+ +'<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px">'
+ +'<div style="font-size:11px;letter-spacing:.5px;font-weight:700;color:var(--muted)">PROSPECT '+(_sess.i+1)+' / '+_sess.queue.length+' &nbsp;·&nbsp; '+_sess.done+' APPEL(S) &nbsp;·&nbsp; '+_sess.rdv+' RDV</div>'
+ +'<div class="btn ghost sm" onclick="sessStop()">Arreter la session</div></div>'
+ +'<div style="border:1px solid var(--line2);border-radius:var(--r);padding:18px 20px;background:var(--surface)">'
+ +'<div style="font-size:22px;font-weight:800;line-height:1.25">'+esc(nm)+'</div>'
+ +(l.business&&l.business!==nm?'<div style="font-size:13.5px;color:var(--muted);margin-top:2px">'+esc(l.business)+'</div>':'')
+ +(chips.length?'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:9px">'+chips.map(function(x){return '<span class="pill">'+esc(x)+'</span>';}).join("")+'</div>':'')
+ +'<div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:15px;align-items:center">'
+ +(ph?'<a class="btn" href="tel:+'+esc(ph)+'" style="text-decoration:none;font-size:16px;letter-spacing:.3px">'+esc(l.phone||("+"+ph))+'</a>':'<span style="color:var(--bad);font-weight:700">Aucun numero</span>')
+ +(ph?'<span class="btn ghost" onclick="sessWa()">WhatsApp</span>':'')
+ +(l.website?'<a class="btn ghost sm" href="'+esc(/^https?:/.test(l.website)?l.website:"https://"+l.website)+'" target="_blank" rel="noopener" style="text-decoration:none">Voir son site</a>':'')
+ +(l.instagram?'<a class="btn ghost sm" href="https://instagram.com/'+esc(String(l.instagram).replace(/^@/,""))+'" target="_blank" rel="noopener" style="text-decoration:none">Instagram</a>':'')
+ +'</div>'
+ +'<div style="font-size:11.5px;color:var(--muted2);margin-top:12px">Statut : <b>'+esc(l.status||"Nouveau")+'</b>'
+ +(att?' · deja '+att+' tentative(s)':' · jamais appele')
+ +(l.lastTouch?' · dernier contact le '+esc(l.lastTouch):'')
+ +(l.nextAction?' · <b style="color:var(--bad)">rappel promis le '+esc(l.nextAction)+'</b>':'')
+ +(l.assignee?' · '+esc(l.assignee):'')+'</div>'
+ +'</div>';
+
+ if(l.notes)h+='<div style="margin-top:14px"><div style="font-size:11px;letter-spacing:.5px;font-weight:700;color:var(--muted);margin-bottom:6px">NOTES ET SCRIPT DE CETTE FICHE</div>'
+  +'<div style="white-space:pre-wrap;font-size:12.5px;line-height:1.65;max-height:280px;overflow:auto;border:1px solid var(--line);border-radius:var(--r-sm);padding:13px 15px;background:var(--surface2)">'+esc(l.notes)+'</div></div>';
+ else if(scr)h+='<div style="margin-top:14px"><div style="font-size:11px;letter-spacing:.5px;font-weight:700;color:var(--muted);margin-bottom:6px">OUVERTURE TYPE</div>'
+  +'<div style="white-space:pre-wrap;font-size:12.5px;line-height:1.65;border:1px solid var(--line);border-radius:var(--r-sm);padding:13px 15px;background:var(--surface2)">'+esc(scr.content||"")+'</div></div>';
+
+ h+='</div>';
+
+ if(_sess.ask==="cb"){
+  h+='<div class="panel"><h3><span class="dot"></span>Rappeler dans combien de temps ?</h3>'
+  +'<div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:10px">'
+  +[1,2,3,7,14,30].map(function(d){return '<span class="btn ghost" onclick="sessCallback('+d+')">'+(d===1?"Demain":"J+"+d)+'</span>';}).join("")
+  +'</div><div class="btn ghost sm" style="margin-top:12px" onclick="sessAsk(\'\')">Annuler</div></div>';}
+ else if(_sess.ask==="lost"){
+  h+='<div class="panel"><h3><span class="dot"></span>Pourquoi est-il perdu ?</h3>'
+  +'<p style="font-size:12px;color:var(--muted);margin-bottom:12px">Cette reponse alimente la page Objections. C\'est elle qui vous dira quoi changer dans votre offre.</p>'
+  +LOSS_REASONS.map(function(r){return '<div class="btn ghost sm" style="display:block;margin-bottom:6px;text-align:start" onclick="sessLost('+JSON.stringify(r.l).replace(/"/g,"&quot;")+')">'+esc(r.l)+'</div>';}).join("")
+  +'<div class="btn ghost sm" style="margin-top:8px" onclick="sessAsk(\'\')">Annuler</div></div>';}
+ else{
+  h+='<div class="panel"><h3><span class="dot"></span>Resultat de l\'appel</h3>'
+  +'<div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:12px">'
+  +'<span class="btn ghost" onclick="sessNoAns()">Pas de reponse</span>'
+  +'<span class="btn ghost" onclick="sessAsk(\'cb\')">Rappeler plus tard</span>'
+  +'<span class="btn" onclick="sessRdv()">RDV pris</span>'
+  +'<span class="btn ghost" onclick="sessWon()">Gagne</span>'
+  +'<span class="btn danger" onclick="sessAsk(\'lost\')">Perdu</span>'
+  +'<span class="btn ghost sm" onclick="sessSkip()">Passer sans rien noter</span>'
+  +'</div></div>';}
+ c.innerHTML=h;}
+
+/* ============================ 2. OBJECTIONS ============================ */
+function renderObjections(c){
+ var lost=(DB.leads||[]).filter(function(l){return (l.status||"")==="Perdu";});
+ var noReason=lost.filter(function(l){return !l.lossReason;});
+ var withReason=lost.filter(function(l){return !!l.lossReason;});
+ var h='<div class="panel"><h3><span class="dot"></span>Pourquoi vous perdez</h3>'
+ +'<p style="font-size:12.5px;color:var(--muted);line-height:1.7;margin-bottom:14px">Un prospect perdu sans raison notee est une lecon perdue. Ici on compte les raisons reelles, on chiffre ce qu\'elles vous coutent, et on vous donne la reponse a preparer.</p>';
+
+ if(!lost.length)return c.innerHTML=h+intelEmpty("Aucun prospect perdu pour l'instant.<br><span style=\"font-size:12.5px\">Quand vous en marquerez un Perdu, le CRM vous demandera pourquoi.</span>")+'</div>';
+
+ var groups={};
+ withReason.forEach(function(l){var k=l.lossReason;if(!groups[k])groups[k]={n:0,val:0,who:{}};
+  groups[k].n++;groups[k].val+=(+l.value||0);
+  var w=l.assignee||"Non assigne";groups[k].who[w]=(groups[k].who[w]||0)+1;});
+ var rows=Object.keys(groups).map(function(k){return {k:k,n:groups[k].n,val:groups[k].val,who:groups[k].who};})
+  .sort(function(a,b){return b.n-a.n;});
+ var tot=withReason.length;
+ var lostVal=lost.reduce(function(a,l){return a+(+l.value||0);},0);
+
+ h+='<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">'
+ +kpiTile("PROSPECTS PERDUS","<b>"+lost.length+"</b>",tot+" avec une raison notee")
+ +kpiTile("VALEUR PERDUE",money(lostVal),"somme des montants estimes","var(--bad)")
+ +kpiTile("RAISON N1",rows.length?'<b style="font-size:17px">'+esc(rows[0].k)+'</b>':"—",rows.length?rows[0].n+" cas ("+Math.round(rows[0].n/tot*100)+"%)":"")
+ +'</div>';
+
+ if(noReason.length)h+='<div style="border:1px solid var(--line2);border-radius:var(--r-sm);padding:13px 15px;margin-bottom:16px;background:var(--surface2);font-size:12.5px;line-height:1.7">'
+  +'<b>'+noReason.length+' prospect(s) perdu(s) sans raison notee.</b> Ouvrez leur fiche et remplissez « Raison de la perte » : '
+  +noReason.slice(0,8).map(function(l){return esc(l.name||l.business||"?");}).join(", ")+(noReason.length>8?"…":"")+'</div>';
+ h+='</div>';
+
+ if(rows.length){
+  h+='<div class="panel"><h3><span class="dot"></span>Repartition des raisons</h3><table class="tbl" style="margin-top:8px">'
+  +'<tr><th>Raison</th><th style="text-align:end">Cas</th><th style="text-align:end">Part</th><th style="text-align:end">Valeur perdue</th></tr>'
+  +rows.map(function(r){var pct=Math.round(r.n/tot*100);
+   return '<tr><td><b>'+esc(r.k)+'</b><div style="margin-top:5px;height:5px;background:var(--line);border-radius:2px;overflow:hidden"><div style="height:5px;width:'+pct+'%;background:var(--brand)"></div></div></td>'
+   +'<td style="text-align:end"><b>'+r.n+'</b></td><td style="text-align:end">'+pct+'%</td>'
+   +'<td style="text-align:end">'+(r.val?money(r.val):"—")+'</td></tr>';}).join("")
+  +'</table></div>';
+
+  h+='<div class="panel"><h3><span class="dot"></span>Quoi repondre, objection par objection</h3>'
+  +rows.map(function(r){var fx=lossFix(r.k);if(!fx)return "";
+   var whoArr=Object.keys(r.who).map(function(w){return {w:w,n:r.who[w]};}).sort(function(a,b){return b.n-a.n;});
+   return '<div style="border:1px solid var(--line);border-radius:var(--r-sm);padding:13px 15px;margin-bottom:9px">'
+   +'<div style="font-weight:700;font-size:13.5px">'+esc(r.k)+' <span style="color:var(--muted2);font-weight:400">— '+r.n+' cas</span></div>'
+   +'<div style="font-size:12.5px;color:var(--muted);line-height:1.7;margin-top:7px">'+esc(fx)+'</div>'
+   +(whoArr.length>1?'<div style="font-size:11.5px;color:var(--muted2);margin-top:8px">Rencontree surtout par : '+whoArr.slice(0,3).map(function(x){return esc(x.w)+" ("+x.n+")";}).join(", ")+'</div>':'')
+   +'</div>';}).join("")+'</div>';}
+ c.innerHTML=h;}
+
+/* ============================ 3. TERRITOIRES ============================ */
+function renderTerritory(c){
+ var leads=(DB.leads||[]);
+ var map={};WILAYAS.forEach(function(w){map[w.n]={n:0,touched:0,won:0};});
+ var unknown=0;
+ leads.forEach(function(l){var w=leadWilaya(l);if(!w||!map[w]){unknown++;return;}
+  map[w].n++;
+  var st=l.status||"Nouveau";
+  if(st!=="Nouveau")map[w].touched++;
+  if(st==="Gagne")map[w].won++;});
+ var covered=WILAYAS.filter(function(w){return map[w.n].n>0;}).length;
+ var withClient=WILAYAS.filter(function(w){return map[w.n].won>0;}).length;
+ var virgin=WILAYAS.filter(function(w){return map[w.n].n===0;});
+
+ var h='<div class="panel"><h3><span class="dot"></span>Couverture nationale</h3>'
+ +'<p style="font-size:12.5px;color:var(--muted);line-height:1.7;margin-bottom:14px">La wilaya est deduite de la ville et de l\'adresse de chaque fiche. Les cases vides sont vos zones blanches : personne ne vous y connait, et aucun concurrent local ne vous y attend.</p>'
+ +'<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px">'
+ +kpiTile("WILAYAS TRAVAILLEES","<b>"+covered+"</b> / 58",Math.round(covered/58*100)+"% du pays")
+ +kpiTile("AVEC UN CLIENT","<b>"+withClient+"</b>","une reference locale a montrer","var(--good)")
+ +kpiTile("ZONES BLANCHES","<b>"+virgin.length+"</b>","aucun prospect enregistre",virgin.length?"var(--warn)":"var(--good)")
+ +kpiTile("FICHES SANS WILAYA","<b>"+unknown+"</b>","ville absente ou non reconnue",unknown?"var(--muted)":"var(--good)")
+ +'</div>'
+ +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:7px">'
+ +WILAYAS.map(function(w){var m=map[w.n];
+   var bg="var(--surface2)",bd="var(--line)",col="var(--muted2)";
+   if(m.won>0){bg="rgba(15,123,85,.12)";bd="rgba(15,123,85,.35)";col="var(--good)";}
+   else if(m.touched>0){bg="rgba(154,103,0,.10)";bd="rgba(154,103,0,.30)";col="var(--warn)";}
+   else if(m.n>0){bg="var(--brand-wash)";bd="rgba(47,111,237,.28)";col="var(--brand)";}
+   return '<div title="'+esc(w.n)+' : '+m.n+' prospect(s), '+m.touched+' contacte(s), '+m.won+' gagne(s)" style="border:1px solid '+bd+';background:'+bg+';border-radius:var(--r-sm);padding:9px 10px">'
+   +'<div style="font-size:11.5px;font-weight:700;line-height:1.3">'+esc(w.n)+'</div>'
+   +'<div style="font-size:15px;font-weight:800;color:'+col+';margin-top:2px">'+(m.n||"—")+'</div>'
+   +(m.n?'<div style="font-size:10px;color:var(--muted2)">'+m.touched+' contactes · '+m.won+' gagnes</div>':'<div style="font-size:10px;color:var(--muted2)">zone blanche</div>')
+   +'</div>';}).join("")
+ +'</div>'
+ +'<div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;font-size:11.5px;color:var(--muted)">'
+ +'<span>Vert : au moins un client</span><span>Orange : contacte, pas encore signe</span><span>Bleu : prospects non appeles</span><span>Gris : zone blanche</span></div></div>';
+
+ var top=WILAYAS.map(function(w){return {n:w.n,m:map[w.n]};}).filter(function(x){return x.m.n>0;})
+  .sort(function(a,b){return b.m.n-a.m.n;}).slice(0,12);
+ if(top.length)h+='<div class="panel"><h3><span class="dot"></span>Vos wilayas les plus fournies</h3><table class="tbl" style="margin-top:8px">'
+ +'<tr><th>Wilaya</th><th style="text-align:end">Prospects</th><th style="text-align:end">Contactes</th><th style="text-align:end">Gagnes</th><th style="text-align:end">Taux</th></tr>'
+ +top.map(function(x){var tx=x.m.n?Math.round(x.m.won/x.m.n*100):0;
+  return '<tr><td><b>'+esc(x.n)+'</b></td><td style="text-align:end">'+x.m.n+'</td><td style="text-align:end">'+x.m.touched+'</td>'
+  +'<td style="text-align:end">'+x.m.won+'</td><td style="text-align:end"><b style="color:'+(tx>=10?"var(--good)":"var(--muted)")+'">'+tx+'%</b></td></tr>';}).join("")
+ +'</table></div>';
+
+ if(virgin.length)h+='<div class="panel"><h3><span class="dot"></span>Ou aller chercher la croissance</h3>'
+ +'<p style="font-size:12.5px;color:var(--muted);line-height:1.7;margin-bottom:12px">'+virgin.length+' wilaya(s) sans aucun prospect enregistre. Chacune est un marche entier ou vous n\'avez encore rien tente.</p>'
+ +'<div style="display:flex;gap:6px;flex-wrap:wrap">'+virgin.map(function(w){return '<span class="pill">'+esc(w.n)+'</span>';}).join("")+'</div></div>';
+ c.innerHTML=h;}
+
+/* ---------- Enregistrement ---------- */
+SYSTEMS.session={key:"session",icon:iconTarget(),intel:renderSession};
+SYSTEMS.objections={key:"objections",icon:iconStar(),intel:renderObjections};
+SYSTEMS.territory={key:"territory",icon:iconChartG(),intel:renderTerritory};
+["objections","territory"].forEach(function(k){if(ADMINONLY.indexOf(k)<0)ADMINONLY.push(k);});
+var _gAcq548=GROUPS.filter(function(g){return g.lbl==="g_acq";})[0];
+if(_gAcq548&&_gAcq548.items.indexOf("session")<0)_gAcq548.items.unshift("session");
+var _gInt548=GROUPS.filter(function(g){return g.lbl==="g_intel";})[0];
+if(_gInt548){["objections","territory"].forEach(function(k){if(_gInt548.items.indexOf(k)<0)_gInt548.items.push(k);});}
+
+/* Les deux champs qui font vivre la session et la page Objections. */
+var _leadFields548=SYSTEMS.leads.fields;
+SYSTEMS.leads.fields=function(){
+ var f=_leadFields548();
+ f.push({k:"nextAction",l:(curLang==="ar"?"إعادة الاتصال في":curLang==="en"?"Call back on":"Rappeler le"),t:"date"});
+ f.push({k:"lossReason",l:(curLang==="ar"?"سبب الخسارة":curLang==="en"?"Loss reason":"Raison de la perte"),t:"select",
+  opts:[""].concat(LOSS_REASONS.map(function(r){return r.l;}))});
+ return f;};
+
+var APP_VERSION="5.48.0";
 var _bn=document.createElement("div");_bn.id="updBanner";
 _bn.style.cssText="display:none;position:fixed;top:0;left:0;right:0;z-index:600;background:var(--brand);color:#fff;padding:10px 18px;font-size:13px;font-weight:700;text-align:center;box-shadow:0 6px 20px -6px rgba(0,0,0,.6)";
 _bn.innerHTML='<span id="updTxt"></span> <span onclick="location.reload(true)" style="text-decoration:underline;cursor:pointer;margin-inline-start:10px">↻ Rafraichir</span> <span onclick="document.getElementById(\'updBanner\').style.display=\'none\'" style="cursor:pointer;margin-inline-start:14px;opacity:.7">✕</span>';
