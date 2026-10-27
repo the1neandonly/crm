@@ -91,9 +91,9 @@ def stamp(col):
     ring = (f'<svg viewBox="0 0 400 400" width="100%" height="100%"><defs><path id="c" d="M200,200 m-150,0 a150,150 0 1,1 300,0 a150,150 0 1,1 -300,0"/></defs>'
             f'<circle cx="200" cy="200" r="194" fill="none" stroke="{col}" stroke-width="8"/><circle cx="200" cy="200" r="122" fill="none" stroke="{col}" stroke-width="3"/>'
             f'<text font-family="Montserrat" font-weight="700" font-size="27" fill="{col}"><textPath href="#c" startOffset="0" textLength="925" lengthAdjust="spacing">DEVELOPTHEONE · DIGITAL MARKETING AGENCY ·</textPath></text>'
-            f'<g transform="translate(160,120) scale(0.42)">{__import__("logo").mark_paths(col, col)}</g>'
+            f'<g transform="translate(141,108) scale(0.21)">{__import__("logo").mark_paths(col, col)}</g>'
             f'<text x="200" y="255" text-anchor="middle" font-family="Cairo" font-weight="700" font-size="30" fill="{col}">DTO</text>'
-            f'<text x="200" y="290" text-anchor="middle" font-family="Inter" font-weight="800" font-size="20" letter-spacing="4" fill="{col}">ORAN</text></svg>')
+            f'<text x="200" y="290" text-anchor="middle" font-family="Inter" font-weight="800" font-size="20" letter-spacing="4" fill="{col}">ALGÉRIE</text></svg>')
     return ring
 for cname, col in [('dto-blue', '#0F66B6'), ('black', '#111111'), ('navy', '#0A3D73')]:
     html('15_Cachet-Tampon_Company-stamp', f'stamp-round-40mm-{cname}', 40, 40, 'transparent', A(stamp(col), 'inset:0'), ('pdf', 'png'), 'mm', 12)
