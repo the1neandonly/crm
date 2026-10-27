@@ -104,7 +104,34 @@ def wordmark(scheme, tagline=True):
         h = 0.697*size + 0.21*size
     return ww, h, inner
 
-LOCKUPS = {'horizontal': horizontal, 'horizontal-compact': lambda sch: horizontal(sch, tagline=False), 'stacked': stacked, 'icon': icon, 'wordmark': wordmark}
+AR_FONT = 'ReadexPro-700.ttf'
+
+def arabic(scheme, size=170):
+    """Arabic lockup — باينة (Darija: clear, obvious). Reads right-to-left, so the symbol leads on the right."""
+    b, s, wc, sc = SCHEMES[scheme]
+    d, w = text_path('باينة', AR_FONT, size, 0, H - 1)
+    return w + 48 + W, H + 0.45*size, f'<path d="{d}" fill="{wc}"/>' + mark_paths(b, s, ox=w + 48)
+
+def bilingual(scheme):
+    b, s, wc, sc = SCHEMES[scheme]
+    size, gapx, base = 196, 48, H - 1
+    word, ww = wordmark_paths(wc, size, W + gapx, base)
+    sub, _ = sub_paths('AGENCY', sc, 29, W + gapx + ww, base - 0.697*size + 0.72*29, anchor='end', tracking=0.46)
+    d, _ = text_path('باينة', AR_FONT, 92, W + gapx + ww, base + 120, anchor='end')
+    return W + gapx + ww, base + 150, mark_paths(b, s) + word + sub + f'<path d="{d}" fill="{sc}"/>'
+
+def bilingual_stacked(scheme):
+    b, s, wc, sc = SCHEMES[scheme]
+    size, asize, gap = 150, 140, 60
+    _, w1 = text_path('bayna', WORD_FONT, size, 0, 0)
+    _, w2 = text_path('باينة', AR_FONT, asize, 0, 0)
+    tot = w1 + gap + w2; base = H + 50 + 0.697*size
+    l, _ = text_path('bayna', WORD_FONT, size, 0, base)
+    a, _ = text_path('باينة', AR_FONT, asize, w1 + gap, base)
+    return tot, base + 60, (mark_paths(b, s, ox=(tot - W)/2) + f'<path d="{l}" fill="{wc}"/>'
+            f'<rect x="{w1 + gap/2 - 1.5}" y="{base - 100}" width="3" height="110" fill="{sc}"/><path d="{a}" fill="{wc}"/>')
+
+LOCKUPS = {'horizontal': horizontal, 'horizontal-compact': lambda sch: horizontal(sch, tagline=False), 'stacked': stacked, 'symbol': icon, 'arabic': arabic, 'bilingual': bilingual, 'bilingual-stacked': bilingual_stacked, 'wordmark': wordmark}
 
 def build(lockup, scheme, pad_ratio=0.0, bg=None):
     fn = LOCKUPS[lockup]
