@@ -3,8 +3,8 @@ TOC = []   # (part, en, fr, page_index)
 def toc(part, en, fr): TOC.append((part, en, fr, len(PAGES)))
 def divider(num, en, fr, sub, cls='gradp'):
     add('', f'''<div style="position:absolute;left:120px;top:150px" class="mono hl">{num}</div>
-<div style="position:absolute;left:120px;bottom:150px"><div class="big" style="font-size:160px;line-height:.92">{en}</div>
-<div class="big" style="font-size:52px;margin-top:26px;opacity:.85;font-weight:600">{fr}</div><p style="margin-top:30px;max-width:900px;font-size:24px">{sub}</p></div>
+<div style="position:absolute;left:120px;bottom:150px"><div class="big" style="font-size:160px;line-height:.92">{fr if LANG == "fr" else en}</div>
+<div class="big" style="font-size:52px;margin-top:26px;opacity:.85;font-weight:600">{en if LANG == "fr" else fr}</div><p style="margin-top:30px;max-width:900px;font-size:24px">{sub}</p></div>
 {mark_svg(body="rgba(255,255,255,.1)", slice_c=LIME, height=1300, style="position:absolute;right:-300px;top:-160px")}''', cls, chrome=False)
 
 def build_brand():

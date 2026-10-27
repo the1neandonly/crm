@@ -1,7 +1,7 @@
 from gl2_visual import *
 def mock(name, en, fr, note, cls='light'):
     n = sum(1 for p in PAGES if p and p[0].startswith('04 ')) + 1
-    add(f'04 {en}', f'''<div style="width:470px">{head(f"04.{n}", en + ".", fr)}<p style="margin-top:28px;font-size:20px">{note}</p></div>
+    add(f'04 {en}', f'''<div class="mockhead" style="width:470px">{head(f"04.{n}", en + ".", fr)}<p style="margin-top:28px;font-size:20px">{note}</p></div>
 <div style="position:absolute;right:120px;top:150px;width:1140px;height:760px;border-radius:28px;overflow:hidden;box-shadow:0 40px 80px -30px rgba(18,14,40,.45)">{img(f"mockups/{name}.jpg","width:100%;height:100%;object-fit:cover")}</div>''', cls)
 def build_apps():
     toc('Applications', 'Applications', 'Applications')
@@ -28,11 +28,11 @@ def build_apps():
     vf = 'file:///tmp/claude-0/-home-user-crm/9822160d-7d4c-5a0c-b763-6d89aa660c2f/scratchpad/frames'
     add('04 Video', f'''{head(f"04.{sum(1 for p in PAGES if p and p[0].startswith('04 ')) + 1}", "Video.", "Vidéo")}
 <div style="display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:24px;margin-top:40px">
-<div><img src="{vf}/logo-intro-16x9-1920x1080/f0149.png" style="width:100%;border-radius:16px;display:block"><div class="lbl hl" style="margin-top:12px">Logo intro · 16:9 · 9:16 · 1:1 · MP4</div></div>
-<div><img src="{vf}/lower-third-1920x1080-alpha/f0060.png" style="width:100%;border-radius:16px;display:block;background:#555"><div class="lbl hl" style="margin-top:12px">Lower third · MOV / WebM alpha</div></div>
-<div><img src="{vf}/end-card-16x9-1920x1080/f0149.png" style="width:100%;border-radius:16px;display:block"><div class="lbl hl" style="margin-top:12px">End card · 16:9 · 9:16</div></div></div>
+<div><img src="file://{lowimg(vf[7:] + '/logo-intro-16x9-1920x1080/f0149.png')}" style="width:100%;border-radius:16px;display:block"><div class="lbl hl" style="margin-top:12px">Logo intro · 16:9 · 9:16 · 1:1 · MP4</div></div>
+<div><img src="file://{lowimg(vf[7:] + '/lower-third-1920x1080-alpha/f0060.png')}" style="width:100%;border-radius:16px;display:block;background:#555"><div class="lbl hl" style="margin-top:12px">Lower third · MOV / WebM alpha</div></div>
+<div><img src="file://{lowimg(vf[7:] + '/end-card-16x9-1920x1080/f0149.png')}" style="width:100%;border-radius:16px;display:block"><div class="lbl hl" style="margin-top:12px">End card · 16:9 · 9:16</div></div></div>
 <div class="row" style="margin-top:30px;gap:24px;align-items:flex-start"><img src="{F("video/stills/youtube-thumbnail-template-1280x720.png")}" style="width:520px;border-radius:16px">
-<div class="row" style="gap:12px">{"".join(f'<img src="{vf}/reel-template-tips-1080x1920/f{n:04d}.png" style="width:120px;border-radius:10px">' for n in (30,100,160,280))}</div>
+<div class="row" style="gap:12px">{"".join(f'<img src="file://{lowimg(vf[7:] + f"/reel-template-tips-1080x1920/f{n:04d}.png")}" style="width:120px;border-radius:10px">' for n in (30,100,160,280))}</div>
 <p style="flex:1;font-size:17px">Also supplied: transparent logo animation (MOV ProRes 4444 / WebM), animated reel template, looping symbol GIF, watermark PNGs and a story frame overlay.</p></div>''', 'dark')
     add('04 Banners', f'''{head(f"04.{sum(1 for p in PAGES if p and p[0].startswith('04 ')) + 1}", "Banners & headers.", "Bannières")}
 <div class="col" style="margin-top:36px;gap:22px">
@@ -101,4 +101,4 @@ if __name__ == '__main__':
         cols += (f'<div style="break-inside:avoid;margin-bottom:34px"><div style="display:flex;gap:18px;align-items:baseline;border-bottom:2px solid var(--ink);padding-bottom:10px"><span class="mono vi" style="font-size:18px">{n}</span><span class="big" style="font-size:28px">{en}</span><span class="muted" style="font-size:17px">{fr}</span><span class="mono muted" style="margin-left:auto;font-size:16px">p.{start+1:02d}</span></div>'
                  + ''.join(f'<div style="display:flex;font-size:14px;padding:3px 0;border-bottom:1px solid var(--line)"><span>{t}</span><span class="mono muted" style="margin-left:auto">{pn:02d}</span></div>' for t, pn in subs) + '</div>')
     PAGES[1] = ('Contents', 'light', f'{head("00", "Contents.", "Sommaire")}<div style="column-count:4;column-gap:56px;margin-top:28px">{cols}</div>', True)
-    n = render(f'{HT}/guidelines2.html'); print('pages', n)
+    n = render(f'{HT}/guidelines2{"_fr" if LANG == "fr" else ""}.html'); print('pages', n)

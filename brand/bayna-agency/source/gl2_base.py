@@ -4,7 +4,18 @@ from icons import ICONS, icon_svg
 from brand import *
 from logo import horizontal, S, R, CX, CY, GAP, SR
 OUT = sys.argv[1]; HT = os.path.abspath('html')
-F = lambda p: 'file://' + os.path.join(OUT, p)
+LOWRES = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lowres')
+def lowimg(full):
+    """Web-weight JPEG copy (max 1400 px) so the guideline PDFs stay light."""
+    import hashlib, subprocess
+    os.makedirs(LOWRES, exist_ok=True)
+    out = os.path.join(LOWRES, hashlib.md5(full.encode()).hexdigest() + '.jpg')
+    if not os.path.exists(out):
+        subprocess.run(['convert', full, '-background', '#F5F4F9', '-flatten', '-resize', '1400x1400>', '-quality', '82', out], check=True)
+    return out
+def F(p):
+    full = os.path.join(OUT, p)
+    return 'file://' + (lowimg(full) if full.lower().endswith(('.png', '.jpg')) else full)
 PV = json.load(open('previews_print.json'))
 def hex2rgb(h): h = h.lstrip('#'); return tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
 def cmyk(h):
@@ -18,7 +29,11 @@ def grade(c): return 'AAA' if c >= 7 else 'AA' if c >= 4.5 else 'AA large' if c 
 
 PAGES = []   # (section, cls, body, chrome)
 def add(section, body, cls='light', chrome=True): PAGES.append((section, cls, body, chrome))
-def head(num, en, fr): return f'<div class="eyebrow">{num} — {fr}</div><h2>{en}</h2>'
+LANG = os.environ.get('BAYNA_LANG', 'en')
+def head(num, en, fr):
+    if LANG == 'fr':   # French edition: French headline, English as the small eyebrow
+        return f'<div class="eyebrow">{num} — {en.rstrip(".")}</div><h2>{fr.split(" · ")[0]}.</h2>'
+    return f'<div class="eyebrow">{num} — {fr}</div><h2>{en}</h2>'
 def img(path, style=''): return f'<img src="{F(path)}" style="display:block;{style}">'
 CSS = '''
 .page{width:1920px;height:1080px;position:relative;overflow:hidden;page-break-after:always;padding:150px 120px 120px}
@@ -45,8 +60,24 @@ p{font-size:21px;line-height:1.6;color:#4a4a55}.dark p,.gradp p{color:rgba(255,2
 .spec td:first-child{width:120px;font-weight:700;letter-spacing:.14em;font-size:13px;text-transform:uppercase;opacity:.6}
 .shot{border-radius:20px;box-shadow:0 30px 60px -20px rgba(18,14,40,.35)}
 .big{font-family:Syne;font-weight:700;letter-spacing:-.03em;line-height:1}
-.num{font-family:'JetBrains Mono';font-size:17px;color:var(--violet)}.dark .num{color:var(--lime)}
+.num{font-family:'JetBrains Mono';font-size:17px;color:var(--violet)}
+.mockhead h2{font-size:58px;line-height:1.02}.dark .num{color:var(--lime)}
 '''
+def translate(html):
+    """French edition: swap every visible English text node for its French version (SVG/CSS untouched)."""
+    import re
+    from fr_dict import FR
+    import html as H
+    esc = lambda x: x.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+    def tr(t):
+        s = t.strip(); u = H.unescape(s)
+        if u in FR: return t.replace(s, esc(FR[u]))
+        m = re.match(r'^(\d\d) (.+)$', s)          # chrome section labels like "01 The name"
+        if m and H.unescape(m.group(2)) in FR: return t.replace(s, f'{m.group(1)} {esc(FR[H.unescape(m.group(2))])}')
+        return t
+    parts = re.split(r'(<svg.*?</svg>|<style.*?</style>|<[^>]+>)', html, flags=re.S)
+    return ''.join(p if (p.startswith('<') or not p.strip()) else tr(p) for p in parts)
+
 def render(path_html):
     total = len(PAGES); out = []
     for i, (sec, cls, body, ch) in enumerate(PAGES):
@@ -54,4 +85,6 @@ def render(path_html):
         chrome = (f'<div class="chrome" style="color:{c}"><span>Bayna Agency — Brand Guidelines</span><span>{sec}</span></div>'
                   f'<div class="folio" style="color:{c}"><span>{i+1:02d} / {total}</span><span>Charte graphique · v2.0 · باينة</span></div>') if ch else ''
         out.append(f'<section class="page {cls}">{chrome}{body}</section>')
-    open(path_html, 'w').write(page_doc(''.join(out), CSS, '1920px 1080px')); return total
+    doc = page_doc(''.join(out), CSS, '1920px 1080px')
+    if LANG == 'fr': doc = translate(doc)
+    open(path_html, 'w').write(doc); return total

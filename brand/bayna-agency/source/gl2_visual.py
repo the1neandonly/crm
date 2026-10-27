@@ -80,7 +80,7 @@ def build_visual():
 <div style="background:#2E2E37;border-radius:28px;padding:34px 38px;flex:1;display:flex;gap:40px;align-items:center">{dn_svg}<div style="flex:1"><div class="lbl muted">Traffic by source · sample</div>{legend}<p style="font-size:15px;margin-top:22px">The donut echoes the symbol: three quarters in violet, the highlighted slice in lime.</p></div></div></div>
 <div class="row" style="margin-top:24px;gap:28px">{kp}</div>''', 'dark')
     fr = 'frames/logo-intro-16x9-1920x1080'
-    strip = ''.join(f'<div style="flex:1"><img src="file:///tmp/claude-0/-home-user-crm/9822160d-7d4c-5a0c-b763-6d89aa660c2f/scratchpad/{fr}/f{n:04d}.png" style="width:100%;border-radius:14px;display:block"><div class="mono muted" style="font-size:14px;margin-top:10px">{n/30:.1f}s</div></div>' for n in (8, 22, 34, 60, 80, 149))
+    strip = ''.join(f'<div style="flex:1"><img src="file://{lowimg(f'/tmp/claude-0/-home-user-crm/9822160d-7d4c-5a0c-b763-6d89aa660c2f/scratchpad/{fr}/f{n:04d}.png')}" style="width:100%;border-radius:14px;display:block"><div class="mono muted" style="font-size:14px;margin-top:10px">{n/30:.1f}s</div></div>' for n in (8, 22, 34, 60, 80, 149))
     add('03 Motion', f'''{head("03.9", "Motion.", "Animation")}
 <p style="max-width:1200px;margin-top:22px">The logo builds itself the way a report reveals its result: the bar rises, the pie turns in, the lime slice pops — then the name appears. Use the supplied MP4 / MOV / WebM files; never re-animate the logo by hand.</p>
 <div class="row" style="margin-top:44px;gap:16px">{strip}</div>
