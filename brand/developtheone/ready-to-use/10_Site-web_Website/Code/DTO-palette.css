@@ -1,0 +1,10 @@
+:root {
+  --dto-dto-blue: #0F66B6;
+  --dto-code-black: #0A0B0D;
+  --dto-white: #FFFFFF;
+  --dto-cursor-gray: #A5A8AA;
+  --dto-sky-blue: #4AA3F0;
+  --dto-deep-navy: #0A3D73;
+  --dto-ice: #F2F6FB;
+  --dto-gradient: linear-gradient(135deg, #4AA3F0 0%, #0F66B6 50%, #0A3D73 100%);
+}

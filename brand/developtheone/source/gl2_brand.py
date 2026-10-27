@@ -1,0 +1,89 @@
+from gl2_base import *
+import dto_mark as DM
+TOC = []
+def toc(part, en, fr): TOC.append((part, en, fr, len(PAGES)))
+def divider(num, en, fr, sub, cls='gradp'):
+    add('', f'''<div style="position:absolute;left:120px;top:150px" class="mono hl">{num}</div>
+<div style="position:absolute;left:120px;bottom:150px"><div class="big" style="font-size:160px;line-height:.92">{fr if LANG == "fr" else en}</div>
+<div class="big" style="font-size:52px;margin-top:26px;opacity:.85;font-weight:600">{en if LANG == "fr" else fr}</div><p style="margin-top:30px;max-width:900px;font-size:24px">{sub}</p></div>
+{mark_svg(body="rgba(255,255,255,.12)", slice_c="rgba(255,255,255,.06)", height=1500, style="position:absolute;right:-240px;top:-60px")}''', cls, chrome=False)
+
+def build_brand():
+    add('', f'''{mark_svg(height=2100, style="position:absolute;right:-420px;top:-200px")}
+<div style="position:absolute;left:120px;top:110px">{logo_svg("horizontal","color-dark",width=620)}</div>
+<div style="position:absolute;left:120px;bottom:130px">
+<div class="big" style="font-size:168px;line-height:.9;letter-spacing:-.04em">{tr("Brand<br>Guidelines", "Charte<br>graphique")}</div>
+<div class="code hl" style="font-weight:700;font-size:40px;margin-top:30px">{{ develop: "the one" }}</div>
+<div style="margin-top:46px;font-size:18px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,.55)">Version 1.0 &nbsp;·&nbsp; {tr("October", "Octobre")} 2026 &nbsp;·&nbsp; DevelopTheOne</div></div>''', 'dark', chrome=False)
+    PAGES.append(None)
+    toc('Brand', 'Brand story', 'L’histoire de la marque')
+    divider('01', 'The brand.', 'La marque.', tr('Who we are, why we exist, where we are going — and how we sound when we speak.', 'Qui nous sommes, pourquoi nous existons, où nous allons — et comment nous parlons.'))
+    cols = [('D', 'Develop', tr('To build, to code, to grow. Websites, apps, campaigns and brands — we make them.', 'Construire, coder, faire grandir. Sites, applications, campagnes et marques — nous les fabriquons.')),
+            ('T', 'The', tr('The connection: the cable that links a brand to the people it serves.', 'Le lien : le câble qui relie une marque aux gens qu’elle sert.')),
+            ('O', 'One', tr('The one your customers choose first — at the centre of its network.', 'Celle que vos clients choisissent en premier — au centre de son réseau.'))]
+    add(tr('01 The name', '01 Le nom'), f'''{head("01.1", "The name.", "Le nom")}
+<div class="code" style="font-size:96px;font-weight:700;margin-top:30px"><span class="hl">{{</span> Develop<span class="hl">·</span>The<span class="hl">·</span>One <span class="hl">}}</span></div>
+<p style="margin-top:22px;font-size:24px;max-width:1300px">{tr("Our name is our method and our promise: we <b style='color:#fff'>develop</b> brands — with code, creativity and data — until each one becomes <b style='color:#fff'>the one</b> its market chooses.", "Notre nom est notre méthode et notre promesse : nous <b style='color:#fff'>développons</b> des marques — avec du code, de la créativité et de la data — jusqu’à ce que chacune devienne <b style='color:#fff'>la référence</b> que son marché choisit.")}</p>
+<div class="row" style="margin-top:56px;gap:30px">{"".join(f'<div style="flex:1;background:#1A1C20;border-radius:28px;padding:40px 44px"><div class="big hl" style="font-size:120px;line-height:1">{l}</div><div class="big" style="font-size:44px;margin-top:16px">{w}</div><p style="font-size:20px;margin-top:12px">{d}</p></div>' for l,w,d in cols)}</div>''', 'dark')
+    add(tr('01 Our story', '01 Notre histoire'), f'''{head("01.2", "Our story.", "Notre histoire")}
+<div class="row" style="margin-top:50px;gap:110px">
+<div style="flex:1.2"><p style="font-size:27px;line-height:1.6;color:#2a2a33">{tr("DevelopTheOne started with a simple idea: <b>marketing and technology should not be two separate jobs.</b>", "DevelopTheOne est née d’une idée simple : <b>le marketing et la technologie ne devraient pas être deux métiers séparés.</b>")}</p>
+<p style="font-size:23px;margin-top:26px">{tr("Too many businesses have a website that doesn’t sell, social pages that don’t grow and campaigns no one measures. The developer, the designer and the marketer never sit at the same table.", "Trop d’entreprises ont un site qui ne vend pas, des pages qui ne grandissent pas et des campagnes que personne ne mesure. Le développeur, le designer et le marketeur ne sont jamais à la même table.")}</p>
+<p style="font-size:23px;margin-top:26px">{tr("We built DTO to put them together — <b>code, creativity and data under one roof</b> — and develop every client into the one their market chooses. It was our first agency, and the community that grew around this logo is the proof that the idea works.", "Nous avons créé DTO pour les réunir — <b>code, créativité et data sous un même toit</b> — et faire de chaque client la référence de son marché. C’était notre première agence, et la communauté qui s’est formée autour de ce logo prouve que l’idée fonctionne.")}</p></div>
+<div style="flex:1"><div class="card" style="padding:56px;background:var(--ink);color:#fff;height:100%">
+<div class="lbl hl">{tr("Our ambition", "Notre ambition")}</div>
+<div class="big" style="font-size:60px;line-height:1.06;margin-top:30px">{tr("Every client, the one its customers choose.", "Chaque client, la référence que ses clients choisissent.")}</div>
+<div class="code hl" style="font-size:40px;font-weight:700;margin-top:44px">{{ the one }}</div></div></div></div>''', 'light')
+    whys = [('01', tr('Digital is where choices are made.', 'C’est en ligne que les choix se font.'), tr('Customers search, compare and decide on a screen. A brand that isn’t built for it doesn’t exist.', 'Les clients cherchent, comparent et décident sur un écran. Une marque qui n’y est pas préparée n’existe pas.')),
+            ('02', tr('Code + creativity, together.', 'Code + créativité, ensemble.'), tr('A beautiful campaign on a slow website wastes money. We build both — so they work as one.', 'Une belle campagne sur un site lent, c’est de l’argent perdu. Nous construisons les deux — pour qu’ils fonctionnent ensemble.')),
+            ('03', tr('Growth must be measured.', 'La croissance se mesure.'), tr('Every dinar invested should show its result. We track, report and improve — every month.', 'Chaque dinar investi doit montrer son résultat. Nous suivons, mesurons et améliorons — chaque mois.'))]
+    add(tr('01 Why DTO', '01 Pourquoi DTO'), f'''{head("01.3", "Why we exist.", "Pourquoi DTO")}
+<div class="row" style="margin-top:80px;gap:40px">{"".join(f'<div style="flex:1;border-top:3px solid var(--lime);padding-top:34px"><div class="mono hl" style="font-size:22px">{n}</div><div class="big" style="font-size:50px;margin:22px 0 22px;line-height:1.05">{t}</div><p style="font-size:21px">{d}</p></div>' for n,t,d in whys)}</div>''', 'dark')
+    add(tr('01 Mission & vision', '01 Mission & vision'), f'''{head("01.4", "Mission & vision.", "Mission & vision")}
+<div class="row" style="margin-top:60px;gap:30px">
+<div class="card" style="flex:1;padding:56px;height:600px"><div class="lbl vi">{tr("Mission · What we do", "Mission · Ce que nous faisons")}</div>
+<div class="big" style="font-size:62px;line-height:1.06;margin-top:36px">{tr("Develop every client into <span class='vi'>the one</span> its market chooses.", "Faire de chaque client <span class='vi'>la référence</span> de son marché.")}</div>
+<p style="position:absolute;left:56px;right:56px;bottom:50px;font-size:20px">{tr("With code, creativity and data — from the first click to the loyal customer.", "Avec du code, de la créativité et de la data — du premier clic au client fidèle.")}</p></div>
+<div class="card" style="flex:1;padding:56px;height:600px;background:var(--grad);color:#fff"><div class="lbl" style="color:#fff">{tr("Vision · Where we are going", "Vision · Où nous allons")}</div>
+<div class="big" style="font-size:56px;line-height:1.08;margin-top:36px">{tr("Become the reference digital marketing agency in Algeria — where technology and creativity meet.", "Devenir l’agence de marketing digital de référence en Algérie — là où la technologie rencontre la créativité.")}</div>
+<p style="position:absolute;left:56px;right:56px;bottom:50px;font-size:20px;color:rgba(255,255,255,.88)">{tr("And keep growing the community that believed in DTO first.", "Et continuer à faire grandir la communauté qui a cru en DTO la première.")}</p></div></div>''', 'light')
+    goals = [('web', tr('Build', 'Construire'), tr('Websites, apps and platforms that work — and sell.', 'Des sites, applications et plateformes qui fonctionnent — et qui vendent.')),
+             ('social', tr('Grow', 'Faire grandir'), tr('Audiences that grow on social media, on search and beyond.', 'Des audiences qui grandissent sur les réseaux, sur Google et au-delà.')),
+             ('analytics', tr('Measure', 'Mesurer'), tr('Clear monthly reports with real numbers.', 'Des rapports mensuels clairs, avec de vrais chiffres.')),
+             ('team', tr('Community', 'Communauté'), tr('Keep growing the DTO community that made us.', 'Faire grandir la communauté DTO qui nous a construits.')),
+             ('star', tr('Excellence', 'Excellence'), tr('International standards for Algerian brands.', 'Des standards internationaux pour les marques algériennes.')),
+             ('idea', tr('Talent', 'Talents'), tr('Train the next generation of digital creatives.', 'Former la prochaine génération de créatifs du digital.'))]
+    add(tr('01 Goals', '01 Objectifs'), f'''{head("01.5", "Our goals.", "Nos objectifs")}
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:26px;margin-top:56px">{"".join(f'<div class="card" style="padding:36px 40px;height:300px">{icon_svg(ic, VIOLET, LIME, 64)}<div class="row" style="align-items:baseline;gap:14px;margin-top:26px"><span class="num">0{i+1}</span><h3 style="font-size:34px;margin:0">{t}</h3></div><p style="font-size:19px;margin-top:10px">{d}</p></div>' for i,(ic,t,d) in enumerate(goals))}</div>''', 'light')
+    vals = [(tr('Innovation', 'Innovation'), 'الابتكار', tr('New tools, new ideas — always one step ahead.', 'De nouveaux outils, de nouvelles idées — toujours un pas d’avance.')),
+            (tr('Precision', 'Précision'), 'الدقة', tr('Clean code, clean design, clean numbers.', 'Un code propre, un design propre, des chiffres propres.')),
+            (tr('Boldness', 'Audace'), 'الجرأة', tr('We aim to be the one — not one more.', 'Nous visons la première place — pas une de plus.')),
+            (tr('Transparency', 'Transparence'), 'الشفافية', tr('Open reports, honest advice, no hidden costs.', 'Rapports ouverts, conseils honnêtes, aucun coût caché.')),
+            (tr('Community', 'Communauté'), 'المجتمع', tr('We grow with the people who follow us.', 'Nous grandissons avec ceux qui nous suivent.'))]
+    add(tr('01 Values', '01 Valeurs'), f'''{head("01.6", "Our values.", "Nos valeurs")}
+<div class="row" style="margin-top:70px;gap:26px">{"".join(f'<div style="flex:1;background:#1A1C20;border-radius:28px;padding:40px 34px;height:520px;position:relative"><div class="code hl" style="font-size:52px;font-weight:700">{{ }}</div><div class="big" style="font-size:38px;margin-top:40px">{en}</div><div class="ar muted" style="margin-top:14px;font-size:22px;text-align:left">{ar}</div><p style="position:absolute;left:34px;right:34px;bottom:40px;font-size:20px">{d}</p></div>' for en,ar,d in vals)}</div>''', 'dark')
+    pers = [(tr('Smart', 'Intelligente'), tr('cold', 'froide')), (tr('Technical', 'Technique'), tr('complicated', 'compliquée')), (tr('Bold', 'Audacieuse'), tr('loud', 'criarde')),
+            (tr('Ambitious', 'Ambitieuse'), tr('arrogant', 'arrogante')), (tr('Friendly', 'Accessible'), tr('casual', 'familière')), (tr('Fast', 'Rapide'), tr('careless', 'négligente'))]
+    add(tr('01 Personality', '01 Personnalité'), f'''{head("01.7", "Personality.", "Personnalité")}
+<p style="max-width:1150px;margin-top:22px">{tr("If DTO were a person, it would be the developer-friend who also understands marketing — clever, direct and always building something.", "Si DTO était une personne, ce serait l’ami développeur qui comprend aussi le marketing — malin, direct et toujours en train de construire quelque chose.")}</p>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:56px">{"".join(f'<div class="card" style="padding:40px 44px;height:200px;display:flex;align-items:center;justify-content:space-between"><div><div class="big" style="font-size:52px">{a}</div><div class="muted" style="font-size:22px;margin-top:8px">{tr("but never", "mais jamais")} <s>{b}</s></div></div><span class="ok">✓</span></div>' for a,b in pers)}</div>''', 'light')
+    dodont = [('Français', '« On développe votre marque, du code au client. »', '« Nous proposons des solutions digitales innovantes à forte valeur ajoutée. »'),
+              ('Darija', '« خلي ماركتك تكون الأولى »', tr('Mixing three scripts in one line, or slang that excludes.', 'Mélanger trois écritures sur une ligne, ou un argot qui exclut.')),
+              ('English', '“Become the one.”', '“Leveraging cross-channel synergies to drive engagement.”')]
+    add(tr('01 Voice & tone', '01 Ton & langage'), f'''{head("01.8", "Voice & tone.", "Ton & langage")}
+<div class="row" style="margin-top:46px;gap:60px">
+<div style="width:560px">{"".join(f'<div style="padding:22px 0;border-top:1px solid rgba(255,255,255,.14)"><h3 style="font-size:28px">{t}</h3><p style="font-size:18px;margin:0">{d}</p></div>' for t,d in [(tr("Speak human, not jargon.", "Parler humain, pas jargon."), tr("We explain technology simply. If a client needs a dictionary, we failed.", "Nous expliquons la technologie simplement. Si le client a besoin d’un dictionnaire, c’est raté.")),(tr("Short and active.", "Court et actif."), tr("Short sentences. Active verbs. One idea per message.", "Phrases courtes. Verbes actifs. Une idée par message.")),(tr("Prove with numbers.", "Prouver par les chiffres."), tr("Results and examples over adjectives.", "Des résultats et des exemples plutôt que des adjectifs.")),(tr("A wink of code.", "Un clin d’œil au code."), tr("Braces, &lt;/&gt; and short code lines are part of our voice — used with care.", "Les accolades, &lt;/&gt; et de courtes lignes de code font partie de notre voix — avec parcimonie."))])}</div>
+<div style="flex:1">{"".join(f'<div class="row" style="gap:20px;margin-bottom:22px"><div class="lbl hl" style="width:120px;padding-top:30px">{l}</div><div style="flex:1;background:#1A1C20;border-radius:22px;padding:22px 28px"><div class="row" style="gap:14px;align-items:center"><span class="ok">✓</span><span style="font-size:24px;font-weight:600;{"font-family:Cairo;" if l=="Darija" else ""}">{d}</span></div><div class="row" style="gap:14px;align-items:center;margin-top:14px"><span class="no">×</span><span style="font-size:18px;color:rgba(255,255,255,.55)">{n}</span></div></div></div>' for l,d,n in dodont)}</div></div>''', 'dark')
+    aud = [tr('SMEs & retailers', 'PME & commerces'), tr('Startups & entrepreneurs', 'Startups & entrepreneurs'), tr('E-commerce & online shops', 'E-commerce & boutiques en ligne'), tr('Restaurants, cafés & hospitality', 'Restaurants, cafés & hôtellerie'), tr('Real estate, health & industry', 'Immobilier, santé & industrie'), tr('Schools, institutions & events', 'Écoles, institutions & événements')]
+    add(tr('01 Audience & services', '01 Clients & services'), f'''{head("01.9", "Who we serve.", "Nos clients & nos services")}
+<div class="row" style="margin-top:50px;gap:60px">
+<div style="width:640px"><div class="lbl vi" style="margin-bottom:14px">{tr("Audience", "Nos clients")}</div>{"".join(f'<div style="display:flex;gap:18px;align-items:center;padding:18px 0;border-top:1px solid var(--line);font-size:22px;font-weight:600"><span class="code vi" style="font-weight:700">&gt;</span>{a}</div>' for a in aud)}</div>
+<div style="flex:1"><div class="lbl vi" style="margin-bottom:14px">{tr("Services", "Nos services")}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">{"".join(f'<div class="card" style="padding:24px 28px;display:flex;gap:20px;align-items:center">{icon_svg(ic, VIOLET, LIME, 52)}<div><div style="font-weight:800;font-size:20px">{fr if LANG=="fr" else en}</div><div class="muted" style="font-size:15px">{en if LANG=="fr" else fr}</div></div></div>' for ic,en,fr in SERVICES)}</div></div></div>''', 'light')
+    rows = [("English", "Become the one.", tr("Primary signature — logo lockups, campaigns, international.", "Signature principale — logo, campagnes, international."), "var(--ink)", "#fff", "big", ""),
+            ("Français", "Devenez la référence.", tr("Business documents, proposals, press.", "Documents commerciaux, propositions, presse."), "#fff", "var(--ink)", "big", ""),
+            ("Code", '{ develop: "the one" }', tr("Social media, tech content, merch.", "Réseaux sociaux, contenus tech, goodies."), "var(--violet)", "#fff", "code", "font-size:60px"),
+            ("عربي", "كون الأول", tr("Arabic-speaking audiences and community posts.", "Publics arabophones et posts communautaires."), "var(--lime)", "var(--ink)", "ar", "")]
+    add(tr('01 Tagline', '01 Signature'), f'''{head("01.10", "One promise, four voices.", "Signature")}
+<div class="col" style="margin-top:44px;gap:18px">
+{"".join(f'<div style="display:flex;align-items:center;gap:40px;background:{bg};border-radius:28px;padding:28px 50px;color:{c}"><span class="lbl" style="width:140px;opacity:.7">{l}</span><span class="{cl}" style="font-size:66px;font-weight:700;{st}">{t}</span><span style="margin-left:auto;font-size:18px;opacity:.75;max-width:420px;text-align:right">{u}</span></div>' for l,t,u,bg,c,cl,st in rows)}
+</div><p style="margin-top:26px">Hashtags : <b>#DevelopTheOne</b> · <b>#BecomeTheOne</b> · <b>#DTO</b></p>''', 'light')

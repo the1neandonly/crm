@@ -1,0 +1,14 @@
+DEVELOPTHEONE — COLOUR PALETTE
+
+DTO Blue               HEX #0F66B6   RGB 15 102 182    CMYK 92 44 0 29
+Code Black             HEX #0A0B0D   RGB 10 11 13      CMYK 23 15 0 95
+White                  HEX #FFFFFF   RGB 255 255 255   CMYK 0 0 0 0
+Cursor Gray            HEX #A5A8AA   RGB 165 168 170   CMYK 3 1 0 33
+Sky Blue               HEX #4AA3F0   RGB 74 163 240    CMYK 69 32 0 6
+Deep Navy              HEX #0A3D73   RGB 10 61 115     CMYK 91 47 0 55
+Ice                    HEX #F2F6FB   RGB 242 246 251   CMYK 4 2 0 2
+
+DTO Gradient: 135°, #4AA3F0 0% → #0F66B6 50% → #0A3D73 100%
+
+Pantone (nearest — confirm on a swatch book): DTO Blue ≈ 2935 C · Code Black ≈ Black 6 C · Cursor Gray ≈ Cool Gray 6 C
+Never set Sky Blue text on white.
