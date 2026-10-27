@@ -8,8 +8,10 @@ def w(path, txt):
 PAD = 16
 SCHEMES_OUT = ['color', 'color-dark', 'on-violet', 'black', 'white']
 JPG_BG = {'color': WHITE, 'black': WHITE, 'color-dark': INK, 'white': INK, 'on-violet': VIOLET, 'on-lime': LIME}
-PNG_WIDTHS = {'horizontal': [800, 2000, 4000], 'horizontal-compact': [400, 800, 2000], 'stacked': [800, 2000, 4000], 'wordmark': [800, 2000, 4000], 'symbol': [256, 1024, 2048], 'arabic': [800, 2000, 4000], 'bilingual': [800, 2000, 4000], 'bilingual-stacked': [800, 2000, 4000]}
-for lockup in ['horizontal', 'horizontal-compact', 'stacked', 'symbol', 'wordmark', 'arabic', 'bilingual', 'bilingual-stacked']:
+PNG_WIDTHS = {'horizontal': [800, 2000, 4000], 'horizontal-compact': [400, 800, 2000], 'stacked': [800, 2000, 4000], 'wordmark': [800, 2000, 4000], 'symbol': [256, 1024, 2048], 'arabic': [800, 2000, 4000], 'bilingual': [800, 2000, 4000], 'bilingual-stacked': [800, 2000, 4000], 'wordmark-plain': [800, 2000, 4000], 'arabic-wordmark': [800, 2000, 4000]}
+ONLY = sys.argv[2].split(',') if len(sys.argv) > 2 else None
+for lockup in ['horizontal', 'horizontal-compact', 'stacked', 'symbol', 'wordmark', 'wordmark-plain', 'arabic', 'arabic-wordmark', 'bilingual', 'bilingual-stacked']:
+    if ONLY and lockup not in ONLY: continue
     schemes = SCHEMES_OUT + (['on-lime'] if lockup == 'symbol' else [])
     for sch in schemes:
         if lockup == 'wordmark' and sch == 'on-lime': continue
@@ -29,6 +31,8 @@ for lockup in ['horizontal', 'horizontal-compact', 'stacked', 'symbol', 'wordmar
         jw = 3000 if lockup != 'symbol' else 2000
         jobs.append({'type': 'png', 'svg': jp, 'out': f'{OUT}/logo/_tmp/{name}-bg.png', 'w': jw, 'h': round(jw*(bh+2*m)/(bw+2*m)), 'jpg': f'{OUT}/logo/jpg/{name}.jpg'})
 
+if ONLY:
+    json.dump(jobs, open('jobs.json', 'w')); print(len(jobs), 'jobs'); sys.exit()
 # ---- App icons / favicons / avatars: mark on brand backgrounds, square
 def square_icon(bg_kind, size_ratio=0.56, radius=0.0, slice_c=LIME, body=WHITE):
     S_ = 1000

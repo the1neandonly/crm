@@ -131,7 +131,17 @@ def bilingual_stacked(scheme):
     return tot, base + 60, (mark_paths(b, s, ox=(tot - W)/2) + f'<path d="{l}" fill="{wc}"/>'
             f'<rect x="{w1 + gap/2 - 1.5}" y="{base - 100}" width="3" height="110" fill="{sc}"/><path d="{a}" fill="{wc}"/>')
 
-LOCKUPS = {'horizontal': horizontal, 'horizontal-compact': lambda sch: horizontal(sch, tagline=False), 'stacked': stacked, 'symbol': icon, 'arabic': arabic, 'bilingual': bilingual, 'bilingual-stacked': bilingual_stacked, 'wordmark': wordmark}
+def wordmark_plain(scheme):
+    """The lettering alone — 'bayna' without the AGENCY descriptor."""
+    return wordmark(scheme, tagline=False)
+
+def arabic_wordmark(scheme, size=170):
+    """The Arabic lettering alone — باينة without the symbol."""
+    _, _, wc, _ = SCHEMES[scheme]
+    d, w = text_path('باينة', AR_FONT, size, 0, 0.62*size)
+    return w, 0.62*size + 0.42*size, f'<path d="{d}" fill="{wc}"/>'
+
+LOCKUPS = {'horizontal': horizontal, 'horizontal-compact': lambda sch: horizontal(sch, tagline=False), 'stacked': stacked, 'symbol': icon, 'wordmark-plain': wordmark_plain, 'arabic-wordmark': arabic_wordmark, 'arabic': arabic, 'bilingual': bilingual, 'bilingual-stacked': bilingual_stacked, 'wordmark': wordmark}
 
 def build(lockup, scheme, pad_ratio=0.0, bg=None):
     fn = LOCKUPS[lockup]

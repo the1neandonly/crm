@@ -1,0 +1,103 @@
+{
+  "Bayna Violet": {
+    "hex": "#6337FF",
+    "rgb": [
+      99,
+      55,
+      255
+    ],
+    "cmyk": [
+      61,
+      78,
+      0,
+      0
+    ]
+  },
+  "Electric Lime": {
+    "hex": "#D2FF5A",
+    "rgb": [
+      210,
+      255,
+      90
+    ],
+    "cmyk": [
+      18,
+      0,
+      65,
+      0
+    ]
+  },
+  "Ink": {
+    "hex": "#24242B",
+    "rgb": [
+      36,
+      36,
+      43
+    ],
+    "cmyk": [
+      16,
+      16,
+      0,
+      83
+    ]
+  },
+  "White": {
+    "hex": "#FFFFFF",
+    "rgb": [
+      255,
+      255,
+      255
+    ],
+    "cmyk": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "Gradient Lavender": {
+    "hex": "#9A7CFF",
+    "rgb": [
+      154,
+      124,
+      255
+    ],
+    "cmyk": [
+      40,
+      51,
+      0,
+      0
+    ]
+  },
+  "Gradient Deep Indigo": {
+    "hex": "#2B1BB5",
+    "rgb": [
+      43,
+      27,
+      181
+    ],
+    "cmyk": [
+      76,
+      85,
+      0,
+      29
+    ]
+  },
+  "Paper": {
+    "hex": "#F5F4F9",
+    "rgb": [
+      245,
+      244,
+      249
+    ],
+    "cmyk": [
+      2,
+      2,
+      0,
+      2
+    ]
+  },
+  "Bayna Gradient": {
+    "css": "linear-gradient(135deg, #9A7CFF 0%, #6337FF 55%, #2B1BB5 100%)"
+  }
+}
