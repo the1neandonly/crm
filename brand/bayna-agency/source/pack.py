@@ -58,13 +58,6 @@ cptree('presentation', '11_Presentation')
 cp('mockups/*.jpg', '12_Mockups'); cp('mockups/*.png', '12_Mockups/PNG')
 cp('email-signature/*', '13_Signature-email')
 cptree('wallpapers', '14_Fonds-ecran_Wallpapers/Ecran_Desktop-phone'); cptree('virtual-backgrounds', '14_Fonds-ecran_Wallpapers/Visio_Zoom-Teams-Meet')
+shutil.copytree(os.path.join(SRC, 'ready-to-use'), os.path.join(DST, '00_PRET-A-L-EMPLOI_READY-TO-USE'), dirs_exist_ok=True)
 shutil.copy2(os.path.join(BASE, 'LISEZ-MOI.txt'), os.path.join(DST, '00_LISEZ-MOI_READ-ME.txt'))
-# zip
-zp = os.path.join(BASE, NAME + '.zip')
-if os.path.exists(zp): os.remove(zp)
-with zipfile.ZipFile(zp, 'w', zipfile.ZIP_DEFLATED, compresslevel=6) as z:
-    for root, _, files in os.walk(DST):
-        for fn in sorted(files):
-            full = os.path.join(root, fn); arc = os.path.relpath(full, BASE)
-            z.write(full, arc, compress_type=zipfile.ZIP_STORED if fn.lower().endswith(('.mp4', '.mov', '.webm', '.jpg', '.png', '.webp', '.gif', '.pptx', '.docx')) else zipfile.ZIP_DEFLATED)
-n = sum(len(f) for _, _, f in os.walk(DST)); print('files', n, 'zip MB', round(os.path.getsize(zp)/1e6, 1))
+print('staged')
