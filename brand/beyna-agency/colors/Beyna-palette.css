@@ -1,0 +1,10 @@
+:root {
+  --beyna-beyna-violet: #6337FF;
+  --beyna-electric-lime: #D2FF5A;
+  --beyna-ink: #24242B;
+  --beyna-white: #FFFFFF;
+  --beyna-gradient-lavender: #9A7CFF;
+  --beyna-gradient-deep-indigo: #2B1BB5;
+  --beyna-paper: #F5F4F9;
+  --beyna-gradient: linear-gradient(135deg, #9A7CFF 0%, #6337FF 55%, #2B1BB5 100%);
+}
