@@ -11,7 +11,7 @@ def lowimg(full):
     os.makedirs(LOWRES, exist_ok=True)
     out = os.path.join(LOWRES, hashlib.md5(full.encode()).hexdigest() + '.jpg')
     if not os.path.exists(out) or os.path.getmtime(out) < os.path.getmtime(full):   # refresh when the source changes
-        subprocess.run(['convert', full, '-background', '#F5F4F9', '-flatten', '-resize', '1400x1400>', '-quality', '82', out], check=True)
+        subprocess.run(['convert', full, '-background', '#F5F4F9', '-flatten', '-resize', '1300x1300>', '-quality', '74', out], check=True)
     return out
 def F(p):
     full = os.path.join(OUT, p)
