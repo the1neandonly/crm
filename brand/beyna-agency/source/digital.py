@@ -24,7 +24,7 @@ for lang in ('fr', 'ar'):
     emit('email-signature', f'email-signature-{lang}-600x180', 600, 180, 'white',
          f'<div style="display:flex;align-items:center;gap:24px;height:180px;padding:0 28px;{"flex-direction:row-reverse;text-align:right" if rtl else ""}">'
          f'<div style="width:96px;height:96px;border-radius:24px;background:var(--grad);display:flex;align-items:center;justify-content:center;flex:none">{mark_svg(body="#fff", height=54)}</div>'
-         f'<div style="width:1px;height:96px;background:rgba(36,36,43,.12)"></div><div><div class="big" style="font-size:22px;color:var(--ink);{"font-family:Readex Pro" if rtl else ""}">{nm}</div>'
+         f'<div style="width:1px;height:96px;background:rgba(27,16,70,.12)"></div><div><div class="big" style="font-size:22px;color:var(--ink);{"font-family:Readex Pro" if rtl else ""}">{nm}</div>'
          f'<div style="font:700 12.5px {"Readex Pro" if rtl else "Manrope"};color:var(--violet);margin:4px 0 12px">{rl} · Beyna Agency</div>'
          f'<div style="font:500 12px/1.7 Manrope;color:#4a4a55;direction:ltr">{PHONE} · {MAIL}<br><b style="color:var(--ink)">{WEB}</b> · {CITY}</div></div></div>', scale=2)
 emit('presentation', 'presentation-cover-1920x1080', 1920, 1080, 'ink',

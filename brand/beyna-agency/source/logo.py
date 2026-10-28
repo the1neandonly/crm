@@ -2,7 +2,7 @@
 from textpath import text_path
 
 # ---- Brand colours
-VIOLET = '#6337FF'; LIME = '#D2FF5A'; INK = '#24242B'; WHITE = '#FFFFFF'
+VIOLET = '#6337FF'; LIME = '#D2FF5A'; INK = '#1B1046'; WHITE = '#FFFFFF'
 G0, G1, G2 = '#9A7CFF', '#6337FF', '#2B1BB5'   # Beyna gradient: lavender -> violet -> deep indigo
 
 # ---- Mark construction (units) — "L'Œil": a lowercase b whose counter is an eye
@@ -96,13 +96,13 @@ def mark_paths(body_fill, iris_fill, ox=0, oy=0, scale=1.0, look=1, pupil=None):
                 f'<path fill-rule="evenodd" fill="{body_fill}" d="{_circ(ix, iy, IR*s)} {_circ(gx, gy, GR*1.3*s, True)}"/>')
     knock = _white(body_fill) or _white(iris_fill) or 'rgba' in str(body_fill)
     if knock: out = f'<path fill-rule="evenodd" fill="{body_fill}" d="{body_d(ox, oy, s)} {holes}"/>'
-    else: out = (f'<path fill-rule="evenodd" fill="{body_fill}" d="{body_d(ox, oy, s)} {lid_d(ox, oy, s, rev=True)}"/>'
+    else: out = (f'<path fill-rule="evenodd" fill="{body_fill}" d="{body_d(ox, oy, s)} {lid_d(ox, oy, s, rev=True)}"/><path fill="{LIME}" d="{lid_d(ox, oy, s)}"/>'
                  f'<path fill="#FFFFFF" d="{almond_d(ox, oy, s)}"/><path fill="#E6E2F5" d="{lid_shadow_d(ox, oy, s)}"/>')
     return out + iris_svg(ix, iy, px, py, gx, gy, s, iris_fill, pupil or INK, look, detail=not knock or iris_fill == LIME)
 
 # Colourways: (body, slice, word, sub)
 SCHEMES = {
-    'color':       ('url(#bg)', LIME, INK, VIOLET),      # on white / light
+    'color':       ('url(#bg)', LIME, VIOLET, INK),      # on white / light
     'color-dark':  ('url(#bg)', LIME, WHITE, LIME),      # on ink
     'on-violet':   (WHITE, LIME, WHITE, LIME),           # on violet / gradient
     'on-lime':     (INK, VIOLET, INK, INK),              # on lime

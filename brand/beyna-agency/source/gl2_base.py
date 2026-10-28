@@ -47,7 +47,7 @@ h3{font-family:Syne;font-weight:700;font-size:30px;letter-spacing:-.01em;margin-
 p{font-size:21px;line-height:1.6;color:#4a4a55}.dark p,.gradp p{color:rgba(255,255,255,.74)}
 .lbl{font-size:14px;font-weight:700;letter-spacing:.2em;text-transform:uppercase}
 .muted{color:#8a8a96}.dark .muted{color:rgba(255,255,255,.5)}
-.card{background:#fff;border-radius:28px;position:relative;overflow:hidden}.dark .card{background:#2E2E37}
+.card{background:#fff;border-radius:28px;position:relative;overflow:hidden}.dark .card{background:#2A1D63}
 .row{display:flex;gap:28px}.col{display:flex;flex-direction:column;gap:28px}
 .cap{position:absolute;left:28px;bottom:22px;font-size:14px;font-weight:700;letter-spacing:.16em;text-transform:uppercase}
 .mono{font-family:'JetBrains Mono',monospace}.ar{font-family:'Readex Pro';direction:rtl}
@@ -81,7 +81,7 @@ def translate(html):
 def render(path_html):
     total = len(PAGES); out = []
     for i, (sec, cls, body, ch) in enumerate(PAGES):
-        dark = cls in ('dark', 'gradp'); c = 'rgba(255,255,255,.5)' if dark else 'rgba(36,36,43,.5)'
+        dark = cls in ('dark', 'gradp'); c = 'rgba(255,255,255,.5)' if dark else 'rgba(27,16,70,.5)'
         chrome = (f'<div class="chrome" style="color:{c}"><span>Beyna Agency — Brand Guidelines</span><span>{sec}</span></div>'
                   f'<div class="folio" style="color:{c}"><span>{i+1:02d} / {total}</span><span>Charte graphique · v2.0 · باينة</span></div>') if ch else ''
         out.append(f'<section class="page {cls}">{chrome}{body}</section>')

@@ -56,7 +56,7 @@ doc('nfc-card', 'nfc-card-CR80-85.6x54-bleed2mm', nw, nh, [
              A('<div class="lbl" style="font-size:5pt">Tap to connect</div>', 'left:17mm;bottom:9.6mm')),
     ('ink', A(f'<div class="big" style="font-size:10.5pt">{NAME}</div><div style="font-size:6.2pt;color:var(--lime);font-weight:600;margin-top:1.4mm">{ROLE}</div>', 'left:8mm;top:8.5mm') +
             A(f'<div style="font-size:6pt;line-height:1.7;color:rgba(255,255,255,.8)">{PHONE}<br>{MAIL}<br>{WEB}</div>', 'left:8mm;bottom:8mm') +
-            A('<div style="width:17mm;height:17mm;border-radius:2.5mm;background:#fff;display:flex;align-items:center;justify-content:center;font:700 5pt Manrope;color:#24242B;text-align:center">QR<br>votre lien</div>', 'right:8mm;bottom:8mm') +
+            A('<div style="width:17mm;height:17mm;border-radius:2.5mm;background:#fff;display:flex;align-items:center;justify-content:center;font:700 5pt Manrope;color:#1B1046;text-align:center">QR<br>votre lien</div>', 'right:8mm;bottom:8mm') +
             A(f'<div style="width:6mm;height:6mm">{nfc_glyph(LIME)}</div>', 'right:8mm;top:8mm'))])
 doc('nfc-card', 'nfc-tag-sticker-30mm-round', 36, 36, [
     ('grad', A('', 'inset:0;border-radius:50%') + A(f'<div style="width:12mm;height:12mm">{nfc_glyph("#fff")}</div>', 'left:12mm;top:9mm') + A('<div class="lbl" style="font-size:4pt;text-align:center">Tap · beyna</div>', 'left:0;right:0;top:23mm'))])
@@ -70,7 +70,7 @@ doc('thank-you-card', 'thank-you-card-A6-bleed3mm', tw, th, [
              A('<div class="big" style="font-size:14pt;color:rgba(255,255,255,.75);font-weight:600">Thank you.</div>', 'left:12mm;top:82mm') +
              A(logo_svg('horizontal-compact', 'on-violet', width='30mm'), 'left:12mm;bottom:13mm')),
     ('paper', A('<div class="lbl vi" style="font-size:6pt">Un petit mot · A little note</div>', 'left:12mm;top:14mm') +
-              A(''.join('<div style="height:9mm;border-bottom:.25mm solid rgba(36,36,43,.15)"></div>' for _ in range(8)), 'left:12mm;right:12mm;top:22mm') +
+              A(''.join('<div style="height:9mm;border-bottom:.25mm solid rgba(27,16,70,.15)"></div>' for _ in range(8)), 'left:12mm;right:12mm;top:22mm') +
               A('<div class="big" style="font-size:9pt">Merci de nous faire confiance.</div><div style="font-size:7pt;margin-top:2mm;color:#6a6a76">Votre marque est entre de bonnes mains. On la rend باينة.</div>', 'left:12mm;bottom:22mm') +
               A(mark_svg(height='9mm'), 'right:12mm;bottom:22mm') +
               A(f'<div style="font-size:6pt;color:#8a8a96">{WEB} · {INSTA}</div>', 'left:12mm;bottom:12mm'))])
@@ -87,7 +87,7 @@ doc('envelope', 'envelope-DL-220x110', 220, 110, [
 # ---------------- Letterhead A4 + invoice
 lh_head = (A(logo_svg('horizontal', 'color', width='54mm'), 'left:20mm;top:18mm') +
            A(f'<div style="text-align:right;font-size:7.6pt;line-height:1.7;color:#55555F"><b style="color:var(--ink)">Beyna Agency</b><br>{CITY}<br>{PHONE}<br>{MAIL} · {WEB}</div>', 'right:20mm;top:18mm') +
-           A('', 'left:20mm;right:20mm;top:44mm;height:.3mm;background:rgba(36,36,43,.12)'))
+           A('', 'left:20mm;right:20mm;top:44mm;height:.3mm;background:rgba(27,16,70,.12)'))
 lh_foot = (A('<div style="display:flex;justify-content:space-between;font-size:7pt;color:#8a8a96;letter-spacing:.04em"><span><b class="vi">Beyna Agency</b> — Marketing &amp; Communication · باينة</span><span>RC 00/00-0000000 · NIF 000000000000000</span></div>', 'left:20mm;right:60mm;bottom:14mm') +
            A('', 'right:0;bottom:0;width:44mm;height:44mm;background:var(--grad);border-top-left-radius:44mm') + A('', 'right:20mm;bottom:20mm;width:14mm;height:14mm;background:radial-gradient(circle at 60% 50%,var(--ink) 0 27%,var(--lime) 28%);border-radius:50%'))
 doc('letterhead', 'letterhead-A4', 210, 297, [('white', lh_head + lh_foot + A('<div style="font-size:8.5pt;color:#8a8a96">Oran, le __ / __ / ____</div>', 'left:20mm;top:58mm'))], 2)
@@ -97,7 +97,7 @@ inv = (lh_head + lh_foot +
 <div style="display:flex;justify-content:space-between;margin-top:10mm;font-size:8.5pt;line-height:1.6"><div><div class="lbl vi" style="font-size:6pt;margin-bottom:1.5mm">Client</div><b>Nom de l’entreprise</b><br>Adresse<br>RC · NIF · NIS</div>
 <div style="text-align:right"><div class="lbl vi" style="font-size:6pt;margin-bottom:1.5mm">Échéance</div>30 jours<br>Virement bancaire</div></div>
 <table style="width:100%;border-collapse:collapse;margin-top:10mm;font-size:8.5pt"><thead><tr style="background:var(--ink);color:#fff"><th style="text-align:left;padding:3mm">Désignation</th><th>Qté</th><th style="text-align:right">P.U. HT</th><th style="text-align:right;padding-right:3mm">Total HT</th></tr></thead>
-<tbody>{rows.replace("<td>", "<td style='padding:3mm;border-bottom:.25mm solid rgba(36,36,43,.1)'>")}</tbody></table>
+<tbody>{rows.replace("<td>", "<td style='padding:3mm;border-bottom:.25mm solid rgba(27,16,70,.1)'>")}</tbody></table>
 <div style="margin-left:auto;width:70mm;margin-top:6mm;font-size:9pt;line-height:2"><div style="display:flex;justify-content:space-between"><span>Total HT</span><b>0,00 DA</b></div><div style="display:flex;justify-content:space-between"><span>TVA 19 %</span><b>0,00 DA</b></div>
 <div style="display:flex;justify-content:space-between;background:var(--lime);padding:1mm 3mm;border-radius:2mm;margin-top:1mm"><span>Total TTC</span><b>0,00 DA</b></div></div>''', 'left:20mm;right:20mm;top:58mm'))
 doc('letterhead', 'invoice-facture-A4', 210, 297, [('white', inv)], 2)

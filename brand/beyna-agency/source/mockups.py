@@ -15,7 +15,7 @@ CSS = '''.sc{position:relative;overflow:hidden;width:2400px;height:1600px}
 .lbl{font:700 22px Manrope;letter-spacing:.24em;text-transform:uppercase}
 .big{font-family:Syne;font-weight:700;letter-spacing:-.03em}'''
 def scene(name, bg, body, caption=None, dark=False):
-    cap = (f'<div class="a lbl" style="left:80px;bottom:60px;color:{"rgba(255,255,255,.5)" if dark else "rgba(36,36,43,.45)"}">{caption}</div>'
+    cap = (f'<div class="a lbl" style="left:80px;bottom:60px;color:{"rgba(255,255,255,.5)" if dark else "rgba(27,16,70,.45)"}">{caption}</div>'
            f'<div class="a" style="right:80px;bottom:52px;opacity:.6">{logo_svg("horizontal-compact", "white" if dark else "black", width=150)}</div>') if caption else ''
     p = f'{HT}/{name}.html'
     open(p, 'w').write(page_doc(f'<div class="sc" style="background:{bg}">{body}{cap}</div>', CSS, f'{SW}px {SH}px'))
@@ -25,7 +25,7 @@ def trim(key, wmm, hmm, bmm, wpx, style='', cls='sh', radius=0):
     return (f'<div class="trim {cls} sheen" style="width:{wpx}px;height:{hmm*k}px;border-radius:{radius}px;{style}">'
             f'<img src="{pv(key)}" style="width:{(wmm+2*bmm)*k}px;left:{-bmm*k}px;top:{-bmm*k}px"></div>')
 PAPER = 'radial-gradient(ellipse at 30% 20%,#F7F6FB 0%,#E4E1EE 70%,#D6D2E3 100%)'
-INKBG = 'radial-gradient(ellipse at 30% 20%,#34343E 0%,#24242B 60%,#1A1A20 100%)'
+INKBG = 'radial-gradient(ellipse at 30% 20%,#2D2066 0%,#1B1046 60%,#1A1A20 100%)'
 STUDIO = 'linear-gradient(180deg,#ECEAF3 0%,#DCD8E8 62%,#CFCADD 62.1%,#C5C0D6 100%)'
 
 # 1 Business cards
@@ -77,7 +77,7 @@ scene('04-packaging-box', STUDIO,
       trim('sticker-symbol-60mm-round-1', 60, 60, 2, 200, 'left:520px;top:600px;transform:rotate(-12deg)', 'shs', 100) +
       trim('paper-bag-front-260x330mm-1', 260, 330, 3, 420, 'left:1880px;top:520px;transform:rotate(3deg)'), 'Packaging · Emballage')
 # 5 Stationery flat-lay (ink surface)
-pen = '<div class="a shs" style="left:1960px;top:300px;width:28px;height:820px;border-radius:14px;background:linear-gradient(90deg,#3a3a45,#24242B 40%,#4a4a55);transform:rotate(14deg)"><div style="position:absolute;left:0;right:0;top:0;height:140px;background:var(--violet);border-radius:14px 14px 0 0"></div><div style="position:absolute;left:4px;right:4px;top:150px;height:6px;background:var(--lime)"></div></div>'
+pen = '<div class="a shs" style="left:1960px;top:300px;width:28px;height:820px;border-radius:14px;background:linear-gradient(90deg,#3a3a45,#1B1046 40%,#4a4a55);transform:rotate(14deg)"><div style="position:absolute;left:0;right:0;top:0;height:140px;background:var(--violet);border-radius:14px 14px 0 0"></div><div style="position:absolute;left:4px;right:4px;top:150px;height:6px;background:var(--lime)"></div></div>'
 scene('05-stationery-flatlay', INKBG,
       trim('letterhead-A4-1', 210, 297, 0, 760, 'left:240px;top:120px;transform:rotate(-4deg)') +
       trim('invoice-facture-A4-1', 210, 297, 0, 700, 'left:640px;top:330px;transform:rotate(5deg)') +
@@ -90,7 +90,7 @@ scene('05-stationery-flatlay', INKBG,
 tee_path = 'M300,60 L420,20 Q500,90 580,20 L700,60 L880,200 L800,330 L720,280 L720,900 Q500,930 280,900 L280,280 L200,330 L120,200 Z'
 tee = (f'<svg class="a" style="left:120px;top:250px;filter:drop-shadow(0 50px 50px rgba(18,14,40,.4))" width="1000" height="1000" viewBox="0 0 1000 950">'
        f'<defs><linearGradient id="ts" x1="0" x2="1"><stop offset="0" stop-color="#000" stop-opacity=".25"/><stop offset=".25" stop-color="#000" stop-opacity="0"/><stop offset=".75" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".3"/></linearGradient></defs>'
-       f'<path d="{tee_path}" fill="#24242B"/><path d="{tee_path}" fill="url(#ts)"/><path d="M420,20 Q500,90 580,20 Q500,60 420,20Z" fill="#111"/>'
+       f'<path d="{tee_path}" fill="#1B1046"/><path d="{tee_path}" fill="url(#ts)"/><path d="M420,20 Q500,90 580,20 Q500,60 420,20Z" fill="#111"/>'
        f'<g transform="translate(395,230) scale(0.55)">{mark_paths("url(#tg)", LIME)}</g><defs>{grad_def("tg")}</defs>'
        f'<text x="500" y="420" fill="#fff" font-family="Syne" font-weight="700" font-size="44" text-anchor="middle" letter-spacing="-1">beyna</text></svg>')
 tote = (f'<div class="a" style="left:1080px;top:380px;width:560px;height:640px">'
@@ -101,7 +101,7 @@ mug = (f'<svg class="a" style="left:1720px;top:600px;filter:drop-shadow(0 40px 4
        f'<defs><linearGradient id="ms" x1="0" x2="1"><stop offset="0" stop-color="#000" stop-opacity=".35"/><stop offset=".3" stop-color="#fff" stop-opacity=".12"/><stop offset=".55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".4"/></linearGradient>{grad_def("mg")}</defs>'
        f'<path d="M360,170 h40 a90,90 0 0 1 0,180 h-40" fill="none" stroke="#6337FF" stroke-width="40"/>'
        f'<path d="M60,90 H380 V440 Q380,500 320,500 H120 Q60,500 60,440 Z" fill="url(#mg)"/><path d="M60,90 H380 V440 Q380,500 320,500 H120 Q60,500 60,440 Z" fill="url(#ms)"/>'
-       f'<ellipse cx="220" cy="90" rx="160" ry="22" fill="#4a2be0"/><ellipse cx="220" cy="90" rx="146" ry="16" fill="#24242B"/>'
+       f'<ellipse cx="220" cy="90" rx="160" ry="22" fill="#4a2be0"/><ellipse cx="220" cy="90" rx="146" ry="16" fill="#1B1046"/>'
        f'<g transform="translate(160,190) scale(0.62)">{mark_paths("#fff", LIME)}</g></svg>')
 scene('06-merch', STUDIO, f'<div class="a" style="left:0;right:0;bottom:0;height:610px;background:linear-gradient(180deg,#CBC6DA,#BDB7D0)"></div>' + tee + tote + mug, 'Merch · T-shirt, tote bag, mug')
 # 7 Badge + lanyard
@@ -117,7 +117,7 @@ scene('08-office-signage', 'linear-gradient(180deg,#F1F0F5 0%,#E3E1EA 74%,#B9B4C
       '<div class="a" style="left:0;right:0;top:0;height:1184px;background:repeating-linear-gradient(90deg,rgba(0,0,0,.015) 0 2px,transparent 2px 240px)"></div>' +
       trim('office-sign-1200x400mm-1', 1200, 400, 0, 1400, 'left:500px;top:300px;box-shadow:0 40px 60px -20px rgba(18,14,40,.5)', '') +
       ''.join(f'<div class="a" style="left:{x}px;top:{y}px;width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff,#9a9aa6)"></div>' for x, y in [(530, 330), (1868, 330), (530, 728), (1868, 728)]) +
-      '<div class="a" style="left:300px;top:880px;width:180px;height:300px;border-radius:20px 20px 0 0;background:linear-gradient(180deg,#3a3a45,#24242B)"></div><div class="a" style="left:240px;top:560px;width:300px;height:340px;border-radius:50% 50% 40% 40%;background:radial-gradient(circle at 40% 30%,#6b8f4e,#2f4a26)"></div>',
+      '<div class="a" style="left:300px;top:880px;width:180px;height:300px;border-radius:20px 20px 0 0;background:linear-gradient(180deg,#3a3a45,#1B1046)"></div><div class="a" style="left:240px;top:560px;width:300px;height:340px;border-radius:50% 50% 40% 40%;background:radial-gradient(circle at 40% 30%,#6b8f4e,#2f4a26)"></div>',
       'Signage · Signalétique bureau')
 # 9 Storefront
 scene('09-storefront', 'linear-gradient(180deg,#BFD3EA 0%,#E6EEF7 40%)',
@@ -131,7 +131,7 @@ scene('09-storefront', 'linear-gradient(180deg,#BFD3EA 0%,#E6EEF7 40%)',
 rollup = (f'<div class="a" style="left:300px;top:110px;width:470px;height:1270px;overflow:hidden;box-shadow:0 40px 60px -20px rgba(18,14,40,.5)"><img src="{F("banners/print/rollup-850x2000mm-bleed5mm.png")}" style="width:100%"></div>'
           '<div class="a" style="left:270px;top:1370px;width:530px;height:60px;border-radius:10px;background:linear-gradient(180deg,#c8c8d0,#8a8a96)"></div>')
 bill = (f'<div class="a" style="left:1050px;top:160px;width:1200px;height:900px;padding:22px;background:#1a1a20;box-shadow:0 40px 60px -20px rgba(18,14,40,.6)"><img src="{F("banners/print/billboard-4x3m-scale-1-10.png")}" style="width:100%;height:100%;display:block"></div>'
-        '<div class="a" style="left:1610px;top:1080px;width:80px;height:520px;background:linear-gradient(90deg,#55555f,#24242B)"></div>')
+        '<div class="a" style="left:1610px;top:1080px;width:80px;height:520px;background:linear-gradient(90deg,#55555f,#1B1046)"></div>')
 scene('10-rollup-billboard', 'linear-gradient(180deg,#C9D9EC 0%,#EEF1F7 70%,#B9B4C6 70.1%,#A9A3B9 100%)', rollup + bill, 'Roll-up & billboard · Kakémono & affichage')
 # 11 Phone: Instagram profile + story
 posts = sorted(os.listdir(f'{OUT}/social/instagram-posts')); posts = [p for p in posts if p.endswith('.png')][:9]
@@ -146,7 +146,7 @@ story = f'<img src="{F("social/instagram-stories/04-link.png")}" style="width:10
 scene('11-instagram-phone', 'linear-gradient(135deg,#9A7CFF,#6337FF 55%,#2B1BB5)',
       phone(ig, 620, 'left:620px;top:120px;transform:rotate(-4deg)') + phone(story, 560, 'left:1340px;top:220px;transform:rotate(5deg)'), 'Social media · Instagram', True)
 # 12 Laptop website
-site = f'<img src="{F("banners/web/website-hero-1920x800.png")}" style="width:100%;display:block"><div style="background:#F5F4F9;height:600px;padding:50px 70px;display:grid;grid-template-columns:repeat(4,1fr);gap:30px">' + ''.join(f'<div style="background:#fff;border-radius:24px;padding:30px"><img src="{F(f"icons/service-icons/png/violet/beyna-icon-{ic}-512.png")}" style="width:70px"><div class="big" style="font-size:30px;margin-top:20px;color:#24242B">{t}</div></div>' for ic, t in [('strategy', 'Stratégie'), ('branding', 'Identité'), ('social', 'Social media'), ('analytics', 'Data')]) + '</div>'
+site = f'<img src="{F("banners/web/website-hero-1920x800.png")}" style="width:100%;display:block"><div style="background:#F5F4F9;height:600px;padding:50px 70px;display:grid;grid-template-columns:repeat(4,1fr);gap:30px">' + ''.join(f'<div style="background:#fff;border-radius:24px;padding:30px"><img src="{F(f"icons/service-icons/png/violet/beyna-icon-{ic}-512.png")}" style="width:70px"><div class="big" style="font-size:30px;margin-top:20px;color:#1B1046">{t}</div></div>' for ic, t in [('strategy', 'Stratégie'), ('branding', 'Identité'), ('social', 'Social media'), ('analytics', 'Data')]) + '</div>'
 laptop = (f'<div class="a" style="left:400px;top:170px;width:1600px;height:1010px;border-radius:40px 40px 0 0;background:#0E0E12;padding:34px 34px 50px;box-shadow:0 60px 100px -30px rgba(18,14,40,.6)"><div style="width:100%;height:100%;overflow:hidden;border-radius:8px;background:#fff">{site}</div></div>'
           '<div class="a" style="left:250px;top:1180px;width:1900px;height:56px;border-radius:0 0 40px 40px;background:linear-gradient(180deg,#d7d7de,#9c9ca8)"></div>'
           '<div class="a" style="left:1080px;top:1180px;width:240px;height:18px;border-radius:0 0 16px 16px;background:#8a8a96"></div>')
@@ -164,6 +164,6 @@ scene('13-stickers', 'radial-gradient(ellipse at 30% 20%,#E9FF9E 0%,#D2FF5A 60%,
 scene('14-wall-mural', '#E8E6EE',
       f'<div class="a" style="left:0;right:0;top:0;height:1200px;overflow:hidden"><img src="{pv("wall-mural-3000x2000mm-1")}" style="width:100%"></div>' +
       '<div class="a" style="left:0;right:0;top:1200px;bottom:0;background:linear-gradient(180deg,#8d8799,#77718a)"></div>' +
-      '<div class="a" style="left:700px;top:980px;width:1000px;height:300px;border-radius:24px 24px 0 0;background:linear-gradient(180deg,#2E2E37,#1a1a20);box-shadow:0 40px 60px -20px rgba(0,0,0,.5)"></div>' +
+      '<div class="a" style="left:700px;top:980px;width:1000px;height:300px;border-radius:24px 24px 0 0;background:linear-gradient(180deg,#2A1D63,#1a1a20);box-shadow:0 40px 60px -20px rgba(0,0,0,.5)"></div>' +
       f'<div class="a" style="left:1080px;top:1060px;opacity:.9">{logo_svg("horizontal-compact", "color-dark", width=240)}</div>', 'Reception wall · Accueil', True)
 json.dump(jobs, open('jobs_mockups.json', 'w')); print(len(jobs))

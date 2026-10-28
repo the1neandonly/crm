@@ -25,11 +25,13 @@ The symbol is a lowercase **b** whose counter is an **eye**. باينة means "i
 In the primary logo the symbol *is* the b of "beyna", followed by "eyna" in Syne Bold. The Arabic name باينة is set in Readex Pro Bold, and in the Arabic lockup the eye looks toward the text.
 
 ## Colours
+Violet and fluo lime are the two main colours of the brand.
+
 | Name | HEX | RGB | Use |
 |---|---|---|---|
-| Beyna Violet | `#6337FF` | 99 55 255 | Primary |
-| Electric Lime | `#D2FF5A` | 210 255 90 | Highlight only (never text on white) |
-| Ink | `#24242B` | 36 36 43 | Dark surfaces, body text |
+| Beyna Violet | `#6337FF` | 99 55 255 | Main colour: headlines, surfaces, the symbol |
+| Fluo Lime | `#D2FF5A` | 210 255 90 | Main colour: energy, calls-to-action, the iris (never text on white) |
+| Deep Violet | `#1B1046` | 27 16 70 | Dark surfaces and body text: violet, never grey |
 | Beyna Gradient | `#9A7CFF → #6337FF → #2B1BB5` | 135° | Large surfaces, the symbol |
 
 ## What's in the kit

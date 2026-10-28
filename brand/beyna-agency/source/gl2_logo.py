@@ -11,7 +11,7 @@ def build_logo():
             (ix, iy), (px, py), (gx, gy) = eye_centres()
             d = iris_svg(ix, iy, px, py, gx, gy, 1, LIME, INK)
         else: d = mark_paths(f, LIME)
-        ghost = '' if kind == 'all' else f'<g opacity=".09">{mark_paths("#24242B", "#24242B")}</g>'
+        ghost = '' if kind == 'all' else f'<g opacity=".09">{mark_paths("#1B1046", "#1B1046")}</g>'
         return f'<svg viewBox="-10 -10 {W+20} {H+20}" height="290"><defs>{g}</defs>{ghost}{d}</svg>'
     parts = [('stem', 'The letter', 'b', 'A lowercase b — the first letter of beyna, its stem cut like a qalam stroke.'), ('eye', 'The eye', 'Seen', 'An almond eye under a fine eyelid crease. باينة: it shows, nobody can miss it.'),
              ('iris', 'The lime iris', 'Insight', 'Ringed and detailed, it looks forward — the idea that stands out.'), ('all', 'The b', 'Beyna', 'Together: a brand you simply can’t not see.')]
@@ -60,7 +60,7 @@ def build_logo():
 <p style="margin-top:28px;max-width:1000px;font-size:19px">Keep a clear zone equal to <b>R</b> — the radius of the bowl — on every side. Below 55 mm / 320 px, switch to the compact version without “AGENCY”.</p></div>
 <div style="flex:1"><div class="lbl vi" style="margin-bottom:12px">Minimum sizes · digital / print</div>{mn}</div></div>''')
     tiles = [('color', '#fff', 'Full colour · light', 'var(--ink)'), ('color-dark', INK, 'Full colour · ink', '#fff'), ('on-violet', VIOLET, 'Reversed · violet', '#fff'), ('on-violet', 'var(--grad)', 'Reversed · gradient', '#fff'),
-             ('on-lime', LIME, 'On lime', 'var(--ink)'), ('black', '#fff', 'Mono · black', 'var(--ink)'), ('white', INK, 'Mono · white', '#fff'), ('white', '#6B6B78', 'Mono · on images', '#fff')]
+             ('on-lime', LIME, 'On lime', 'var(--ink)'), ('black', '#fff', 'Mono · black', 'var(--ink)'), ('white', INK, 'Mono · white', '#fff'), ('white', '#5B4C9A', 'Mono · on images', '#fff')]
     add('02 Colour versions', f'''{head("02.6", "Colour versions.", "Versions couleur")}
 <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-top:50px">{"".join(f'<div class="card" style="height:330px;background:{bg};display:flex;align-items:center;justify-content:center">{logo_svg("horizontal",s,width=330)}<div class="cap" style="color:{cc};opacity:.7">{c}</div></div>' for s,bg,c,cc in tiles)}</div>''')
     hz = lambda st='', s='color', w=330: logo_svg('horizontal', s, width=w, style=st)

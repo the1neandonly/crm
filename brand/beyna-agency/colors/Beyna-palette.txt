@@ -1,8 +1,8 @@
 BEYNA AGENCY — باينة — COLOUR PALETTE
 
 Beyna Violet           HEX #6337FF   RGB 99 55 255     CMYK 61 78 0 0
-Electric Lime          HEX #D2FF5A   RGB 210 255 90    CMYK 18 0 65 0
-Ink                    HEX #24242B   RGB 36 36 43      CMYK 16 16 0 83
+Fluo Lime              HEX #D2FF5A   RGB 210 255 90    CMYK 18 0 65 0
+Deep Violet            HEX #1B1046   RGB 27 16 70      CMYK 61 77 0 73
 White                  HEX #FFFFFF   RGB 255 255 255   CMYK 0 0 0 0
 Gradient Lavender      HEX #9A7CFF   RGB 154 124 255   CMYK 40 51 0 0
 Gradient Deep Indigo   HEX #2B1BB5   RGB 43 27 181     CMYK 76 85 0 29
@@ -10,5 +10,5 @@ Paper                  HEX #F5F4F9   RGB 245 244 249   CMYK 2 2 0 2
 
 Beyna Gradient: 135°, #9A7CFF 0% → #6337FF 55% → #2B1BB5 100%
 
-Pantone (nearest — confirm on a swatch book): Violet ≈ 2725 C · Lime ≈ 380 C · Ink ≈ 419 C
+Pantone (nearest — confirm on a swatch book): Violet ≈ 2725 C · Lime ≈ 380 C · Deep Violet ≈ 2765 C
 Never set lime text on white.

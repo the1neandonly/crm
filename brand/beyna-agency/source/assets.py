@@ -31,11 +31,11 @@ def pattern_svg(cols, rows, cell, pal, bg, seed, accent_every=11):
             out.append(shp)
     return f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {cols*cell} {rows*cell}" width="{cols*cell}" height="{rows*cell}">{"".join(out)}</svg>'
 PATTERNS = {
-    'ink':    ([VIOLET, '#4A2BD9', '#7B5CFF', '#2F2F38', '#2F2F38'], INK, 7),
+    'ink':    ([VIOLET, '#4A2BD9', '#7B5CFF', '#271A5E', '#271A5E'], INK, 7),
     'violet': (['#7B5CFF', '#4A2BD9', '#8C70FF', '#5530F0'], VIOLET, 3),
     'paper':  (['#E6E1FA', '#D9D1FF', '#EDEAF7', VIOLET], '#F5F4F9', 5),
     'lime':   (['#C2F040', '#B8E83A', INK, '#DAFF78'], LIME, 9),
-    'mono':   (['#2F2F38', '#34343E', '#3A3A45'], INK, 4),
+    'mono':   (['#271A5E', '#2D2066', '#33256E'], INK, 4),
 }
 for n, (pal, bg, seed) in PATTERNS.items():
     p = f'{OUT}/patterns/svg/beyna-pattern-{n}.svg'; w(p, pattern_svg(8, 8, 120, pal, bg, seed, 999 if n in ('mono', 'lime') else 11))
@@ -68,5 +68,5 @@ for lbl, ic in HL:
 json.dump(svg_jobs, open('jobs_assets_svg.json', 'w')); json.dump(html_jobs, open('jobs_assets_html.json', 'w'))
 # icon sheet preview
 sheet = ''.join(f'<div style="display:inline-block;margin:14px">{icon_svg(n, VIOLET, LIME, 96)}</div>' for n in ICONS)
-open('icon_sheet.html', 'w').write(f'<body style="background:#fff;width:1000px">{sheet}<div style="background:#24242B;padding:10px">' + ''.join(f'<div style="display:inline-block;margin:14px">{icon_svg(n, WHITE, LIME, 96)}</div>' for n in ICONS) + '</div></body>')
+open('icon_sheet.html', 'w').write(f'<body style="background:#fff;width:1000px">{sheet}<div style="background:#1B1046;padding:10px">' + ''.join(f'<div style="display:inline-block;margin:14px">{icon_svg(n, WHITE, LIME, 96)}</div>' for n in ICONS) + '</div></body>')
 print(len(svg_jobs), len(html_jobs))

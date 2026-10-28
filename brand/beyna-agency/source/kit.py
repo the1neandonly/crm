@@ -10,7 +10,7 @@ def font_css():
     fam = {'ReadexPro': 'Readex Pro', 'JetBrainsMono': 'JetBrains Mono'}
     return ''.join(f"@font-face{{font-family:'{fam.get(f, f)}';font-weight:{w};src:url('file://{FONTS}/{f}-{w}.ttf')}}" for f, w in faces)
 
-BASE_CSS = f''':root{{--violet:{VIOLET};--lime:{LIME};--ink:{INK};--g0:{G0};--g2:{G2};--grad:{GRAD_CSS};--paper:#F5F4F9;--line:rgba(36,36,43,.12)}}
+BASE_CSS = f''':root{{--violet:{VIOLET};--lime:{LIME};--ink:{INK};--g0:{G0};--g2:{G2};--grad:{GRAD_CSS};--paper:#F5F4F9;--line:rgba(27,16,70,.12)}}
 *{{box-sizing:border-box;margin:0;padding:0}}
 html,body{{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 body{{font-family:'Manrope',sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}}

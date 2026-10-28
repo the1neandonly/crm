@@ -80,8 +80,8 @@ def merch(name, wpx, hpx, body, bg='transparent'):
 merch('tshirt-front-chest-white-ink-for-dark-tees-3000x3000', 3000, 3000, A(logo_svg('stacked', 'white', width=2400), 'left:300px;top:640px'))
 merch('tshirt-front-chest-ink-for-light-tees-3000x3000', 3000, 3000, A(logo_svg('stacked', 'black', width=2400), 'left:300px;top:640px'))
 merch('tshirt-back-symbol-color-4500x5400', 4500, 5400, A(mark_svg(height=3600), 'left:900px;top:500px') + A('<div class="big" style="font-size:420px;color:#fff;text-align:center">Make it <span class="hl">clear.</span></div>', 'left:0;right:0;top:4400px'))
-merch('tote-bag-print-ink-3000x3000', 3000, 3000, A(mark_svg(body=INK, slice_c=INK, height=1500), 'left:960px;top:400px') + A('<div class="big" style="font-size:250px;color:#24242B;text-align:center">Make it clear.</div>', 'left:0;right:0;top:2250px'))
-merch('mug-wrap-sublimation-2475x1155', 2475, 1155, A(mark_svg(height=760), 'left:250px;top:200px') + A(logo_svg('horizontal-compact', 'color', width=1000), 'left:1250px;top:360px') + A('<div class="big" style="font-size:110px;color:#24242B">Make it <span style="color:#6337FF">clear.</span></div>', 'left:1250px;top:700px'), '#fff')
+merch('tote-bag-print-ink-3000x3000', 3000, 3000, A(mark_svg(body=INK, slice_c=INK, height=1500), 'left:960px;top:400px') + A('<div class="big" style="font-size:250px;color:#1B1046;text-align:center">Make it clear.</div>', 'left:0;right:0;top:2250px'))
+merch('mug-wrap-sublimation-2475x1155', 2475, 1155, A(mark_svg(height=760), 'left:250px;top:200px') + A(logo_svg('horizontal-compact', 'color', width=1000), 'left:1250px;top:360px') + A('<div class="big" style="font-size:110px;color:#1B1046">Make it <span style="color:#6337FF">clear.</span></div>', 'left:1250px;top:700px'), '#fff')
 merch('cap-embroidery-symbol-1-colour-1200x1200', 1200, 1200, A(mark_svg(body='#fff', slice_c='#fff', height=1000), 'left:225px;top:100px'))
 for f in ['beyna-symbol-white.svg', 'beyna-symbol-black.svg', 'beyna-horizontal-compact-white.svg', 'beyna-horizontal-compact-black.svg', 'beyna-stacked-white.svg', 'beyna-stacked-black.svg']:
     cp(f'logo/svg/{f}', f'{M}/Broderie-gravure-1-couleur_Embroidery-engraving-1-colour')
@@ -105,7 +105,7 @@ for cname, col in [('violet', '#3B2BD0'), ('black', '#111111'), ('blue', '#1F3FA
 # ---- Vehicle & window decals (vector PDF + PNG)
 V = '16_Vehicule-Vitrine_Vehicle-Window'
 html(V, 'car-door-decal-600x250mm-white', 600, 250, 'transparent', A(logo_svg('horizontal', 'white', width='540mm'), 'left:30mm;top:40mm') + A(f'<div style="font:700 26mm Manrope;color:#fff">{PHONE}</div>', 'left:30mm;top:190mm'), ('pdf', 'png'), 'mm', 2)
-html(V, 'car-door-decal-600x250mm-color', 600, 250, 'transparent', A(logo_svg('horizontal', 'color', width='540mm'), 'left:30mm;top:40mm') + A(f'<div style="font:700 26mm Manrope;color:#24242B">{PHONE}</div>', 'left:30mm;top:190mm'), ('pdf', 'png'), 'mm', 2)
+html(V, 'car-door-decal-600x250mm-color', 600, 250, 'transparent', A(logo_svg('horizontal', 'color', width='540mm'), 'left:30mm;top:40mm') + A(f'<div style="font:700 26mm Manrope;color:#1B1046">{PHONE}</div>', 'left:30mm;top:190mm'), ('pdf', 'png'), 'mm', 2)
 html(V, 'rear-window-decal-800x200mm-white', 800, 200, 'transparent', A(f'<div class="big" style="font-size:70mm;color:#fff;white-space:nowrap">{WEB}</div>', 'left:20mm;top:40mm'), ('pdf', 'png'), 'mm', 2)
 html(V, 'window-vinyl-symbol-600x600mm-white', 600, 600, 'transparent', A(mark_svg(body='#fff', slice_c=LIME, height='500mm'), 'left:112mm;top:50mm'), ('pdf', 'png'), 'mm', 1.5)
 
