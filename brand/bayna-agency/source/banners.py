@@ -53,7 +53,7 @@ emit('web', 'newsletter-footer-1200x300', 1200, 300, 'ink',
 emit('web', 'blog-cover-1600x900', 1600, 900, 'paper',
      A('<div class="lbl" style="font-size:22px;color:var(--violet)">Blog · Article</div><div class="big" style="font-size:96px;margin-top:26px;width:1000px">Le titre de votre article sur deux lignes.</div>', 'left:120px;top:250px') +
      A('', 'right:-1px;bottom:-1px;width:520px;height:520px;background:var(--grad);border-top-left-radius:520px') +
-     A('', 'right:180px;bottom:180px;width:160px;height:160px;background:var(--lime);border-top-left-radius:160px') +
+     A('', 'right:180px;bottom:180px;width:160px;height:160px;background:radial-gradient(circle at 60% 50%,var(--ink) 0 27%,var(--lime) 28%);border-radius:50%') +
      A(logo_svg('horizontal-compact', 'color', width=220), 'left:120px;bottom:90px'))
 
 # ---------- Display ads (IAB sizes) — one responsive layout

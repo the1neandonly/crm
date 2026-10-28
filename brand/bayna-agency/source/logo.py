@@ -1,18 +1,23 @@
-"""Bayna Agency logo system — all geometry generated from a single construction grid."""
+"""Bayna Agency logo system v3 — "L'Œil": the b whose counter is an eye. All geometry generated from one construction."""
 from textpath import text_path
 
 # ---- Brand colours
 VIOLET = '#6337FF'; LIME = '#D2FF5A'; INK = '#24242B'; WHITE = '#FFFFFF'
 G0, G1, G2 = '#9A7CFF', '#6337FF', '#2B1BB5'   # Bayna gradient: lavender -> violet -> deep indigo
 
-# ---- Mark construction (units)
-S = 36          # stem width  (= R/2)
-R = 72          # bowl radius
-GAP = 8         # slice offset (= R/9)
-H = 192         # total mark height
-W = 2 * R       # total mark width
+# ---- Mark construction (units) — "L'Œil": a lowercase b whose counter is an almond eye
+S = 38          # stem width (Syne Bold stem)
+R = 72          # bowl radius — the bowl matches Syne's x-height, the stem its ascender
+H = 192         # total mark height (stem top -> bowl bottom)
+W = 2 * R       # total mark width (the stem's left edge is tangent to the bowl)
 CX, CY = R, H - R
-SR = R - S - GAP  # lime slice radius
+YJ = CY - (R*R - (S - CX)**2) ** 0.5   # where the stem's right edge meets the bowl
+EX, EY = CX + 4, CY      # centre of the almond (the counter), nudged toward the name
+EW, EH = 110, 34         # almond width, half-height (lid sagitta)
+IR, IOFF = 31, 10        # iris radius (touches both lids), offset toward the name
+PR, POFF = 14, 6.8       # pupil radius, offset from the iris centre
+GR = 5                   # catch-light radius
+GAP, SR = IOFF, IR       # legacy names
 
 WORD_FONT = 'Syne-700.ttf'
 SUB_FONT = 'Manrope-700.ttf'
@@ -22,14 +27,45 @@ def grad_def(gid, x1=0, y1=0, x2=1, y2=1):
             f'<stop offset="0" stop-color="{G0}"/><stop offset="0.55" stop-color="{G1}"/>'
             f'<stop offset="1" stop-color="{G2}"/></linearGradient>')
 
-def mark_paths(body_fill, slice_fill, ox=0, oy=0, scale=1.0):
+def _circ(cx, cy, r, rev=False):
+    s = 0 if rev else 1
+    return f'M{cx - r:.3f},{cy:.3f} a{r:.3f},{r:.3f} 0 1,{s} {2*r:.3f},0 a{r:.3f},{r:.3f} 0 1,{s} {-2*r:.3f},0 Z'
+
+def body_d(ox=0, oy=0, scale=1.0):
+    """Stem with a round cap + full bowl, as one closed outline."""
     def p(x, y): return f'{ox + x*scale:.3f},{oy + y*scale:.3f}'
-    r = R*scale; sr = SR*scale
-    body = (f'M{p(0,0)} L{p(S,0)} L{p(S,CY)} L{p(CX,CY)} L{p(CX,CY-R)} '
-            f'A{r:.3f},{r:.3f} 0 1,1 {p(0,CY)} Z')
-    sx, sy = CX - GAP, CY - GAP
-    slc = f'M{p(sx,sy)} L{p(sx-SR,sy)} A{sr:.3f},{sr:.3f} 0 0,1 {p(sx,sy-SR)} Z'
-    return f'<path d="{body}" fill="{body_fill}"/><path d="{slc}" fill="{slice_fill}"/>'
+    r, h = R*scale, S/2*scale
+    return f'M{p(0, S/2)} A{h:.3f},{h:.3f} 0 0,1 {p(S, S/2)} L{p(S, YJ)} A{r:.3f},{r:.3f} 0 1,1 {p(0, CY)} Z'
+
+def almond_d(ox=0, oy=0, scale=1.0, rev=False):
+    """The counter: two circular arcs meeting in sharp corners — the eye."""
+    def p(x, y): return f'{ox + x*scale:.3f},{oy + y*scale:.3f}'
+    r = ((EW/2)**2 + EH**2) / (2*EH) * scale
+    a, b = (EX - EW/2, EX + EW/2) if not rev else (EX + EW/2, EX - EW/2)
+    sw = 0 if rev else 1
+    return f'M{p(a, EY)} A{r:.3f},{r:.3f} 0 0,{sw} {p(b, EY)} A{r:.3f},{r:.3f} 0 0,{sw} {p(a, EY)} Z'
+
+def _white(c): return str(c).lower() in ('#fff', '#ffffff', 'white')
+
+def eye_centres(ox=0, oy=0, scale=1.0, look=1):
+    t = lambda x, y: (ox + x*scale, oy + y*scale)
+    ix = EX + look*IOFF; px = ix + look*POFF
+    return t(ix, EY), t(px, EY), t(px + look*PR*0.52, EY - PR*0.55)
+
+def mark_paths(body_fill, iris_fill, ox=0, oy=0, scale=1.0, look=1, pupil=None):
+    """The symbol. Colour: white of the eye, coloured iris, ink pupil, white catch-light.
+    Mono (body == iris): a single colour, the white of the eye knocked out."""
+    s = scale
+    (ix, iy), (px, py), (gx, gy) = eye_centres(ox, oy, s, look)
+    hole = f'<path fill-rule="evenodd" fill="{body_fill}" d="{body_d(ox, oy, s)} {almond_d(ox, oy, s, rev=True)}"/>'
+    if body_fill == iris_fill:
+        return hole + (f'<path fill-rule="evenodd" fill="{body_fill}" d="{_circ(ix, iy, IR*s)} '
+                       f'{_circ(gx, gy, GR*1.3*s, True)}"/>')
+    knock = _white(body_fill) or _white(iris_fill) or 'rgba' in str(body_fill)
+    out = hole if knock else f'<path fill="{body_fill}" d="{body_d(ox, oy, s)}"/><path fill="#FFFFFF" d="{almond_d(ox, oy, s)}"/>'
+    return out + (f'<circle cx="{ix:.3f}" cy="{iy:.3f}" r="{IR*s:.3f}" fill="{iris_fill}"/>'
+                  f'<circle cx="{px:.3f}" cy="{py:.3f}" r="{PR*s:.3f}" fill="{pupil or INK}"/>'
+                  f'<circle cx="{gx:.3f}" cy="{gy:.3f}" r="{GR*s:.3f}" fill="#FFFFFF"/>')
 
 # Colourways: (body, slice, word, sub)
 SCHEMES = {
@@ -62,18 +98,21 @@ def sub_paths(text, fill, size, x, baseline, anchor='start', tracking=0.42):
     d, w = text_path(text, SUB_FONT, size, x, baseline, tracking=tracking, anchor=anchor)
     return f'<path d="{d}" fill="{fill}"/>', w
 
+LOGO_SIZE = H / 0.697            # Syne size whose 'b' ascender equals the symbol height
+def ayna(fill, x=0):
+    """'ayna' set so that the symbol reads as the first letter of bayna."""
+    d, w = text_path('ayna', WORD_FONT, LOGO_SIZE, x + W + 0.045*LOGO_SIZE, H, tracking=-0.015)
+    return f'<path d="{d}" fill="{fill}"/>', W + 0.045*LOGO_SIZE + w
+
 def horizontal(scheme, tagline=True):
+    """Primary logo: the eye-b followed by 'ayna' — the symbol is the first letter of the name."""
     b, s, wc, sc = SCHEMES[scheme]
-    size = 196                      # 'b' ascender ~ 137u, x-height 98u
-    gapx = 48
-    base = H - 1                    # wordmark baseline sits on the bowl (optical overshoot 1u)
-    word, ww = wordmark_paths(wc, size, W + gapx, base)
+    word, tw = ayna(wc)
     inner = mark_paths(b, s) + word
-    total_w = W + gapx + ww
     if tagline:                     # descriptor tucked into the ascender zone above "yna"
-        sub, _ = sub_paths('AGENCY', sc, 29, total_w, base - 0.697*size + 0.72*29, anchor='end', tracking=0.46)
+        sub, _ = sub_paths('AGENCY', sc, 36, tw, H - 0.697*LOGO_SIZE + 0.72*36, anchor='end', tracking=0.5)
         inner += sub
-    return total_w, H + 0.2*size, inner
+    return tw, H + 0.2*LOGO_SIZE, inner
 
 def stacked(scheme, tagline=True):
     b, s, wc, sc = SCHEMES[scheme]
@@ -110,15 +149,13 @@ def arabic(scheme, size=170):
     """Arabic lockup — باينة (Darija: clear, obvious). Reads right-to-left, so the symbol leads on the right."""
     b, s, wc, sc = SCHEMES[scheme]
     d, w = text_path('باينة', AR_FONT, size, 0, H - 1)
-    return w + 48 + W, H + 0.45*size, f'<path d="{d}" fill="{wc}"/>' + mark_paths(b, s, ox=w + 48)
+    return w + 48 + W, H + 0.45*size, f'<path d="{d}" fill="{wc}"/>' + mark_paths(b, s, ox=w + 48, look=-1)
 
 def bilingual(scheme):
-    b, s, wc, sc = SCHEMES[scheme]
-    size, gapx, base = 196, 48, H - 1
-    word, ww = wordmark_paths(wc, size, W + gapx, base)
-    sub, _ = sub_paths('AGENCY', sc, 29, W + gapx + ww, base - 0.697*size + 0.72*29, anchor='end', tracking=0.46)
-    d, _ = text_path('باينة', AR_FONT, 92, W + gapx + ww, base + 120, anchor='end')
-    return W + gapx + ww, base + 150, mark_paths(b, s) + word + sub + f'<path d="{d}" fill="{sc}"/>'
+    _, _, _, sc = SCHEMES[scheme]
+    tw, th, inner = horizontal(scheme)
+    d, _ = text_path('باينة', AR_FONT, 104, tw, H + 150, anchor='end')
+    return tw, H + 180, inner + f'<path d="{d}" fill="{sc}"/>'
 
 def bilingual_stacked(scheme):
     b, s, wc, sc = SCHEMES[scheme]

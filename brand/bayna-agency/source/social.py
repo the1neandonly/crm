@@ -59,7 +59,7 @@ tpl(G, '03-announcement', W1, H1, 'paper',
     T('Écrivez ici votre annonce en une ou deux phrases courtes. Clair, direct, évident.', M, 790, 'font-size:34px;color:#4a4a55', 'sub', 700) +
     T('En savoir plus →', M, 1000, 'font-size:30px;color:var(--violet)', 'pill', None) +
     A('', 'right:-1px;bottom:-1px;width:420px;height:420px;background:var(--grad);border-top-left-radius:420px') +
-    A('', 'right:120px;bottom:120px;width:130px;height:130px;background:var(--lime);border-top-left-radius:130px'), 'Announcement')
+    A('', 'right:120px;bottom:120px;width:130px;height:130px;background:radial-gradient(circle at 60% 50%,var(--ink) 0 27%,var(--lime) 28%);border-radius:50%'), 'Announcement')
 
 stars = ''.join(icon_svg('star', LIME, VIOLET, 46).replace('<svg', '<svg style="display:inline-block;margin-right:8px"') for _ in range(5))
 tpl(G, '04-testimonial', W1, H1, 'violetbg',
@@ -89,7 +89,7 @@ for k, (tt, body) in enumerate([('Un message flou.', 'Si on ne comprend pas ce q
                                 ('Aucune mesure.', 'Sans chiffres, pas de preuve. Fixez un objectif, suivez-le, ajustez chaque mois.')]):
     tpl(CG, f'0{k+2}-slide', W1, H1, 'paper',
         T(f'0{k+1}', M, M, 'font-size:26px;color:var(--violet)', 'lbl', 300) + T(f'{k+1} / 3', 600, M, 'font-size:22px;text-align:right;color:#8a8a96', 'lbl', 392) +
-        A('', f'left:{M}px;top:300px;width:150px;height:150px;background:var(--lime);border-top-left-radius:150px') +
+        A('', f'left:{M}px;top:300px;width:150px;height:150px;background:radial-gradient(circle at 60% 50%,var(--ink) 0 27%,var(--lime) 28%);border-radius:50%') +
         T(tt, M, 520, 'font-size:112px;letter-spacing:-.03em;line-height:1', 'big', 900) +
         T(body, M, 830, 'font-size:38px;color:#4a4a55', 'sub', 820) + A(mark_svg(height=70), f'right:{M}px;bottom:{M}px'), f'Carousel slide {k+1}')
 tpl(CG, '05-cta', W1, H1, 'grad',

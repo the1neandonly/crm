@@ -1,7 +1,7 @@
 """Motion templates: HTML + CSS keyframes, rendered frame-by-frame (see video_render.js)."""
 import os, sys, json
 from kit import *
-from logo import horizontal, wordmark_paths, sub_paths, mark_paths, S, R, CX, CY, GAP, SR
+from logo import horizontal, ayna, sub_paths, body_d, almond_d, eye_centres, IR, PR, GR, LOGO_SIZE
 from brand import *
 OUT = sys.argv[1]; HT = os.path.abspath('html/video'); os.makedirs(HT, exist_ok=True)
 vids = []
@@ -20,26 +20,36 @@ svg g,svg rect{transform-box:fill-box}
 @keyframes slidein{from{transform:translateX(-110%)}to{transform:translateX(0)}}
 @keyframes slideout{from{transform:translateX(0)}to{transform:translateX(-120%)}}
 @keyframes glow{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
-@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}'''
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+@keyframes lidopen{from{transform:scaleY(1)}to{transform:scaleY(0)}}
+@keyframes blink{0%{transform:scaleY(0)}45%{transform:scaleY(1)}100%{transform:scaleY(0)}}
+@keyframes look{0%{transform:translateX(0)}25%{transform:translateX(-13px)}60%{transform:translateX(-13px)}100%{transform:translateX(0)}}'''
 E = 'cubic-bezier(.2,.8,.2,1)'
 def anim(name, dur, delay, ease=E): return f'animation:{name} {dur}s {ease} {delay}s'
 
+def eye_mark(b, s, gid, t0, blink_at, white=True):
+    """The animated symbol: the letter rises, the eyelid opens, the iris looks around, then a blink."""
+    (ix, iy), (px, py), (gx, gy) = eye_centres()
+    sclera = f'<path d="{almond_d()}" fill="#fff"/>' if white else ''
+    iris = (f'<circle cx="{ix}" cy="{iy}" r="{IR}" fill="{s}"/><circle cx="{px}" cy="{py}" r="{PR}" fill="{INK}"/>'
+            f'<circle cx="{gx}" cy="{gy}" r="{GR}" fill="#fff"/>')
+    lid = f'<path d="{almond_d()}" fill="{b}"/>'
+    return (f'<g style="transform-origin:50% 100%;{anim("up",.55,t0)}"><path fill-rule="evenodd" fill="{b}" d="{body_d()} {almond_d(rev=True)}"/>{sclera}'
+            f'<g style="{anim("popc",.5,t0+.75)}"><g style="{anim("look",1.1,t0+1.25,"ease-in-out")}">{iris}</g></g>'
+            f'<g style="transform-origin:50% 50%;{anim("lidopen",.4,t0+.55)}">{lid}</g>'
+            f'<g style="transform-origin:50% 50%;{anim("blink",.3,blink_at,"ease-in-out")}">{lid}</g></g>')
+
 def animated_lockup(scheme, t0=0.0, tagline=True):
-    """Full horizontal lockup whose parts build in sequence: bar → pie → slice → wordmark."""
-    b, s, wc, sc = {'dark': ('url(#vg)', LIME, '#fff', LIME), 'light': ('url(#vg)', LIME, INK, VIOLET), 'white': ('#fff', LIME, '#fff', LIME)}[scheme]
+    """Full horizontal lockup: the eye-b comes alive, then 'ayna' wipes in and AGENCY fades up."""
+    b, s, wc, sc, white = {'dark': ('url(#vg)', LIME, '#fff', LIME, True), 'light': ('url(#vg)', LIME, INK, VIOLET, True), 'white': ('#fff', LIME, '#fff', LIME, False)}[scheme]
     tw, th, _ = horizontal('color')
-    word, ww = wordmark_paths(wc, 196, W + 48, H - 1)
-    sub, _ = sub_paths('AGENCY', sc, 29, tw, H - 1 - 0.697*196 + 0.72*29, anchor='end', tracking=0.46)
+    word, _ = ayna(wc)
+    sub, _ = sub_paths('AGENCY', sc, 36, tw, H - 0.697*LOGO_SIZE + 0.72*36, anchor='end', tracking=0.5)
     dx = tw/2 - W/2
-    sx, sy = CX - GAP, CY - GAP
     grad = f'<linearGradient id="vg" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="{W}" y2="{H}"><stop offset="0" stop-color="{G0}"/><stop offset=".55" stop-color="{G1}"/><stop offset="1" stop-color="{G2}"/></linearGradient>'
-    svg = (f'<svg viewBox="0 0 {tw:.1f} {th:.1f}" width="100%" overflow="visible"><defs>{grad}<clipPath id="wc"><rect x="{W+30}" y="-40" width="{ww+60}" height="{th+80}" style="transform-origin:0 0;{anim("wipe",.8,t0+1.85)}"/></clipPath></defs>'
-           f'<g style="--dx:{dx:.1f}px;{anim("shift",.9,t0+1.5)}">'
-           f'<g style="transform-origin:50% 100%;{anim("up",.55,t0+.0)}"><path d="M0,0 H{S} V{CY} H0Z" fill="{b}"/></g>'
-           f'<g style="transform-origin:0% 0%;{anim("pop",.75,t0+.35)}"><path d="M0,{CY} L{CX},{CY} L{CX},{CY-R} A{R},{R} 0 1,1 0,{CY} Z" fill="{b}"/></g>'
-           f'<g style="transform-origin:100% 100%;{anim("popc",.5,t0+.95)}"><path d="M{sx},{sy} L{sx-SR},{sy} A{SR},{SR} 0 0,1 {sx},{sy-SR} Z" fill="{s}"/></g></g>'
-           f'<g clip-path="url(#wc)">{word}</g><g style="{anim("fade",.6,t0+2.3)}">{sub}</g></svg>')
-    return svg
+    return (f'<svg viewBox="0 0 {tw:.1f} {th:.1f}" width="100%" overflow="visible"><defs>{grad}<clipPath id="wc"><rect x="{W+10}" y="-40" width="{tw}" height="{th+80}" style="transform-origin:0 0;{anim("wipe",.8,t0+2.45)}"/></clipPath></defs>'
+            f'<g style="--dx:{dx:.1f}px;{anim("shift",.9,t0+2.15)}">{eye_mark(b, s, "vg", t0, t0+3.55, white)}</g>'
+            f'<g clip-path="url(#wc)">{word}</g><g style="{anim("fade",.6,t0+2.9)}">{sub}</g></svg>')
 
 def video(name, w, h, cls, body, dur, fps=30, outs=('mp4',), folder='video'):
     p = f'{HT}/{name}.html'
@@ -53,9 +63,9 @@ tag = lambda fs, d: f'<div class="big" style="font-size:{fs}px;text-align:center
 for nm, w, h, lw, fs in [('logo-intro-16x9-1920x1080', 1920, 1080, 980, 56), ('logo-intro-9x16-1080x1920', 1080, 1920, 860, 60), ('logo-intro-1x1-1080x1080', 1080, 1080, 820, 52)]:
     video(nm, w, h, 'ink', glow(w*1.1, -w*0.05, h/2 - w*0.55, 0) +
           f'<div class="a" style="left:{(w-lw)/2}px;top:{h/2 - lw*0.13}px;width:{lw}px">{animated_lockup("dark")}</div>' +
-          f'<div class="a" style="left:0;right:0;top:{h/2 + lw*0.2}px">{tag(fs, 2.9)}</div>', 5.0)
-video('logo-intro-transparent-1920x1080', 1920, 1080, 'clear', f'<div class="a" style="left:470px;top:410px;width:980px">{animated_lockup("dark")}</div>', 4.0, outs=('webm', 'mov'))
-video('logo-intro-gradient-1920x1080', 1920, 1080, 'grad', f'<div class="a" style="left:470px;top:410px;width:980px">{animated_lockup("white")}</div><div class="a" style="left:0;right:0;top:640px">{tag(56, 2.9)}</div>', 5.0)
+          f'<div class="a" style="left:0;right:0;top:{h/2 + lw*0.2}px">{tag(fs, 3.3)}</div>', 5.5)
+video('logo-intro-transparent-1920x1080', 1920, 1080, 'clear', f'<div class="a" style="left:470px;top:410px;width:980px">{animated_lockup("dark")}</div>', 4.5, outs=('webm', 'mov'))
+video('logo-intro-gradient-1920x1080', 1920, 1080, 'grad', f'<div class="a" style="left:470px;top:410px;width:980px">{animated_lockup("white")}</div><div class="a" style="left:0;right:0;top:640px">{tag(56, 3.3)}</div>', 5.5)
 
 # End cards
 def endcard(w, h, k):
@@ -80,7 +90,7 @@ M = 96
 reel = (scene(0, 2.2, f'<div class="a big" style="left:{M}px;top:520px;font-size:560px;color:var(--lime);{anim("popc",.6,.1)};transform-origin:20% 80%">3</div>'
                     f'<div class="a big" style="left:{M}px;right:{M}px;top:1100px;font-size:100px;color:#fff;{anim("fadeup",.6,.6)}">erreurs qui rendent votre marque invisible</div>') +
         ''.join(scene(2.2 + i*1.8, 4.0 + i*1.8,
-                      f'<div class="a" style="left:{M}px;top:560px;width:180px;height:180px;background:var(--lime);border-top-left-radius:180px;{anim("popc",.5,2.3 + i*1.8)}"></div>'
+                      f'<div class="a" style="left:{M}px;top:560px;width:180px;height:180px;background:radial-gradient(circle at 60% 50%,var(--ink) 0 27%,var(--lime) 28%);border-radius:50%;{anim("popc",.5,2.3 + i*1.8)}"></div>'
                       f'<div class="a" style="left:{M}px;top:800px;font:500 40px JetBrains Mono;color:var(--lime);{anim("fadeup",.5,2.35 + i*1.8)}">0{i+1}</div>'
                       f'<div class="a big" style="left:{M}px;right:{M}px;top:880px;font-size:130px;color:#fff;{anim("fadeup",.6,2.45 + i*1.8)}">{t}</div>')
                 for i, t in enumerate(['Un message flou.', 'Des visuels incohérents.', 'Aucune mesure.'])) +
@@ -92,10 +102,8 @@ reel = (scene(0, 2.2, f'<div class="a big" style="left:{M}px;top:520px;font-size
 video('reel-template-tips-1080x1920', 1080, 1920, 'ink', reel, 10.0)
 
 # Looping symbol GIF / MP4 (build → hold → loop)
-gs = (f'<div class="a" style="left:150px;top:110px;width:300px">'
-      f'<svg viewBox="0 0 {W} {H}" width="300" overflow="visible"><defs><linearGradient id="vg2" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="{W}" y2="{H}"><stop offset="0" stop-color="{G0}"/><stop offset=".55" stop-color="{G1}"/><stop offset="1" stop-color="{G2}"/></linearGradient></defs>'
-      f'<g style="transform-origin:50% 100%;{anim("up",.5,.0)}"><path d="M0,0 H{S} V{CY} H0Z" fill="url(#vg2)"/></g>'
-      f'<g style="transform-origin:0% 0%;{anim("pop",.7,.3)}"><path d="M0,{CY} L{CX},{CY} L{CX},{CY-R} A{R},{R} 0 1,1 0,{CY} Z" fill="url(#vg2)"/></g>'
-      f'<g style="transform-origin:100% 100%;{anim("popc",.45,.85)}"><path d="M{CX-GAP},{CY-GAP} L{CX-GAP-SR},{CY-GAP} A{SR},{SR} 0 0,1 {CX-GAP},{CY-GAP-SR} Z" fill="{LIME}"/></g></svg></div>')
-video('symbol-loop-600x600', 600, 600, 'ink', f'<div style="position:absolute;inset:0;{anim("fadeout",.35,2.65)}">{gs}</div>', 3.0, fps=25, outs=('mp4', 'gif'))
+gs = (f'<div class="a" style="left:{300 - 150*W/H:.1f}px;top:110px;width:{300*W/H:.1f}px">'
+      f'<svg viewBox="0 0 {W} {H}" width="{300*W/H:.1f}" overflow="visible"><defs><linearGradient id="vg2" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="{W}" y2="{H}"><stop offset="0" stop-color="{G0}"/><stop offset=".55" stop-color="{G1}"/><stop offset="1" stop-color="{G2}"/></linearGradient></defs>'
+      f'{eye_mark("url(#vg2)", LIME, "vg2", 0, 2.45)}</svg></div>')
+video('symbol-loop-600x600', 600, 600, 'ink', f'<div style="position:absolute;inset:0;{anim("fadeout",.35,3.05)}">{gs}</div>', 3.4, fps=25, outs=('mp4', 'gif'))
 json.dump(vids, open('videos.json', 'w')); print(len(vids))

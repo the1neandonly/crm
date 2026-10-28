@@ -35,5 +35,5 @@ emit('presentation', 'presentation-section-1920x1080', 1920, 1080, 'grad',
 emit('presentation', 'presentation-content-1920x1080', 1920, 1080, 'white',
      A(logo_svg('horizontal-compact', 'color', width=200), 'right:120px;top:80px') +
      A('<div style="font:700 20px Manrope;letter-spacing:.24em;text-transform:uppercase;color:var(--violet)">Sous-titre</div><div class="big" style="font-size:80px;margin-top:20px;color:var(--ink)">Titre de la diapositive.</div><div style="font:400 28px/1.6 Manrope;color:#4a4a55;margin-top:40px;width:900px">Zone de texte. Une idée par diapositive, des phrases courtes, un chiffre clé en lime sur fond sombre si nécessaire.</div>', 'left:120px;top:220px') +
-     A('', 'right:-1px;bottom:-1px;width:360px;height:360px;background:var(--grad);border-top-left-radius:360px') + A('', 'right:120px;bottom:120px;width:110px;height:110px;background:var(--lime);border-top-left-radius:110px'), ('png', 'jpg'))
+     A('', 'right:-1px;bottom:-1px;width:360px;height:360px;background:var(--grad);border-top-left-radius:360px') + A('', 'right:120px;bottom:120px;width:110px;height:110px;background:radial-gradient(circle at 60% 50%,var(--ink) 0 27%,var(--lime) 28%);border-radius:50%'), ('png', 'jpg'))
 json.dump(jobs, open('jobs_digital.json', 'w')); print(len(jobs))

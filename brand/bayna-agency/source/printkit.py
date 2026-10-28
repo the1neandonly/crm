@@ -81,7 +81,7 @@ doc('thank-you-card', 'thank-you-tag-50x90mm-bleed3mm', 56, 96, [
 doc('envelope', 'envelope-DL-220x110', 220, 110, [
     ('white', A(logo_svg('horizontal', 'color', width='52mm'), 'left:14mm;top:12mm') +
               A(f'<div style="font-size:7pt;line-height:1.6;color:#6a6a76">{CITY}<br>{WEB}</div>', 'left:14mm;top:34mm') +
-              A('', 'right:0;bottom:0;width:36mm;height:36mm;background:var(--grad);border-top-left-radius:36mm') + A('', 'right:14mm;bottom:14mm;width:10mm;height:10mm;background:var(--lime);border-top-left-radius:10mm')),
+              A('', 'right:0;bottom:0;width:36mm;height:36mm;background:var(--grad);border-top-left-radius:36mm') + A('', 'right:14mm;bottom:14mm;width:10mm;height:10mm;background:radial-gradient(circle at 60% 50%,var(--ink) 0 27%,var(--lime) 28%);border-radius:50%')),
     ('ink', A(f'<div style="width:100%;height:100%;background:url({PAT("ink")}) 0 0/60mm 60mm"></div>', 'inset:0'))])
 
 # ---------------- Letterhead A4 + invoice
@@ -89,7 +89,7 @@ lh_head = (A(logo_svg('horizontal', 'color', width='54mm'), 'left:20mm;top:18mm'
            A(f'<div style="text-align:right;font-size:7.6pt;line-height:1.7;color:#55555F"><b style="color:var(--ink)">Bayna Agency</b><br>{CITY}<br>{PHONE}<br>{MAIL} · {WEB}</div>', 'right:20mm;top:18mm') +
            A('', 'left:20mm;right:20mm;top:44mm;height:.3mm;background:rgba(36,36,43,.12)'))
 lh_foot = (A('<div style="display:flex;justify-content:space-between;font-size:7pt;color:#8a8a96;letter-spacing:.04em"><span><b class="vi">Bayna Agency</b> — Marketing &amp; Communication · باينة</span><span>RC 00/00-0000000 · NIF 000000000000000</span></div>', 'left:20mm;right:60mm;bottom:14mm') +
-           A('', 'right:0;bottom:0;width:44mm;height:44mm;background:var(--grad);border-top-left-radius:44mm') + A('', 'right:20mm;bottom:20mm;width:14mm;height:14mm;background:var(--lime);border-top-left-radius:14mm'))
+           A('', 'right:0;bottom:0;width:44mm;height:44mm;background:var(--grad);border-top-left-radius:44mm') + A('', 'right:20mm;bottom:20mm;width:14mm;height:14mm;background:radial-gradient(circle at 60% 50%,var(--ink) 0 27%,var(--lime) 28%);border-radius:50%'))
 doc('letterhead', 'letterhead-A4', 210, 297, [('white', lh_head + lh_foot + A('<div style="font-size:8.5pt;color:#8a8a96">Oran, le __ / __ / ____</div>', 'left:20mm;top:58mm'))], 2)
 rows = ''.join(f'<tr><td>Prestation {i}</td><td style="text-align:center">1</td><td style="text-align:right">0,00 DA</td><td style="text-align:right">0,00 DA</td></tr>' for i in range(1, 6))
 inv = (lh_head + lh_foot +

@@ -1,37 +1,41 @@
 from gl2_brand import *
 def build_logo():
     toc('Logo', 'Logo', 'Logo')
-    divider('02', 'The logo.', 'Le logo.', 'A letter built from data. How it is made, how it is used, and how it must never be used.', 'dark')
+    divider('02', 'The logo.', 'Le logo.', 'A letter that looks back at you. How it is made, how it is used, and how it must never be used.', 'dark')
     # Symbol
     def piece(kind):
         g = grad_def(f'pc{kind}'); f = f'url(#pc{kind})'
-        if kind == 'bar': d = f'<path d="M0,0 H{S} V{CY} H0Z" fill="{f}"/>'
-        elif kind == 'pie': d = f'<path d="M0,{CY} L{CX},{CY} L{CX},{CY-R} A{R},{R} 0 1,1 0,{CY} Z" fill="{f}"/>'
-        elif kind == 'slice': sx, sy = CX-GAP, CY-GAP; d = f'<path d="M{sx},{sy} L{sx-SR},{sy} A{SR},{SR} 0 0,1 {sx},{sy-SR} Z" fill="{LIME}"/>'
+        if kind == 'stem': d = f'<path fill-rule="evenodd" fill="{f}" d="{body_d()} {almond_d(rev=True)}"/>'
+        elif kind == 'eye': d = f'<path d="{almond_d()}" fill="#fff" stroke="{VIOLET}" stroke-width="2.5"/>'
+        elif kind == 'iris':
+            (ix, iy), (px, py), (gx, gy) = eye_centres()
+            d = f'<circle cx="{ix}" cy="{iy}" r="{IR}" fill="{LIME}"/><circle cx="{px}" cy="{py}" r="{PR}" fill="{INK}"/><circle cx="{gx}" cy="{gy}" r="{GR}" fill="#fff"/>'
         else: d = mark_paths(f, LIME)
         ghost = '' if kind == 'all' else f'<g opacity=".09">{mark_paths("#24242B", "#24242B")}</g>'
         return f'<svg viewBox="-10 -10 {W+20} {H+20}" height="290"><defs>{g}</defs>{ghost}{d}</svg>'
-    parts = [('bar', 'The bar', 'Growth', 'A rising bar — the result every client wants to see.'), ('pie', 'The pie', 'Audience', 'The market, the data, the whole picture we study first.'),
-             ('slice', 'The slice', 'Insight', 'The share we win for you — highlighted in lime.'), ('all', 'The b', 'Bayna', 'Together they draw a letter built from data.')]
+    parts = [('stem', 'The letter', 'b', 'A lowercase b — the first letter of bayna, cut to Syne’s proportions.'), ('eye', 'The eye', 'Seen', 'Its counter is an eye. باينة: it shows, nobody can miss it.'),
+             ('iris', 'The lime iris', 'Insight', 'The idea that stands out, looking forward — toward the name.'), ('all', 'The b', 'Bayna', 'Together: a brand you simply can’t not see.')]
     sym = ''
     for i, (k, t, kw, d) in enumerate(parts):
         sym += (f'<div style="flex:1"><div class="card" style="height:390px;display:flex;align-items:center;justify-content:center;{"background:var(--ink)" if k=="all" else ""}">{piece(k)}</div>'
                 f'<div class="row" style="margin-top:24px;align-items:baseline;gap:14px"><h3>{t}</h3><span class="lbl vi">{kw}</span></div><p style="font-size:18px">{d}</p></div>')
         if i < 3: sym += f'<div class="big" style="font-size:64px;color:var(--violet);padding-top:160px">{"+" if i<2 else "="}</div>'
     add('02 The symbol', f'''{head("02.1", "The symbol.", "Le symbole")}
-<p style="max-width:1200px;margin-top:22px">A lowercase <b>b</b> assembled from the three shapes of a marketing report — a bar, a pie chart and its highlighted slice. It says what we do before a single word is read: <b>we make the important part obvious.</b></p>
+<p style="max-width:1200px;margin-top:22px">A lowercase <b>b</b> whose counter is an eye. باينة means clear, obvious — what everyone can see. The symbol says it before a single word is read: <b>we make brands impossible to miss.</b></p>
 <div class="row" style="margin-top:50px;gap:30px;align-items:flex-start">{sym}</div>''')
     # Construction
     cell = 12; ann = 'rgba(210,255,90,.95)'
     gl = ''.join(f'<line x1="{x*cell}" y1="0" x2="{x*cell}" y2="{H}"/>' for x in range(13)) + ''.join(f'<line x1="0" y1="{y*cell}" x2="{W}" y2="{y*cell}"/>' for y in range(17))
     def dh(x1, x2, y, l): return f'<path d="M{x1},{y}H{x2}M{x1},{y-3}v6M{x2},{y-3}v6" stroke="{ann}" stroke-width=".5"/><text x="{(x1+x2)/2}" y="{y-4}" fill="{ann}" font-size="5.5" text-anchor="middle" font-family="JetBrains Mono">{l}</text>'
     def dv(y1, y2, x, l): return f'<path d="M{x},{y1}V{y2}M{x-3},{y1}h6M{x-3},{y2}h6" stroke="{ann}" stroke-width=".5"/><text x="{x-5}" y="{(y1+y2)/2}" fill="{ann}" font-size="5.5" text-anchor="end" dominant-baseline="middle" font-family="JetBrains Mono">{l}</text>'
+    ar = ((EW/2)**2 + EH**2) / (2*EH); (ix, iy), _, _ = eye_centres()
     cons = (f'<svg viewBox="-60 -24 {W+90} {H+40}" height="800"><defs>{grad_def("cg")}</defs><g stroke="rgba(255,255,255,.10)" stroke-width=".4">{gl}</g>'
             f'<g opacity=".92">{mark_paths("url(#cg)", LIME)}</g><circle cx="{CX}" cy="{CY}" r="{R}" fill="none" stroke="#fff" stroke-width=".5" stroke-dasharray="2 2"/>'
-            f'<circle cx="{CX-GAP}" cy="{CY-GAP}" r="{SR}" fill="none" stroke="#fff" stroke-width=".4" stroke-dasharray="1.5 1.5" opacity=".7"/><circle cx="{CX}" cy="{CY}" r="1.6" fill="#fff"/>'
-            f'{dh(0, S, -8, "3")}{dh(0, W, H+14, "12 — W")}{dv(0, H, -16, "16 — H")}{dv(CY, H, -40, "6 — R")}{dh(CX-GAP, CX, CY+8, "⅔")}</svg>')
-    specs = [('Grid', '12 × 16 modules (3 : 4)'), ('Stem', '3 modules wide'), ('Bowl', 'Radius 6 — half the width'), ('Notch', 'One quadrant removed'),
-             ('Slice', 'Offset ⅔ module, radius 2⅓'), ('Wordmark', 'Syne Bold, −1.5 % tracking'), ('Arabic', 'Readex Pro Bold'), ('Baseline', 'Sits on the bowl')]
+            f'<g fill="none" stroke="#fff" stroke-width=".35" stroke-dasharray="1.5 1.5" opacity=".6"><circle cx="{EX}" cy="{EY + ar - EH}" r="{ar}"/><circle cx="{EX}" cy="{EY - ar + EH}" r="{ar}"/></g>'
+            f'<circle cx="{ix}" cy="{iy}" r="{IR}" fill="none" stroke="#fff" stroke-width=".4" stroke-dasharray="1.5 1.5"/><circle cx="{CX}" cy="{CY}" r="1.6" fill="#fff"/>'
+            f'{dh(0, S, -8, "3")}{dh(0, W, H+14, "12 — W")}{dv(0, H, -16, "16 — H")}{dv(CY, H, -40, "6 — R")}</svg>')
+    specs = [('Grid', '12 × 16 modules (3 : 4)'), ('Stem', '3 modules wide, round cap'), ('Bowl', 'Radius 6 — half the width'), ('Eye', 'Almond 9 × 5⅔ modules, two equal arcs'),
+             ('Iris', 'Radius 2½, touches both lids, looks forward'), ('Wordmark', 'The symbol is the b · “ayna” in Syne Bold'), ('Arabic', 'Readex Pro Bold'), ('Baseline', 'Sits on the bowl')]
     add('02 Construction', f'''<div style="position:absolute;right:170px;top:150px">{cons}</div>{head("02.2", "Construction.", "Construction")}
 <p style="max-width:640px;margin-top:26px">Every curve and edge sits on a 12 × 16 modular grid. Always use the master files — never redraw the logo.</p>
 <table class="spec" style="margin-top:40px;width:640px;border-collapse:collapse">{"".join(f"<tr><td>{a}</td><td>{b}</td></tr>" for a,b in specs)}</table>''', 'dark')

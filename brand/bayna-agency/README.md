@@ -1,4 +1,4 @@
-# Bayna Agency — باينة — Brand Identity Kit v2
+# Bayna Agency — باينة — Brand Identity Kit v3
 
 Marketing & communication agency · Oran, Algérie
 
@@ -17,12 +17,12 @@ Start with **`Bayna-Agency-Brand-Guidelines.pdf`** (charte graphique, 58 pages):
 - every application, and an index of the kit
 
 ## The logo
-The symbol is a lowercase **b** built from the three shapes of a marketing report:
-- a **bar** for growth
-- a **pie chart** for audience and data
-- a **lime slice** pulled out of the pie for the insight
+The symbol is a lowercase **b** whose counter is an **eye**. باينة means "it shows": something nobody can miss.
+- the **b** is the first letter of the name, cut to the proportions of Syne Bold
+- the **almond eye** stands for being seen: clear, obvious, impossible to miss
+- the **lime iris** looks forward, toward the name, and stands for the idea that stands out
 
-The wordmark is set in Syne Bold. The Arabic name باينة is set in Readex Pro Bold.
+In the primary logo the symbol *is* the b of "bayna", followed by "ayna" in Syne Bold. The Arabic name باينة is set in Readex Pro Bold, and in the Arabic lockup the eye looks toward the text.
 
 ## Colours
 | Name | HEX | RGB | Use |

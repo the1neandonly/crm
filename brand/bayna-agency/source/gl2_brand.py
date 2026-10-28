@@ -70,7 +70,7 @@ def build_brand():
             ('Boldness', 'Audace · الجرأة', 'Bright ideas, confident execution.'), ('Craft', 'Exigence · الإتقان', 'High-end detail in everything we ship.'),
             ('Proximity', 'Proximité · القرب', 'We speak our clients’ language — French, Darija, Arabic, English.')]
     add('01 Values', f'''{head("01.6", "Our values.", "Nos valeurs")}
-<div class="row" style="margin-top:70px;gap:26px">{"".join(f'<div style="flex:1;background:#2E2E37;border-radius:28px;padding:40px 34px;height:520px;position:relative"><div style="width:70px;height:70px;background:{LIME if i==0 else VIOLET};border-top-left-radius:70px"></div><div class="big" style="font-size:42px;margin-top:40px">{en}</div><div class="lbl muted" style="margin-top:14px;letter-spacing:.1em;text-transform:none;font-size:17px">{fr}</div><p style="position:absolute;left:34px;right:34px;bottom:40px;font-size:20px">{d}</p></div>' for i,(en,fr,d) in enumerate(vals))}</div>''', 'dark')
+<div class="row" style="margin-top:70px;gap:26px">{"".join(f'<div style="flex:1;background:#2E2E37;border-radius:28px;padding:40px 34px;height:520px;position:relative"><div style="width:70px;height:70px;background:{LIME if i==0 else VIOLET};border-radius:50%"></div><div class="big" style="font-size:42px;margin-top:40px">{en}</div><div class="lbl muted" style="margin-top:14px;letter-spacing:.1em;text-transform:none;font-size:17px">{fr}</div><p style="position:absolute;left:34px;right:34px;bottom:40px;font-size:20px">{d}</p></div>' for i,(en,fr,d) in enumerate(vals))}</div>''', 'dark')
     # Personality
     pers = [('Clear', 'cold'), ('Bold', 'loud'), ('Expert', 'arrogant'), ('Local', 'small'), ('Warm', 'casual'), ('Playful', 'childish')]
     add('01 Personality', f'''{head("01.7", "Personality.", "Personnalité")}
@@ -88,7 +88,7 @@ def build_brand():
     aud = ['SMEs & retailers in Oran and western Algeria', 'Startups & entrepreneurs', 'Restaurants, cafés & hospitality', 'Fashion, beauty & health', 'Real estate & industry', 'Institutions, schools & events']
     add('01 Audience & services', f'''{head("01.9", "Who we serve.", "Nos clients & nos services")}
 <div class="row" style="margin-top:50px;gap:60px">
-<div style="width:640px"><div class="lbl vi" style="margin-bottom:14px">Audience</div>{"".join(f'<div style="display:flex;gap:18px;align-items:center;padding:18px 0;border-top:1px solid var(--line);font-size:22px;font-weight:600"><span style="width:18px;height:18px;background:var(--lime);border-top-left-radius:18px;flex:none"></span>{a}</div>' for a in aud)}</div>
+<div style="width:640px"><div class="lbl vi" style="margin-bottom:14px">Audience</div>{"".join(f'<div style="display:flex;gap:18px;align-items:center;padding:18px 0;border-top:1px solid var(--line);font-size:22px;font-weight:600"><span style="width:18px;height:18px;background:radial-gradient(circle at 60% 50%,var(--ink) 0 27%,var(--lime) 28%);border-radius:50%;flex:none"></span>{a}</div>' for a in aud)}</div>
 <div style="flex:1"><div class="lbl vi" style="margin-bottom:14px">Services</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">{"".join(f'<div class="card" style="padding:24px 28px;display:flex;gap:20px;align-items:center">{icon_svg(ic, VIOLET, LIME, 52)}<div><div style="font-weight:800;font-size:20px">{fr}</div><div class="muted" style="font-size:15px">{en}</div></div></div>' for ic,en,fr in SERVICES)}</div></div></div>''', 'light')
     # Tagline system
     add('01 Tagline', f'''{head("01.10", "One promise, three languages.", "Signature")}

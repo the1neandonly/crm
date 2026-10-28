@@ -20,13 +20,13 @@ tpl(G, '03-section', W_, H_, 'grad', T('01', 120, 330, 'font-size:40px;color:var
 tpl(G, '04-content', W_, H_, 'paper', A(logo('horizontal-compact', 'color', 200), 'right:120px;top:80px') +
     T('Sous-titre', 120, 220, 'font-size:20px;color:var(--violet)', 'lbl', 600) + T('Titre de la diapositive.', 120, 270, 'font-size:80px', 'big', 1300) +
     T('Zone de texte. Une idée par diapositive, des phrases courtes, un chiffre clé en lime sur fond sombre si nécessaire.', 120, 420, 'font-size:30px;color:#4a4a55;line-height:1.6', 'sub', 950) +
-    A('', 'right:-1px;bottom:-1px;width:360px;height:360px;background:var(--grad);border-top-left-radius:360px') + A('', 'right:120px;bottom:120px;width:110px;height:110px;background:var(--lime);border-top-left-radius:110px'), 'Content')
+    A('', 'right:-1px;bottom:-1px;width:360px;height:360px;background:var(--grad);border-top-left-radius:360px') + A('', 'right:120px;bottom:120px;width:110px;height:110px;background:radial-gradient(circle at 60% 50%,var(--ink) 0 27%,var(--lime) 28%);border-radius:50%'), 'Content')
 tpl(G, '05-key-figure', W_, H_, 'ink', T('Chiffre clé', 120, 200, 'font-size:22px;color:var(--lime)', 'lbl', 600) +
     T('+00%', 110, 260, 'font-size:380px;color:var(--lime);letter-spacing:-.05em', 'big', 1500) +
     T('Ce que ce chiffre prouve, en une phrase.', 120, 720, 'font-size:60px;letter-spacing:-.02em', 'big', 1300) + A(mark_svg(height=110), 'right:120px;bottom:100px'), 'Key figure')
 tpl(G, '06-three-columns', W_, H_, 'paper', T('Notre approche', 120, 120, 'font-size:20px;color:var(--violet)', 'lbl', 600) + T('Trois étapes, un résultat.', 120, 170, 'font-size:80px', 'big', 1500) +
     ''.join(A('', f'left:{120 + i*580}px;top:400px;width:540px;height:520px;background:#fff;border-radius:32px') +
-            A('', f'left:{170 + i*580}px;top:450px;width:90px;height:90px;background:{["var(--violet)","var(--violet)","var(--lime)"][i]};border-top-left-radius:90px') +
+            A('', f'left:{170 + i*580}px;top:450px;width:90px;height:90px;background:{["var(--violet)","var(--violet)","var(--lime)"][i]};border-radius:50%') +
             T(t, 170 + i*580, 590, 'font-size:44px', 'big', 440) + T('Décrivez cette étape en deux ou trois lignes.', 170 + i*580, 670, 'font-size:26px;color:#4a4a55;line-height:1.55', 'sub', 440)
             for i, t in enumerate(['Comprendre', 'Créer', 'Prouver'])), 'Three columns')
 tpl(G, '07-thank-you', W_, H_, 'grad', T('Merci.', 120, 330, 'font-size:200px', 'big', 1000) + T('شكراً', 120, 560, 'font-size:120px;color:var(--lime);text-align:left', 'ar', 800) +

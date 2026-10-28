@@ -19,10 +19,12 @@ def pattern_svg(cols, rows, cell, pal, bg, seed, accent_every=11):
     for j in range(rows):
         for i in range(cols):
             x, y = i*cell, j*cell; k = random.random()
-            c = LIME if random.random() < 1/accent_every else random.choice(pal)
+            hi = random.random() < 1/accent_every; c = LIME if hi else random.choice(pal)
             rot = random.choice([0, 90, 180, 270]); cx, cy = x + cell/2, y + cell/2
             m = cell*0.06; s = cell - 2*m
-            if k < .55:   shp = f'<path d="M{x+m},{y+m+s} V{y+m} A{s},{s} 0 0,1 {x+m+s},{y+m+s} Z" fill="{c}" transform="rotate({rot} {cx} {cy})"/>'
+            if hi:        shp = (f'<circle cx="{cx}" cy="{cy}" r="{s/2}" fill="{LIME}"/><circle cx="{cx + s*0.1}" cy="{cy}" r="{s*0.2}" fill="{INK}"/>'
+                                 f'<circle cx="{cx + s*0.17}" cy="{cy - s*0.1}" r="{s*0.06}" fill="#fff"/>')   # the iris
+            elif k < .55:   shp = f'<path d="M{x+m},{y+m+s} V{y+m} A{s},{s} 0 0,1 {x+m+s},{y+m+s} Z" fill="{c}" transform="rotate({rot} {cx} {cy})"/>'
             elif k < .72: shp = f'<circle cx="{cx}" cy="{cy}" r="{s/2}" fill="{c}"/>'
             elif k < .86: shp = f'<path d="M{x+m},{cy} A{s/2},{s/2} 0 0,1 {x+m+s},{cy} Z" fill="{c}" transform="rotate({rot} {cx} {cy})"/>'
             else: shp = ''
