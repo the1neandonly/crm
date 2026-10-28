@@ -1,0 +1,32 @@
+GYMLIINK — IDENTITÉ VISUELLE COMPLÈTE
+gymliink.com · جيم لينك · Logiciel pour salles de sport en Algérie
+=================================================================
+
+LOGO : « Le lien ii » — les deux i du nom deviennent deux maillons
+entrelacés ; leurs points sont le membre et la salle, connectés.
+
+01  CHARTE GRAPHIQUE — livre de marque (PDF, 39 pages) + 3 concepts explorés
+02  LOGOS — horizontal, vertical, symbole, symbole petite taille, logotype,
+    arabe, arabe vertical, bilingue · 6 versions : couleur sur fond sombre,
+    couleur sur fond clair, Volt, noir, blanc, inversé sur Volt
+    → chaque fichier en SVG, PNG, JPG et PDF
+03  ICÔNES D'APP — iOS 1024 (défaut, sombre, teinté), Android adaptatif
+    (premier plan, arrière-plan, monochrome), Play Store, favicons 16/32/48
+    + .ico + .svg, écrans de démarrage (splash)
+04  COULEURS — nuancier + fichiers .ase / .gpl / .css / .json / .txt
+05  POLICES — Geist, Geist Mono, IBM Plex Sans Arabic (gratuites, OFL)
+06  APPLICATIONS — carte membre (physique + app FR/AR), écran de check-in,
+    reçu imprimé, affiche « Scannez pour entrer », vitrophanie
+    « Gym powered by Gymliink », carte partenaire, en-tête e-mail,
+    photo WhatsApp, site gymliink.com
+07  RÉSEAUX SOCIAUX — modèles de posts et stories Instagram
+08  ICÔNES — Phosphor Light utilisées (licence MIT)
+09  SOURCE — scripts qui régénèrent tout
+
+À SAVOIR
+- Noms, montants, identifiants de carte et QR codes sont des exemples :
+  remplacez-les par les vrais liens avant impression.
+- Volt (#C5F04A) reste l'accent principal, moins de 10 % de la surface.
+
+OUVRIR CE ZIP : Windows clic droit → Extraire tout · Mac double-clic ·
+iPhone app Fichiers · Android Files by Google.

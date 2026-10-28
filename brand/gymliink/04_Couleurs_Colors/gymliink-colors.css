@@ -1,0 +1,19 @@
+:root {
+  --gl-volt: #C5F04A;
+  --gl-volt-ink: #12160A;
+  --gl-volt-deep: #7FA61A;
+  --gl-volt-text: #4E6A0A;
+  --gl-background: #0A0A0B;
+  --gl-surface-1: #141416;
+  --gl-surface-2: #1D1D20;
+  --gl-surface-3: #2A2A2F;
+  --gl-line: #26262B;
+  --gl-text: #F5F5F6;
+  --gl-text-2: #9A9AA3;
+  --gl-light-background: #F4F4F2;
+  --gl-light-surface: #FFFFFF;
+  --gl-success: #4CD98F;
+  --gl-warning: #F6B94F;
+  --gl-danger: #FF6B5E;
+  --gl-info: #7AA7FF;
+}
