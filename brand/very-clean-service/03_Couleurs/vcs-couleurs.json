@@ -1,0 +1,107 @@
+{
+  "Bleu VCS": {
+    "hex": "#0100F4",
+    "rgb": [
+      1,
+      0,
+      244
+    ],
+    "cmyk": [
+      100,
+      100,
+      0,
+      4
+    ],
+    "usage": "Couleur principale · logo, fonds, titres"
+  },
+  "Vert VCS": {
+    "hex": "#00C700",
+    "rgb": [
+      0,
+      199,
+      0
+    ],
+    "cmyk": [
+      100,
+      0,
+      100,
+      22
+    ],
+    "usage": "Couleur d’accent · appels à l’action, propreté"
+  },
+  "Bleu nuit": {
+    "hex": "#0B0E3F",
+    "rgb": [
+      11,
+      14,
+      63
+    ],
+    "cmyk": [
+      83,
+      78,
+      0,
+      75
+    ],
+    "usage": "Textes, fonds sombres"
+  },
+  "Ardoise": {
+    "hex": "#5B6175",
+    "rgb": [
+      91,
+      97,
+      117
+    ],
+    "cmyk": [
+      22,
+      17,
+      0,
+      54
+    ],
+    "usage": "Textes secondaires"
+  },
+  "Bleu ciel": {
+    "hex": "#E9ECFF",
+    "rgb": [
+      233,
+      236,
+      255
+    ],
+    "cmyk": [
+      9,
+      7,
+      0,
+      0
+    ],
+    "usage": "Fonds clairs, cartes"
+  },
+  "Vert menthe": {
+    "hex": "#E5F8E5",
+    "rgb": [
+      229,
+      248,
+      229
+    ],
+    "cmyk": [
+      8,
+      0,
+      8,
+      3
+    ],
+    "usage": "Fonds clairs, messages positifs"
+  },
+  "Blanc": {
+    "hex": "#FFFFFF",
+    "rgb": [
+      255,
+      255,
+      255
+    ],
+    "cmyk": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "usage": "Fond principal"
+  }
+}

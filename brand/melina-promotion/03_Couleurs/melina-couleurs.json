@@ -1,0 +1,107 @@
+{
+  "Noir Melina": {
+    "hex": "#141412",
+    "rgb": [
+      20,
+      20,
+      18
+    ],
+    "cmyk": [
+      0,
+      0,
+      10,
+      92
+    ],
+    "usage": "Couleur principale · textes, fonds"
+  },
+  "Rouge Melina": {
+    "hex": "#C0281E",
+    "rgb": [
+      192,
+      40,
+      30
+    ],
+    "cmyk": [
+      0,
+      79,
+      84,
+      25
+    ],
+    "usage": "Couleur d’accent · appels à l’action"
+  },
+  "Rouge profond": {
+    "hex": "#7A1E19",
+    "rgb": [
+      122,
+      30,
+      25
+    ],
+    "cmyk": [
+      0,
+      75,
+      80,
+      52
+    ],
+    "usage": "Ombres, fonds secondaires"
+  },
+  "Graphite": {
+    "hex": "#2B2B2B",
+    "rgb": [
+      43,
+      43,
+      43
+    ],
+    "cmyk": [
+      0,
+      0,
+      0,
+      83
+    ],
+    "usage": "Fonds sombres, pictogrammes"
+  },
+  "Gris béton": {
+    "hex": "#9A9A96",
+    "rgb": [
+      154,
+      154,
+      150
+    ],
+    "cmyk": [
+      0,
+      0,
+      3,
+      40
+    ],
+    "usage": "Textes secondaires, filets"
+  },
+  "Pierre": {
+    "hex": "#EEEAE3",
+    "rgb": [
+      238,
+      234,
+      227
+    ],
+    "cmyk": [
+      0,
+      2,
+      5,
+      7
+    ],
+    "usage": "Fonds clairs chaleureux"
+  },
+  "Blanc": {
+    "hex": "#FFFFFF",
+    "rgb": [
+      255,
+      255,
+      255
+    ],
+    "cmyk": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "usage": "Fond principal, espace"
+  }
+}

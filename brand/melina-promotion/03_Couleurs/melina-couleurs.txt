@@ -1,0 +1,9 @@
+Melina Promotion — PALETTE
+
+Noir Melina      #141412   RGB (20, 20, 18)   CMYK (0, 0, 10, 92)   Couleur principale · textes, fonds
+Rouge Melina     #C0281E   RGB (192, 40, 30)   CMYK (0, 79, 84, 25)   Couleur d’accent · appels à l’action
+Rouge profond    #7A1E19   RGB (122, 30, 25)   CMYK (0, 75, 80, 52)   Ombres, fonds secondaires
+Graphite         #2B2B2B   RGB (43, 43, 43)   CMYK (0, 0, 0, 83)   Fonds sombres, pictogrammes
+Gris béton       #9A9A96   RGB (154, 154, 150)   CMYK (0, 0, 3, 40)   Textes secondaires, filets
+Pierre           #EEEAE3   RGB (238, 234, 227)   CMYK (0, 2, 5, 7)   Fonds clairs chaleureux
+Blanc            #FFFFFF   RGB (255, 255, 255)   CMYK (0, 0, 0, 0)   Fond principal, espace

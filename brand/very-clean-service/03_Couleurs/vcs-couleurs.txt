@@ -1,0 +1,9 @@
+Very Clean Service — PALETTE
+
+Bleu VCS         #0100F4   RGB (1, 0, 244)   CMYK (100, 100, 0, 4)   Couleur principale · logo, fonds, titres
+Vert VCS         #00C700   RGB (0, 199, 0)   CMYK (100, 0, 100, 22)   Couleur d’accent · appels à l’action, propreté
+Bleu nuit        #0B0E3F   RGB (11, 14, 63)   CMYK (83, 78, 0, 75)   Textes, fonds sombres
+Ardoise          #5B6175   RGB (91, 97, 117)   CMYK (22, 17, 0, 54)   Textes secondaires
+Bleu ciel        #E9ECFF   RGB (233, 236, 255)   CMYK (9, 7, 0, 0)   Fonds clairs, cartes
+Vert menthe      #E5F8E5   RGB (229, 248, 229)   CMYK (8, 0, 8, 3)   Fonds clairs, messages positifs
+Blanc            #FFFFFF   RGB (255, 255, 255)   CMYK (0, 0, 0, 0)   Fond principal
