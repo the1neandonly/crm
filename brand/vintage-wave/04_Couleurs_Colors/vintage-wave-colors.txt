@@ -1,0 +1,12 @@
+VINTAGE WAVE — PALETTE
+
+Espresso   #2A1712   RGB (42, 23, 18)   CMYK (0, 45, 57, 84)
+Cream      #F3ECE1   RGB (243, 236, 225)   CMYK (0, 3, 7, 5)
+Rust       #A63D1E   RGB (166, 61, 30)   CMYK (0, 63, 82, 35)
+Amber      #D9962B   RGB (217, 150, 43)   CMYK (0, 31, 80, 15)
+Maple      #6E1F17   RGB (110, 31, 23)   CMYK (0, 72, 79, 57)
+Denim      #48657A   RGB (72, 101, 122)   CMYK (41, 17, 0, 52)
+Sage       #8A8F68   RGB (138, 143, 104)   CMYK (3, 0, 27, 44)
+Kraft      #C9A57A   RGB (201, 165, 122)   CMYK (0, 18, 39, 21)
+
+Proportions: Cream ~45 % · Espresso ~30 % · Rust ~12 % · Amber ~7 % · Denim, Sage, Kraft for details.
